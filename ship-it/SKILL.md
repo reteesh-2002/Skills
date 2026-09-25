@@ -35,6 +35,19 @@ git diff --cached | grep -iE 'api[_-]?key|secret|password|bearer|aizasy[0-9a-za-
 ```
 - If a potential secret is detected: **HALT IMMEDIATELY**. Alert the user and do not proceed with staging or committing.
 
+### Step 2.5: Deterministic Release Gate Evaluation (MANDATORY)
+Before constructing any commit or executing `git push`, evaluate the machine-readable evidence manifest:
+```bash
+bash scripts/verify-release-gate.sh
+```
+- **Fail-Closed Rule**: If `verify-release-gate.sh` exits non-zero, **HALT IMMEDIATELY**.
+- Do NOT proceed if:
+  1. The git tree SHA in `.evidence/manifest.v1.json` does not match the current `git write-tree` (stale evidence).
+  2. The manifest contains 0 verification checks.
+  3. Any check exited non-zero or reported failing tests.
+  4. The policy disposition is RED or un-waived AMBER.
+- Never bypass this gate based on conversational chat statements or 1-line heartbeats.
+
 ### Step 3: Atomic Conventional Commit Construction
 Write commit messages following the **Conventional Commits 1.0.0** specification:
 

@@ -65,8 +65,10 @@ Implement the smallest necessary change that directly resolves the root cause:
 
 ### Stage 6: Regression & Verification Proof
 Prove the fix works using empirical evidence:
-1. Re-run the exact reproduction step from Stage 1 -> Verify clean exit code and expected output.
-2. Run adjacent tests or related workflows -> Verify zero secondary regressions.
+1. Re-run the reproduction command via the trusted execution proxy:
+   `bash scripts/exec-proxy.sh --label debug_verify <reproduction command>`
+   Verify clean exit code 0 and valid output.
+2. Run adjacent tests via `exec-proxy.sh` -> Verify zero secondary regressions and update `.evidence/manifest.v1.json`.
 3. Clean up any temporary diagnostic print statements or debug logs before concluding.
 
 ---

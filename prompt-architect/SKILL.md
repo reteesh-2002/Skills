@@ -27,6 +27,8 @@ Analyze the user's input to determine the core category:
 - **🎨 Frontend / UI Sprint**: Landing pages, design systems, visual tools, widgets, audio synths, dashboards.
 - **🚀 Full-Stack / Data Feature**: Databases, REST/tRPC APIs, web crawlers, state management, full applications.
 - **🩹 Bugfix / Hotfix**: Crashes, stack traces, broken behavior, performance leaks, regression repair.
+- **🛡️ Security & Auth Audit**: Authentication, BOLA/IDOR, public APIs, input sanitization, tenant boundaries.
+- **⚙️ Operations & Reliability**: Zero-downtime DB migrations, background queues, memory leak soaks, deployment health.
 - **🏛️ High-Risk Architecture / Decision**: Evaluating new frameworks, build vs buy, database selection, major pivots.
 - **📦 Multi-File Refactor (>12 files)**: Mass migrations, multi-module overhauls across frontend/backend/tests.
 
@@ -36,8 +38,10 @@ Map the domain to the optimal, minimal skill combination:
 | Domain | Assigned Skill Team | Omitted Skills & Why |
 | :--- | :--- | :--- |
 | **Frontend / UI Sprint** | `/anti-slop-spec`<br>`/frontend-artisan`<br>`/qa-sentinel` | Omit `orchestrator`, `schema-craft`, `idea-council` to prevent token bloat. |
-| **Full-Stack / Data** | `/plan-master`<br>`/schema-craft`<br>`/qa-sentinel`<br>`/ship-it` | Omit `adaptive-orchestrator` unless >12 files; add `frontend-artisan` if UI is included. |
+| **Full-Stack / Data** | `/plan-master`<br>`/schema-craft`<br>`/qa-sentinel`<br>`/ship-it` | Add `/security-verifier` if public APIs or auth are involved. |
 | **Bugfix / Hotfix** | `/deep-debugger`<br>`/qa-sentinel` | Omit all planning, council, and design skills. Direct root-cause repair only. |
+| **Security / Auth Audit** | `/security-verifier`<br>`/qa-sentinel`<br>`/ship-it` | Direct boundary and synthetic tenant testing against OWASP API Top 10. |
+| **Operations / Reliability**| `/runtime-reliability`<br>`/schema-craft`<br>`/ship-it` | Rehearse migrations, test graceful shutdown, and run memory soaks. |
 | **High-Risk Decision** | `/idea-council`<br>`/plan-master` | Omit implementation and git tools until the decision verdict is sealed. |
 | **Large Multi-Module (>12 files)**| `/adaptive-worker-orchestrator-v2`<br>`/plan-master`<br>`/qa-sentinel` | Activates git worktrees (`.git/.orch-worktrees/`) for parallel worker subagents. |
 
@@ -48,10 +52,11 @@ Every generated prompt MUST include:
    - For DB: Ban unindexed foreign keys, implicit cascades, and non-timezone timestamps.
    - For Network: Ban unsafe unspooling/redirects without private IP SSRF filters.
 2. **Deterministic Verification & False-Green Defense**:
-   - Instruct `/qa-sentinel` on exact terminal commands to prove success (`node -c`, `curl -I`, `py_compile`, exit code 0).
+   - Mandate executing all checks via `scripts/exec-proxy.sh`.
    - Demand explicit count verification (`collected > 0`, `passed == collected`).
-3. **Dual-Surface Output Density & Pipeline Suppression**:
-   - Instruct all chained skills to adhere to the Dual-Surface model: stream raw verbose logs to background disk files (`.log`), and cap foreground chat output to a **15–25 line Executive Card**.
+   - Mandate running `scripts/verify-release-gate.sh` before any release actions in `/ship-it`.
+3. **Tri-Surface Output Density & Pipeline Suppression**:
+   - Instruct all chained skills to adhere to the Tri-Surface model: stream raw verbose logs to background disk files (`.evidence/logs/`), update the machine manifest (`.evidence/manifest.v1.json`), and cap foreground chat output to a **15–25 line Executive Card**.
    - Enforce **intermediate pipeline suppression**: in multi-skill chains (e.g. `deep-debugger` -> `qa-sentinel` -> `ship-it`), intermediate skills emit a 1-line milestone (`✓ [skill]: status`); only the terminal skill emits the final Executive Card.
 4. **Delivery Invariants**:
    - Instruct `/ship-it` to scan for secret leaks and format Conventional Commits.

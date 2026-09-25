@@ -1,0 +1,8 @@
+id: deep-debugger
+contract_version: 1
+inputs: [error-trace.v1, reproduction-task.v1]
+outputs: [defect-resolution-record.v1, surgical-patch.v1]
+required_capabilities: [run_reproduction, isolate_root_cause, apply_surgical_fix]
+forbidden_capabilities: [shotgun_refactor, approve_own_waiver, git_push]
+manual_only: false
+report_policy: pipeline_suppress_intermediate
