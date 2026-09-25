@@ -1,0 +1,13 @@
+interface:
+  display_name: Idea Council
+  short_description: Manually run a six-agent debate about your idea
+  default_prompt: 'Use $idea-council to debate this project or feature: [my idea].'
+  icon_small: assets/icon.svg
+  icon_large: assets/icon.svg
+policy:
+  allow_implicit_invocation: false
+  products:
+  - chatgpt
+  - codex
+  - api
+  - atlas

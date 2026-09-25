@@ -1,0 +1,18 @@
+# Logs & Debugging
+*.log
+.debug/
+
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.swp

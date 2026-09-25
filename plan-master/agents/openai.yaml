@@ -1,0 +1,6 @@
+interface:
+  display_name: "Plan Master"
+  short_description: "Manual planning with optional council and worker handoffs"
+  default_prompt: "Use $plan-master to create an actionable plan for this project or feature: [goal]."
+policy:
+  allow_implicit_invocation: false
