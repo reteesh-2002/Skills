@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PulseMesh // Industrial Telemetry HUD</title>
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body class="industrial-hud">
+  <header class="hud-chassis-header" role="banner">
+    <div class="system-stamp">
+      <span class="hud-beacon active" aria-hidden="true"></span>
+      <span class="sys-id">[PULSEMESH // GATEWAY-NODE-01]</span>
+      <span class="sys-mode">[WAL-SYNC: NORMAL]</span>
+    </div>
+    <div class="timestamp-stamp" id="clock-display" aria-label="System Time">
+      2026-09-25T15:24:01.000Z
+    </div>
+  </header>
+
+  <main class="hud-grid-rack" role="main">
+    <!-- PANEL 1: INGESTION & BUFFER INSTRUMENT -->
+    <section class="rack-module" aria-labelledby="mod-buffer-title">
+      <div class="module-header">
+        <h2 id="mod-buffer-title">[01 // TELEMETRY RING-BUFFER]</h2>
+        <span class="module-badge" id="buffer-status-badge">[STATUS: DRAIN-NORMAL]</span>
+      </div>
+      <div class="module-body">
+        <div class="meter-legend">
+          <span>BUFFER SATURATION</span>
+          <span id="buffer-pct-label" class="val-mono">0.0%</span>
+        </div>
+        <div class="segmented-led-bar" role="meter" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="buffer-led-meter">
+          <!-- 20 Segmented Hardware LED blocks -->
+          <div class="led-tick"></div><div class="led-tick"></div><div class="led-tick"></div><div class="led-tick"></div><div class="led-tick"></div>
+          <div class="led-tick"></div><div class="led-tick"></div><div class="led-tick"></div><div class="led-tick"></div><div class="led-tick"></div>
+          <div class="led-tick"></div><div class="led-tick"></div><div class="led-tick"></div><div class="led-tick"></div><div class="led-tick"></div>
+          <div class="led-tick"></div><div class="led-tick"></div><div class="led-tick"></div><div class="led-tick"></div><div class="led-tick"></div>
+        </div>
+
+        <div class="instrument-readouts">
+          <div class="readout-cell">
+            <span class="cell-label">TOTAL INGESTED</span>
+            <span class="cell-value" id="stat-enqueued">0</span>
+          </div>
+          <div class="readout-cell">
+            <span class="cell-label">WAL BATCH COMMITS</span>
+            <span class="cell-value" id="stat-flushed">0</span>
+          </div>
+          <div class="readout-cell">
+            <span class="cell-label">DROPPED (SHED)</span>
+            <span class="cell-value" id="stat-dropped">0</span>
+          </div>
+        </div>
+
+        <div class="tactile-control-group">
+          <button id="btn-manual-flush" class="btn-tactile mechanical-btn" type="button">
+            [TRIGGER SYNC FLUSH]
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- PANEL 2: ZERO-TRUST THREAT BOUNDARY -->
+    <section class="rack-module" aria-labelledby="mod-threat-title">
+      <div class="module-header">
+        <h2 id="mod-threat-title">[02 // ZERO-TRUST BOUNDARY]</h2>
+        <span class="module-badge status-secure">[SSRF FILTER: ACTIVE]</span>
+      </div>
+      <div class="module-body">
+        <div class="boundary-matrix">
+          <div class="matrix-row">
+            <span class="param-name">IDOR / BOLA GUARDS</span>
+            <span class="param-val status-green">[FAIL-CLOSED]</span>
+          </div>
+          <div class="matrix-row">
+            <span class="param-name">METADATA SSRF (169.254.x)</span>
+            <span class="param-val status-green">[BLOCKED]</span>
+          </div>
+          <div class="matrix-row">
+            <span class="param-name">LOOPBACK SSRF (127.0.0.1)</span>
+            <span class="param-val status-green">[BLOCKED]</span>
+          </div>
+          <div class="matrix-row">
+            <span class="param-name">TENANT ISOLATION</span>
+            <span class="param-val status-green">[STRICT CASCADE]</span>
+          </div>
+        </div>
+
+        <div class="tactile-control-group switch-group">
+          <label class="mechanical-switch-label" for="toggle-zero-trust">
+            <input type="checkbox" id="toggle-zero-trust" checked>
+            <span class="switch-chassis">
+              <span class="switch-lever"></span>
+            </span>
+            <span class="switch-caption">[ENFORCE ZERO-TRUST HARDENING]</span>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <!-- PANEL 3: LIVE TELEMETRY TAPE (STREAM LEDGER) -->
+    <section class="rack-module full-width" aria-labelledby="mod-stream-title">
+      <div class="module-header">
+        <h2 id="mod-stream-title">[03 // REAL-TIME AGENT TELEMETRY STREAM]</h2>
+        <span class="module-badge">[LOG-BUS: 60 FPS]</span>
+      </div>
+      <div class="module-body stream-container">
+        <div class="stream-ledger" id="telemetry-log-stream" role="log" aria-live="polite">
+          <!-- Live monospace log entries injected dynamically -->
+          <div class="stream-line init-line">
+            <span class="line-time">2026-09-25T15:24:01.000Z</span>
+            <span class="line-badge badge-sys">[KERNEL]</span>
+            <span class="line-content">PulseMesh Zero-Trust Gateway Initialized // WAL-mode enabled.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="hud-chassis-footer" role="contentinfo">
+    <div class="foot-item">ARCHETYPE: INDUSTRIAL-TELEMETRY-HUD</div>
+    <div class="foot-item">WCAG-AA: PASS (>= 4.5:1 CONTRAST)</div>
+    <div class="foot-item">BUILD: 1.0.0-PROD-STABLE</div>
+  </footer>
+
+  <script src="dashboard.js"></script>
+</body>
+</html>

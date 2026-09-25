@@ -1,0 +1,370 @@
+/* PulseMesh Industrial Telemetry HUD Stylesheet */
+/* Anti-Slop Directive: Strict 0px radius, no generic gradients, high-contrast monospace */
+
+:root {
+  --bg-void: #080a0f;
+  --bg-rack: #0e131a;
+  --bg-chassis: #121822;
+  --border-hairline: #1c2633;
+  --border-bright: #2d3d52;
+
+  --color-phosphor: #ffb000;      /* Amber CRT (9.8:1 contrast on void) */
+  --color-laser: #00e676;         /* Electroluminescent Green (11.2:1 contrast) */
+  --color-crimson: #ff3d00;       /* Warning Alert (6.4:1 contrast) */
+  --color-dim: #8c9ba5;           /* Secondary Metadata (5.1:1 contrast) */
+  --color-high-white: #f0f4f8;    /* Pure Terminal White (15.5:1 contrast) */
+
+  --font-hud: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "JetBrains Mono", monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border-radius: 0 !important; /* Non-negotiable Anti-Slop invariant */
+}
+
+body.industrial-hud {
+  background-color: var(--bg-void);
+  color: var(--color-high-white);
+  font-family: var(--font-hud);
+  font-size: 13px;
+  line-height: 1.5;
+  letter-spacing: 0.04em;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* HEADER CHASSIS */
+.hud-chassis-header {
+  background-color: var(--bg-rack);
+  border-bottom: 2px solid var(--border-hairline);
+  padding: 10px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.system-stamp {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.hud-beacon {
+  width: 10px;
+  height: 10px;
+  background-color: var(--color-laser);
+  display: inline-block;
+  box-shadow: 0 0 6px var(--color-laser);
+}
+
+.sys-id {
+  color: var(--color-phosphor);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.sys-mode {
+  color: var(--color-dim);
+}
+
+.timestamp-stamp {
+  color: var(--color-phosphor);
+  font-variant-numeric: tabular-nums;
+}
+
+/* MAIN RACK GRID */
+.hud-grid-rack {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 16px;
+  flex: 1;
+}
+
+.rack-module {
+  background-color: var(--bg-rack);
+  border: 1px solid var(--border-hairline);
+  display: flex;
+  flex-direction: column;
+}
+
+.rack-module.full-width {
+  grid-column: 1 / -1;
+}
+
+.module-header {
+  background-color: var(--bg-chassis);
+  border-bottom: 1px solid var(--border-hairline);
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.module-header h2 {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--color-phosphor);
+}
+
+.module-badge {
+  color: var(--color-dim);
+  font-size: 11px;
+}
+
+.module-badge.status-secure {
+  color: var(--color-laser);
+}
+
+.module-body {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex: 1;
+}
+
+/* SEGMENTED HARDWARE LED METER */
+.meter-legend {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--color-dim);
+  letter-spacing: 0.06em;
+}
+
+.segmented-led-bar {
+  display: flex;
+  gap: 3px;
+  background-color: var(--bg-void);
+  padding: 4px;
+  border: 1px solid var(--border-hairline);
+  height: 24px;
+}
+
+.led-tick {
+  flex: 1;
+  background-color: #151c24;
+}
+
+.led-tick.active-green {
+  background-color: var(--color-laser);
+  box-shadow: 0 0 4px var(--color-laser);
+}
+
+.led-tick.active-amber {
+  background-color: var(--color-phosphor);
+  box-shadow: 0 0 4px var(--color-phosphor);
+}
+
+.led-tick.active-red {
+  background-color: var(--color-crimson);
+  box-shadow: 0 0 4px var(--color-crimson);
+}
+
+/* INSTRUMENT READOUT CELLS */
+.instrument-readouts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.readout-cell {
+  background-color: var(--bg-void);
+  border: 1px solid var(--border-hairline);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.cell-label {
+  font-size: 10px;
+  color: var(--color-dim);
+  letter-spacing: 0.06em;
+}
+
+.cell-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-phosphor);
+  font-variant-numeric: tabular-nums;
+  margin-top: 4px;
+}
+
+/* TACTILE MECHANICAL CONTROLS */
+.btn-tactile {
+  font-family: var(--font-hud);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 10px 14px;
+  background-color: var(--bg-chassis);
+  color: var(--color-phosphor);
+  border: 1px solid var(--border-bright);
+  cursor: pointer;
+  text-align: center;
+  box-shadow: 0 3px 0 var(--border-hairline);
+  transition: transform 0.05s ease, box-shadow 0.05s ease;
+}
+
+.btn-tactile:hover {
+  background-color: #1a2332;
+}
+
+.btn-tactile:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--border-hairline);
+}
+
+.btn-tactile:focus-visible {
+  outline: 2px solid var(--color-laser);
+  outline-offset: 2px;
+}
+
+/* MECHANICAL TOGGLE SWITCH */
+.switch-group {
+  margin-top: auto;
+}
+
+.mechanical-switch-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.mechanical-switch-label input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.switch-chassis {
+  width: 44px;
+  height: 22px;
+  background-color: var(--bg-void);
+  border: 1px solid var(--border-bright);
+  position: relative;
+  display: inline-block;
+}
+
+.switch-lever {
+  width: 18px;
+  height: 16px;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  background-color: var(--color-dim);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 2px 4px rgba(0,0,0,0.8);
+  transition: transform 0.08s ease, background-color 0.08s ease;
+}
+
+.mechanical-switch-label input:checked + .switch-chassis .switch-lever {
+  transform: translateX(20px);
+  background-color: var(--color-laser);
+}
+
+.mechanical-switch-label input:focus-visible + .switch-chassis {
+  outline: 2px solid var(--color-laser);
+}
+
+.switch-caption {
+  font-size: 11px;
+  color: var(--color-high-white);
+  letter-spacing: 0.06em;
+}
+
+/* ZERO-TRUST BOUNDARY MATRIX */
+.boundary-matrix {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.matrix-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 8px;
+  background-color: var(--bg-void);
+  border: 1px solid var(--border-hairline);
+  font-size: 11px;
+}
+
+.param-name {
+  color: var(--color-dim);
+}
+
+.param-val.status-green {
+  color: var(--color-laser);
+  font-weight: 700;
+}
+
+/* REAL-TIME TELEMETRY TAPE (LEDGER) */
+.stream-container {
+  height: 240px;
+  overflow: hidden;
+  padding: 0;
+}
+
+.stream-ledger {
+  background-color: var(--bg-void);
+  height: 100%;
+  overflow-y: auto;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stream-line {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+  border-bottom: 1px solid #111722;
+  padding-bottom: 2px;
+}
+
+.line-time {
+  color: var(--color-dim);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.line-badge {
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.badge-sys {
+  color: var(--color-phosphor);
+}
+
+.badge-allow {
+  color: var(--color-laser);
+}
+
+.badge-block {
+  color: var(--color-crimson);
+}
+
+.line-content {
+  color: var(--color-high-white);
+  word-break: break-all;
+}
+
+/* FOOTER */
+.hud-chassis-footer {
+  background-color: var(--bg-rack);
+  border-top: 1px solid var(--border-hairline);
+  padding: 6px 16px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--color-dim);
+}

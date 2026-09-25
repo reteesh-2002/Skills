@@ -1,0 +1,6 @@
+# PulseMesh gitignore
+node_modules/
+*.log
+.DS_Store
+*.db-shm
+*.db-wal
