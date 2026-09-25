@@ -1,0 +1,13 @@
+flowchart TD
+    U["User intent and authorization"] --> C["Coordinator and specialist models"]
+    C --> P["Policy and state service"]
+    P --> X["Execution proxy"]
+    X --> W["Isolated task sandboxes"]
+    X --> E["Immutable evidence store"]
+    E --> V["Runner adapters and verifier"]
+    V --> P
+    P --> R["Release gateway"]
+    P --> H["Deterministic card renderer"]
+    H --> U
+    E --> M["Search and memory index"]
+    M --> C

@@ -1,0 +1,23 @@
+sequenceDiagram
+    participant D as deep-debugger
+    participant E as Evidence service
+    participant Q as qa-sentinel
+    participant S as ship-it
+    participant U as User
+    D->>E: Publish patch, rationale, snapshot
+    E-->>D: Durable receipt and manifest ID
+    D-->>U: Milestone with manifest reference
+    Q->>E: Read patch contract and required checks
+    Q->>E: Request verification for snapshot
+    E-->>Q: Completed results and warnings
+    Q->>E: Publish assessment linked to results
+    Q-->>U: Milestone with state and blockers
+    S->>E: Validate snapshot, policy, authorization
+    alt Evidence complete and release eligible
+        E-->>S: Scoped release capability
+        S->>E: Record release action and receipt
+        S-->>U: Final card with release evidence
+    else Missing, stale, or blocking evidence
+        E-->>S: Block with reason codes
+        S-->>U: Final blocked card and next action
+    end
