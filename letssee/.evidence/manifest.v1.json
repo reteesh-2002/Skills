@@ -1,0 +1,98 @@
+{
+  "schema_version": "manifest.v1",
+  "git_tree_sha": "1708383b9b0f897868b093c7c8515c40ad649ef7",
+  "policy_disposition": "GREEN",
+  "checks": [
+    {
+      "receipt_id": "rcpt_20260925_154210_14822",
+      "label": "check_database",
+      "command": "node --test tests/unit/db.test.js",
+      "exit_code": 0,
+      "duration_ms": 87,
+      "git_tree_sha": "1708383b9b0f897868b093c7c8515c40ad649ef7",
+      "log_path": "logs/rcpt_20260925_154210_14822.log",
+      "metrics": {
+        "collected": 7,
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "receipt_id": "rcpt_20260925_154210_32754",
+      "label": "check_ui_dashboard",
+      "command": "node --test tests/unit/ui.test.js",
+      "exit_code": 0,
+      "duration_ms": 93,
+      "git_tree_sha": "1708383b9b0f897868b093c7c8515c40ad649ef7",
+      "log_path": "logs/rcpt_20260925_154210_32754.log",
+      "metrics": {
+        "collected": 5,
+        "passed": 5,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "receipt_id": "rcpt_20260925_154214_9218",
+      "label": "check_webhook_dispatcher",
+      "command": "node --test tests/unit/webhook.test.js",
+      "exit_code": 0,
+      "duration_ms": 5091,
+      "git_tree_sha": "1708383b9b0f897868b093c7c8515c40ad649ef7",
+      "log_path": "logs/rcpt_20260925_154214_9218.log",
+      "metrics": {
+        "collected": 4,
+        "passed": 4,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "receipt_id": "rcpt_20260925_154227_27317",
+      "label": "check_security_boundaries",
+      "command": "node --test tests/unit/security.test.js",
+      "exit_code": 0,
+      "duration_ms": 109,
+      "git_tree_sha": "1708383b9b0f897868b093c7c8515c40ad649ef7",
+      "log_path": "logs/rcpt_20260925_154227_27317.log",
+      "metrics": {
+        "collected": 7,
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "receipt_id": "rcpt_20260925_154235_5295",
+      "label": "check_runtime_reliability",
+      "command": "node --test tests/reliability/graceful-drain.test.js tests/reliability/memory-soak.test.js tests/reliability/migration-rehearsal.test.js",
+      "exit_code": 0,
+      "duration_ms": 5117,
+      "git_tree_sha": "1708383b9b0f897868b093c7c8515c40ad649ef7",
+      "log_path": "logs/rcpt_20260925_154235_5295.log",
+      "metrics": {
+        "collected": 8,
+        "passed": 8,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "receipt_id": "rcpt_20260925_154243_15785",
+      "label": "check_full_suite",
+      "command": "npm test",
+      "exit_code": 0,
+      "duration_ms": 5265,
+      "git_tree_sha": "1708383b9b0f897868b093c7c8515c40ad649ef7",
+      "log_path": "logs/rcpt_20260925_154243_15785.log",
+      "metrics": {
+        "collected": 31,
+        "passed": 31,
+        "failed": 0,
+        "skipped": 0
+      }
+    }
+  ],
+  "open_waivers": []
+}
