@@ -22,19 +22,53 @@ fail=0
 
 if [ -z "$files" ]; then echo "No changes found."; exit 0; fi
 
+wt_root="$(pwd -P)"
+
 while IFS= read -r f; do
-  [ -L "$f" ] && continue
+  [ -z "$f" ] && continue
+
+  # Handle symlinks safely (F12, P20)
+  if [ -L "$f" ]; then
+    target=$(readlink -f "$f" || true)
+    case "$target" in
+      "$wt_root"/*) ;; # Inside sandbox
+      *)
+        echo "OUT-OF-SCOPE-SYMLINK: $f points outside worktree sandbox ($target)"
+        fail=1
+        continue
+        ;;
+    esac
+  fi
+
   ok=0
   for a in "${allowed[@]}"; do
-    case "$f" in "$a"*) ok=1; break ;; esac
+    prefix="${a%/}"
+    if [[ "$f" == "$prefix" || "$f" == "$prefix"/* ]]; then
+      ok=1
+      break
+    fi
   done
   [ $ok -eq 0 ] && { echo "OUT-OF-SCOPE: $f"; fail=1; }
   if echo "$f" | grep -Eq "$protected"; then echo "PROTECTED: $f"; fail=1; fi
 done <<< "$files"
 
+# Check diff for placeholder markers
 hits=$(git diff -U0 "$mb" | grep -E '^\+[^+]' | grep -v 'NotImplementedError' | grep -Ei "$placeholder" || true)
+
+# Also check untracked files for placeholder markers (F13, P22)
+untracked_files=$(git ls-files --others --exclude-standard)
+if [ -n "$untracked_files" ]; then
+  while IFS= read -r uf; do
+    [ -f "$uf" ] || continue
+    uh=$(grep -v 'NotImplementedError' "$uf" 2>/dev/null | grep -Ei "$placeholder" || true)
+    if [ -n "$uh" ]; then
+      hits=$(printf "%s\n%s: %s" "$hits" "$uf" "$uh")
+    fi
+  done <<< "$untracked_files"
+fi
+
 if [ -n "$hits" ]; then
-  echo "WARNING: PLACEHOLDERS detected in added lines:"
+  echo "WARNING: PLACEHOLDERS detected in added or untracked lines:"
   echo "$hits" | head -20
   if [ "${FAIL_ON_PLACEHOLDERS:-0}" = "1" ]; then
     fail=1

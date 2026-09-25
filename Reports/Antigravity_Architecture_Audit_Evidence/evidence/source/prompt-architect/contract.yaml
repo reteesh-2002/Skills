@@ -1,0 +1,8 @@
+id: prompt-architect
+contract_version: 1
+inputs: [raw-user-intent.v1]
+outputs: [execution-blueprint.v1, skill-team-selection.v1]
+required_capabilities: [classify_domain, compose_prompt]
+forbidden_capabilities: [modify_code, execute_terminal]
+manual_only: false
+report_policy: standalone_card

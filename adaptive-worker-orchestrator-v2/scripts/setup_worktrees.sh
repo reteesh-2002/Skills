@@ -16,7 +16,18 @@ if [ "${1:-}" = "cleanup" ]; then
       wname=$(basename "$wt")
       branch="orch/$wname"
 
-      # Safely detach worktree
+      # Check if worktree directory has uncommitted work (tracked or untracked) (F04, P19)
+      wt_dirty=$(git -C "$wt" status --porcelain 2>/dev/null || true)
+      if [ -n "$wt_dirty" ]; then
+        rescue_wt_branch="orch/rescue-$wname-uncommitted-$(date +%s)"
+        echo "Worktree $wname has uncommitted changes; rescuing to $rescue_wt_branch before detachment..."
+        git -C "$wt" checkout -b "$rescue_wt_branch" 2>/dev/null || true
+        git -C "$wt" add -A 2>/dev/null || true
+        git -C "$wt" commit -m "chore(orch): auto-rescue uncommitted work from $wname before worktree cleanup" --no-verify 2>/dev/null || true
+        echo "Preserved uncommitted work from $wname in branch $rescue_wt_branch"
+      fi
+
+      # Safely detach worktree (never remove without securing uncommitted work first)
       git -C "$repo" worktree remove "$wt" 2>/dev/null || git -C "$repo" worktree remove --force "$wt" 2>/dev/null || true
 
       # Check if branch has unmerged work before deleting

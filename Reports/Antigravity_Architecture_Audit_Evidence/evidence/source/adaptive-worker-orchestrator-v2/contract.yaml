@@ -1,0 +1,8 @@
+id: adaptive-worker-orchestrator-v2
+contract_version: 1
+inputs: [multi-module-plan.v1]
+outputs: [orchestration-log.v1, integrated-candidate.v1]
+required_capabilities: [setup_worktrees, dispatch_workers, reconcile_diffs]
+forbidden_capabilities: [direct_push_without_qa, modify_main_directly]
+manual_only: false
+report_policy: coordinator_summary

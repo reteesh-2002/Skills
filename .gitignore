@@ -1,8 +1,7 @@
 # Logs & Debugging
 *.log
 .debug/
-.evidence/logs/
-.evidence/receipts/
+.evidence/
 
 # Environment & Secrets
 .env
