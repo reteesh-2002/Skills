@@ -5,6 +5,9 @@ description: Master prompt composer and skill orchestrator. Analyzes any raw pro
 
 # Prompt Architect
 
+> [!NOTE]
+> **Consolidation Notice**: Prompt Architect's intent classification, skill team selection, and prompt hardening have been natively consolidated into [`plan-master`](../plan-master/SKILL.md) for single-entry planning. This skill remains active as a standalone alias for direct prompt composition.
+
 The executive director and traffic controller for your entire Antigravity skills suite. Transforms rough, ambiguous, or unpolished user ideas into production-grade execution prompts equipped with the exact right skills, architectural safeguards, and anti-slop constraints.
 
 ---

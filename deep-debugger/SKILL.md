@@ -16,6 +16,31 @@ Systematic, hypothesis-driven root cause analysis and surgical defect remediatio
 
 ---
 
+## The "3 + 5" Escalation Protocol (Max 8 Cycles)
+
+To balance deep investigation of stubborn race-conditions with zero tolerance for infinite hallucination spirals:
+
+```
+[Cycles 1–3: Fast Surgical Probing]
+  │  Direct root-cause hypotheses on the immediate failure site.
+  ▼
+[⚠️ CYCLE-3 SANITY CHECKPOINT] ──> Resolved? ──(YES)──> [Exit 0 & Verify]
+  │ (NO)
+  ├── 1. Blast Radius Check: Did we touch >2 files? If YES: REVERT uncommitted edits.
+  ├── 2. Anti-Shotgun Audit: Reject blind try/catch wrappers or typecasts (as any).
+  └── 3. Escalate: Announce "Surgical fix failed. Escalating to Deep Trace Mode."
+  ▼
+[Cycles 4–8: Deep Trace & Minimal Reproduction]
+  │  Construct isolated minimal repro script in scratch/repro_[id].ext.
+  │  Instrument state timeline logging (Before -> Action -> Corrupted State).
+  ▼
+[🛑 CYCLE-8 HARD CEILING] ──> Resolved? ──(YES)──> [Exit 0 & Verify]
+  │ (NO)
+  └── HALT execution immediately. Output Failure Autopsy with 8 hypotheses tested.
+      Yield cleanly to human developer with zero unverified file mutations.
+
+---
+
 ## The 6-Stage Investigation Protocol
 
 ```

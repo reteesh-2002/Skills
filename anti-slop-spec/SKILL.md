@@ -5,6 +5,9 @@ description: Aesthetic and prompt sharpener that purges generic AI template clic
 
 # Anti-Slop Spec
 
+> [!NOTE]
+> **Consolidation Notice**: Anti-Slop visual discipline, banned AI aesthetics, and high-craft design constraints have been natively incorporated into [`plan-master`](../plan-master/SKILL.md) and [`frontend-artisan`](../frontend-artisan/SKILL.md). This skill remains active as a dedicated standalone spec generator.
+
 Transforms lazy, generic AI prompts into uncompromising, culturally grounded, high-craft specifications. Prevents the AI median aesthetic (the standard dark-mode SaaS dashboard with rounded cards, cyan/purple glows, and Inter font) from ever being generated.
 
 ## The AI Slop Banned List
