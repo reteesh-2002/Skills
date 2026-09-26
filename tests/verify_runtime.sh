@@ -374,4 +374,7 @@ fi
 
 echo ""
 echo "🎉 Conformance & Adversarial Suite: ${PASS_COUNT}/${TOTAL_TESTS} tests passed cleanly."
+echo "# tests ${TOTAL_TESTS}"
+echo "# pass ${PASS_COUNT}"
+echo "# fail $((TOTAL_TESTS - PASS_COUNT))"
 exit 0
