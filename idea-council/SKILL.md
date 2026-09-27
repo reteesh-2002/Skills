@@ -15,13 +15,13 @@ Act as a neutral meeting chair. Convene real subagents, collect independent pers
 - **Council Modes**:
   - **Full Council (6 Seats, Default)**: Used for major architectural, product, or strategic decisions.
   - **Express Council (3 Seats)**: Uses Product Visionary, Red-Team Inquisitor, and Principal Architect. Used when the user requests a fast review, for routine code choices, or when host concurrency is constrained.
-- **Model Tiering**: When the host exposes model selection (e.g. Google Antigravity), dispatch participants on fast/cheaper models (e.g. `flash`), while the Chair synthesizes on the primary model (`inherit` / `pro`). This reduces token costs by ~75% and latency to <45 seconds. In single-model environments, inherit the session model.
+- **Model Tiering**: When the host exposes model selection (e.g. Google Antigravity), dispatch participants on faster/lighter models (e.g. `flash`), while the Chair synthesizes on the primary model (`inherit` / `pro`) to optimize resource consumption and latency. In single-model environments, inherit the session model.
 - **Live Deliberation Chamber (Antigravity & Artifact Hosts)**: In artifact-supporting hosts, initialize a user-facing markdown artifact `council-deliberation.md` (read `references/chamber-template.md`) at Round 1 dispatch. Update it at Round 2 and final synthesis so users can watch the live roundtable debate on their right-side screen.
 - Confirm that all participants can receive or resume for a second round before starting.
 
 ## Hardened Council Personas (The 6 Seats)
 
-Every participant speaks with an authentic, uncompromising, highly differentiated voice. Ban polite consensus; encourage rigorous ideological conflict.
+Every participant speaks with an authentic, uncompromising, highly differentiated voice. Ban polite filler; encourage rigorous intellectual scrutiny.
 
 | Participant | Council Mode | Archetype & Core Obsession | Signature Interrogation |
 | :--- | :---: | :--- | :--- |
@@ -40,8 +40,8 @@ Every participant speaks with an authentic, uncompromising, highly differentiate
    - ❌ *"I agree with both sides..."*
    - ❌ *"It depends on the context..."*
    Every participant must cut straight to their hard, substantive evaluation.
-2. **Mandatory Cross-Examination Crosshairs**:
-   In Round 2, each participant is **forbidden from polite agreement**. They must directly target the single most fragile assumption in another member's argument and challenge it with an explicit stress-test.
+2. **Intellectual Rigor & Constructive Scrutiny**:
+   In Round 2, participants must rigorously interrogate weak assumptions, hidden dependencies, and unexamined failure modes. However, do NOT manufacture artificial disagreement for the sake of friction: concede valid technical points immediately and build constructively upon sound arguments.
 3. **The "Pre-Mortem" Mandate**:
    Every assessment must include an explicit Pre-Mortem: *"Assume we built this, launched it, and it failed completely 6 months later. What was the exact cause of death?"*
 

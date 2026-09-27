@@ -14,6 +14,18 @@ Automated verification gatekeeper. Enforces that no code change, feature, or ref
 
 ---
 
+## The Iron Law of TDD (Red-Green-Refactor)
+
+> **NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST.**
+> If you didn't watch the test fail, you do not know if it tests the right thing.
+> 1. **RED**: Write a focused test exercising the required behavior or bug reproduction.
+> 2. **Verify RED**: Run via `scripts/exec-proxy.sh` and confirm it fails for the expected reason.
+> 3. **GREEN**: Write the minimal implementation code to pass the test.
+> 4. **Verify GREEN**: Run via `scripts/exec-proxy.sh` and confirm all tests pass.
+> 5. **REFACTOR**: Clean up while maintaining green tests.
+
+---
+
 ## 4-Tier Verification Matrix
 
 QA Sentinel checks the application across 4 escalating tiers:

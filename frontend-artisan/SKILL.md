@@ -37,14 +37,16 @@ Tailor the visual personality to the domain by selecting one of three intensity 
 
 ---
 
-## 2. The Anti-Pattern Ban-List
+## 2. Intentionality & Anti-Pattern Defense
 
-Always enforce [Anti-Patterns Reference](references/anti-patterns.md) before writing code:
-- ❌ **BAN** the "AI Purple Cliché" (`bg-slate-900` with `from-purple-500 to-indigo-500` text/glow).
-- ❌ **BAN** the uniform 3-card grid with identical padding, icons, and heights.
-- ❌ **BAN** unstyled, low-contrast placeholder text (`text-slate-400` on white).
-- ❌ **BAN** floating cards without tactile hover or active press states.
-- ❌ **BAN** generic centered heroes with two identical pill buttons ("Get Started" / "Learn More").
+Avoid lazy defaults while respecting project context:
+- **Design System First**: If the project has existing design tokens, brand guidelines, or component libraries, **always respect and extend that system**. Inter, neutral cards, and standard columns are completely appropriate when justified by existing branding or content requirements.
+- **For Greenfield Builds Without a Design System**: Avoid falling into unconsidered AI clichés out of laziness:
+  - Avoid unconsidered "AI Purple Clichés" (`bg-slate-900` with `from-purple-500 to-indigo-500` glow).
+  - Avoid monotonous identical card grids where asymmetric editorial layouts, data tables, or tactile panels communicate better.
+  - Avoid unstyled, low-contrast placeholder text (`text-slate-400` on white).
+  - Avoid floating elements that lack tactile feedback on click or hover.
+  - Avoid generic centered heroes with two identical pill buttons ("Get Started" / "Learn More") without domain grounding.
 
 ---
 

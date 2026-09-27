@@ -33,22 +33,30 @@ To prevent prompt bloat and instruction dilution, **never load all skills at onc
 
 ---
 
-## 2. Automated Anti-Slop Visual Discipline (UI Tasks)
+## 2. Intentional Aesthetics & Contextual Visual Discipline (UI Tasks)
 
-Whenever planning a user-facing interface, website, or component, Plan Master **automatically enforces strict anti-slop constraints**:
+Whenever planning a user-facing interface, website, or component, Plan Master enforces intentional craft over lazy defaults:
 
-1. **Banned AI Defaults**:
-   - ❌ **No dark `#0d0f12` + soft border `#252a34`**: Use warm parchment, brutalist monochrome, deep oxblood, or industrial matte slate.
-   - ❌ **No cookie-cutter rounded cards (`border-radius: 8-12px`)**: Use sharp tabular ledgers (`0px` or `2px`), physical chassis, or asymmetric editorial layouts.
-   - ❌ **No cyan/purple pill badges**: Use monospace stamp codes (`[DEPT-01]`), engraved metadata, or structural section dividers.
-   - ❌ **No default Inter / Roboto / System Sans**: Pair an expressive display serif or industrial grotesque with a monospace data accent.
-   - ❌ **No generic 3-column card grids**: Design contextual visual architecture (telemetry HUD, broadsheet, tasting ledger).
-2. **Archetype Selection**: Prescribe an authentic design archetype from `frontend-artisan` (e.g. *Terminal Density*, *Neo-Brutalist*, *Hardware Skeuomorphic*, *Warm Editorial*).
-3. **Signature Tactile Detail**: Require at least one bespoke interaction (physical button depression `translateY(2px)`, mechanical toggle snap, slider).
+1. **Respect Existing Design Systems**: If the project already has an established design system, brand guidelines, or component library, **always honor and extend that system**. Never unilaterally rewrite an existing visual identity.
+2. **Avoid Unconsidered AI Clichés (for Greenfield Builds)**: When building from scratch without an existing design system, avoid falling into the median AI aesthetic out of laziness:
+   - Avoid defaulting blindly to dark `#0d0f12` + soft `#252a34` borders; explore warm parchment, brutalist monochrome, deep oxblood, or industrial matte slate when appropriate.
+   - Avoid cookie-cutter card grids where tabular ledgers, physical chassis, or asymmetric editorial layouts fit the content better.
+   - Avoid unconsidered typography neutrality; select intentional pairings (expressive display serif or industrial grotesque with a monospace accent).
+3. **Archetype Selection**: For greenfield projects, select one of the 10 craft archetypes from `frontend-artisan` (e.g. *Terminal Density*, *Neo-Brutalist*, *Hardware Skeuomorphic*, *Neo-Swiss*).
+4. **Signature Tactile Detail**: Include at least one bespoke interaction (physical button depression `translateY(2px)`, mechanical toggle snap, slider, or subtle sound cue).
 
 ---
 
-## 3. Ingest Council Verdicts & Ground the Current State
+## 3. The Iron Law of TDD & Verification Checkpoints
+
+In every execution plan:
+1. **The Iron Law of TDD**: Mandate that workers write the failing test first, run it via `scripts/exec-proxy.sh` to watch it fail (verified RED), write minimal code to pass (verified GREEN), then refactor.
+2. **Independent Code Review Gate**: For high-risk tasks (>12 files touched, or changes affecting authentication, cryptographic boundaries, or database migrations), insert a mandatory review checkpoint before committing or merging.
+3. **Workflow Isolation**: Never combine two overlapping planning workflows (e.g. `plan-master` and `superpowers:writing-plans`) in the same invocation turn. Select one planning authority.
+
+---
+
+## 4. Ingest Council Verdicts & Ground the Current State
 
 When ingesting an **Idea Council v2.0** decision record, automatically route by verdict:
 - 🟢 **Go Ahead (Build Now)**: Produce a Standard or Detailed execution plan.
@@ -61,7 +69,7 @@ Ground against the codebase proportionately: inspect entry points, directory str
 
 ---
 
-## 4. Depth-Tiered Planning
+## 5. Depth-Tiered Planning
 
 Select the smallest useful depth to prevent token bloat:
 
@@ -73,14 +81,14 @@ Select the smallest useful depth to prevent token bloat:
 
 ---
 
-## 5. Make decisions before splitting work
+## 6. Make decisions before splitting work
 
 Define scope, exclusions, interfaces, and acceptance criteria before task partitioning:
 - Assign acceptance IDs (`A1`, `A2`...) and task IDs (`T1`, `T2`...).
 - For parallel execution candidates, enforce **strict 1-writer-per-file isolation**. No two concurrent tasks may write to the same file or shared contract.
 - Read [Plan and handoff templates](references/templates.md), selecting only the needed blocks.
 
-## 5. Adaptive Execution Profile (Orchestrator & Solo)
+## 7. Adaptive Execution Profile (Orchestrator & Solo)
 
 Provide a valid sequential order for every plan, regardless of executor:
 - **Solo Execution (Default)**: Sequential task ordering with clear verification checks after each step.
