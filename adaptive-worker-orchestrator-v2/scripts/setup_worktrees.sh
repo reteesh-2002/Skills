@@ -21,14 +21,27 @@ if [ "${1:-}" = "cleanup" ]; then
       if [ -n "$wt_dirty" ]; then
         rescue_wt_branch="orch/rescue-$wname-uncommitted-$(date +%s)"
         echo "Worktree $wname has uncommitted changes; rescuing to $rescue_wt_branch before detachment..."
-        git -C "$wt" checkout -b "$rescue_wt_branch" 2>/dev/null || true
-        git -C "$wt" add -A 2>/dev/null || true
-        git -C "$wt" commit -m "chore(orch): auto-rescue uncommitted work from $wname before worktree cleanup" --no-verify 2>/dev/null || true
-        echo "Preserved uncommitted work from $wname in branch $rescue_wt_branch"
+        if git -C "$wt" checkout -b "$rescue_wt_branch" 2>/dev/null && \
+           git -C "$wt" add -A 2>/dev/null && \
+           git -C "$wt" commit -m "chore(orch): auto-rescue uncommitted work from $wname before worktree cleanup" --no-verify 2>/dev/null; then
+          echo "Preserved uncommitted work from $wname in branch $rescue_wt_branch"
+        else
+          echo "ERROR: Failed to commit rescue branch for dirty worktree $wname. Aborting cleanup to prevent data loss." >&2
+          exit 1
+        fi
       fi
 
-      # Safely detach worktree (never remove without securing uncommitted work first)
-      git -C "$repo" worktree remove "$wt" 2>/dev/null || git -C "$repo" worktree remove --force "$wt" 2>/dev/null || true
+      # Verify worktree is completely clean before removal
+      if [ -n "$(git -C "$wt" status --porcelain 2>/dev/null)" ]; then
+        echo "ERROR: Worktree $wname still contains uncommitted changes. Aborting cleanup to prevent data loss." >&2
+        exit 1
+      fi
+
+      # Safely detach worktree (never force remove unverified state)
+      if ! git -C "$repo" worktree remove "$wt" 2>/dev/null; then
+        echo "ERROR: Failed to remove worktree $wname." >&2
+        exit 1
+      fi
 
       # Check if branch has unmerged work before deleting
       if git -C "$repo" rev-parse --verify --quiet "$branch" >/dev/null; then
