@@ -46,6 +46,9 @@ git commit -m "<type>(<optional scope>): <imperative description>"
 ### Step 4: Deterministic Release Gate Evaluation (MANDATORY BEFORE PUSH)
 After committing and before executing `git push`, opening a PR, or tagging a release, evaluate the machine-readable evidence manifest against the clean committed tree:
 ```bash
+# Verification performed prior to committing becomes ineligible once committed because the commit changes the git tree SHA.
+# Run explicit final verification against the clean committed snapshot:
+scripts/exec-proxy.sh --label test_conformance <your-test-command>
 bash scripts/verify-release-gate.sh
 ```
 - **Fail-Closed Rule**: If `verify-release-gate.sh` exits non-zero, **HALT IMMEDIATELY**.

@@ -13,7 +13,7 @@ AUDIT_DIFF="${REPO_ROOT}/adaptive-worker-orchestrator-v2/scripts/audit_diff.sh"
 
 echo "🧪 Starting Antigravity Runtime Conformance & Adversarial Suite..."
 PASS_COUNT=0
-TOTAL_TESTS=21
+TOTAL_TESTS=25
 
 # Create isolated test environment for deterministic assertions
 TEST_SANDBOX=$(mktemp -d -t agy_test_sandbox_XXXXXX)
@@ -44,7 +44,7 @@ SB_SETUP_WT="${TEST_SANDBOX}/adaptive-worker-orchestrator-v2/scripts/setup_workt
 SB_AUDIT_DIFF="${TEST_SANDBOX}/adaptive-worker-orchestrator-v2/scripts/audit_diff.sh"
 
 # Test 1: Non-zero exit code propagation
-echo -n "  [1/21] Testing non-zero exit code capture... "
+echo -n "  [1/25] Testing non-zero exit code capture... "
 set +e
 "${SB_PROXY}" --label test_fail bash -c "exit 42" >/dev/null 2>&1
 CODE=$?
@@ -58,7 +58,7 @@ else
 fi
 
 # Test 2: Pipefail failure detection (P10)
-echo -n "  [2/21] Testing child shell pipe failure detection... "
+echo -n "  [2/25] Testing child shell pipe failure detection... "
 set +e
 "${SB_PROXY}" --label test_pipe bash -c "false | cat" >/dev/null 2>&1
 CODE=$?
@@ -72,7 +72,7 @@ else
 fi
 
 # Test 3: Real Node spec test metric capture (P16 / F07)
-echo -n "  [3/21] Testing Node.js spec test metric parsing (P16)... "
+echo -n "  [3/25] Testing Node.js spec test metric parsing (P16)... "
 set +e
 "${SB_PROXY}" --label test_node_sanity node -e 'const test = require("node:test"); const assert = require("node:assert"); test("sanity", () => { assert.strictEqual(1, 1); });' >/dev/null 2>&1
 CODE=$?
@@ -90,7 +90,7 @@ else
 fi
 
 # Test 4: Release gate approval on clean verified state
-echo -n "  [4/21] Testing release gate approval on clean verified tree... "
+echo -n "  [4/25] Testing release gate approval on clean verified tree... "
 # Clean evidence dir and run a clean verified test check
 rm -rf "${TEST_SANDBOX}/.evidence"
 "${SB_PROXY}" --label test_node_sanity node -e 'const test = require("node:test"); const assert = require("node:assert"); test("sanity", () => { assert.strictEqual(1, 1); });' >/dev/null 2>&1
@@ -107,7 +107,7 @@ else
 fi
 
 # Test 5: P01 - Zero tests on test-labeled check blocked by release gate (F01)
-echo -n "  [5/21] Testing P01 zero-test test-labeled check rejection... "
+echo -n "  [5/25] Testing P01 zero-test test-labeled check rejection... "
 "${SB_PROXY}" --label test_fake_zero true >/dev/null 2>&1
 set +e
 OUTPUT=$("${SB_GATE}" 2>&1)
@@ -122,7 +122,7 @@ else
 fi
 
 # Test 6: P02 - Unstaged working tree changes blocked by release gate (F02)
-echo -n "  [6/21] Testing P02 unstaged working tree modification rejection... "
+echo -n "  [6/25] Testing P02 unstaged working tree modification rejection... "
 # Reset manifest to clean state first
 "${SB_PROXY}" --label test_node_sanity node -e 'const test = require("node:test"); const assert = require("node:assert"); test("sanity", () => { assert.strictEqual(1, 1); });' >/dev/null 2>&1
 echo "tamper" >> "${TEST_SANDBOX}/index.js"
@@ -140,7 +140,7 @@ else
 fi
 
 # Test 7: P04 - Mixed snapshot rejection (F02b)
-echo -n "  [7/21] Testing P04 mixed-snapshot / stale check rejection... "
+echo -n "  [7/25] Testing P04 mixed-snapshot / stale check rejection... "
 # Commit a new file to advance tree
 echo "export const b = 2;" > "${TEST_SANDBOX}/b.js"
 git -C "${TEST_SANDBOX}" add b.js
@@ -160,7 +160,7 @@ else
 fi
 
 # Test 8: P05 - Handwritten manifest missing physical receipts/logs (F03)
-echo -n "  [8/21] Testing P05 missing physical receipt/log rejection... "
+echo -n "  [8/25] Testing P05 missing physical receipt/log rejection... "
 CUR_TREE=$(git -C "${TEST_SANDBOX}" write-tree)
 cat << MEOF > "${TEST_SANDBOX}/.evidence/manifest.v1.json"
 {
@@ -192,7 +192,7 @@ else
 fi
 
 # Test 9: P06 & P09 - Unknown tree SHA rejection (F05)
-echo -n "  [9/21] Testing P06 & P09 invalid or unknown tree SHA rejection... "
+echo -n "  [9/25] Testing P06 & P09 invalid or unknown tree SHA rejection... "
 cat << MEOF > "${TEST_SANDBOX}/.evidence/manifest.v1.json"
 {
   "schema_version": "manifest.v1",
@@ -214,7 +214,7 @@ else
 fi
 
 # Test 10: P07 - Invalid policy disposition rejection (F11)
-echo -n "  [10/21] Testing P07 invalid disposition 'BANANA' rejection... "
+echo -n "  [10/25] Testing P07 invalid disposition 'BANANA' rejection... "
 cat << MEOF > "${TEST_SANDBOX}/.evidence/manifest.v1.json"
 {
   "schema_version": "manifest.v1",
@@ -236,7 +236,7 @@ else
 fi
 
 # Test 11: P08 - Unstructured string waiver rejection (F11)
-echo -n "  [11/21] Testing P08 unstructured waiver ['self-approved'] rejection... "
+echo -n "  [11/25] Testing P08 unstructured waiver ['self-approved'] rejection... "
 mkdir -p "${TEST_SANDBOX}/.evidence/receipts"
 cat << REOF > "${TEST_SANDBOX}/.evidence/receipts/dummy.json"
 {
@@ -288,7 +288,7 @@ else
 fi
 
 # Test 12: P12 - Retry laundering prevention & flaky retry AMBER classification (F08)
-echo -n "  [12/21] Testing P12 retry laundering prevention & AMBER classification... "
+echo -n "  [12/25] Testing P12 retry laundering prevention & AMBER classification... "
 # Run failing check first
 set +e
 "${SB_PROXY}" --label flaky_test bash -c "exit 1" >/dev/null 2>&1
@@ -308,7 +308,7 @@ else
 fi
 
 # Test 13: P18 - High concurrency race defense (F09)
-echo -n "  [13/21] Testing P18 concurrent manifest writes with flock... "
+echo -n "  [13/25] Testing P18 concurrent manifest writes with flock... "
 pids=()
 for i in {1..6}; do
   "${SB_PROXY}" --label "concurrent_worker_${i}" true >/dev/null 2>&1 &
@@ -328,7 +328,7 @@ else
 fi
 
 # Test 14: P19 - Worker worktree dirty cleanup rescue (F04)
-echo -n "  [14/21] Testing P19 dirty worktree rescue before cleanup... "
+echo -n "  [14/25] Testing P19 dirty worktree rescue before cleanup... "
 "${SB_SETUP_WT}" main worker_probe >/dev/null 2>&1
 WT_PATH="${TEST_SANDBOX}/.git/.orch-worktrees/worker_probe"
 echo "uncommitted valuable work" > "${WT_PATH}/critical_work.txt"
@@ -344,7 +344,7 @@ else
 fi
 
 # Test 15: P20 - audit_diff symlink sandbox escape defense (F12)
-echo -n "  [15/21] Testing P20 audit_diff out-of-scope symlink rejection... "
+echo -n "  [15/25] Testing P20 audit_diff out-of-scope symlink rejection... "
 ln -s /etc/passwd "${TEST_SANDBOX}/malicious_link"
 set +e
 OUTPUT=$("${SB_AUDIT_DIFF}" "${TEST_SANDBOX}" main "index.js" 2>&1)
@@ -360,7 +360,7 @@ else
 fi
 
 # Test 16: P21 - audit_diff prefix match boundary defense (F12)
-echo -n "  [16/21] Testing P21 audit_diff path prefix boundary defense... "
+echo -n "  [16/25] Testing P21 audit_diff path prefix boundary defense... "
 mkdir -p "${TEST_SANDBOX}/src-evil"
 echo "malicious" > "${TEST_SANDBOX}/src-evil/bad.js"
 set +e
@@ -377,7 +377,7 @@ else
 fi
 
 # Test 17: P22 - audit_diff untracked placeholder detection (F13)
-echo -n "  [17/21] Testing P22 audit_diff untracked placeholder detection... "
+echo -n "  [17/25] Testing P22 audit_diff untracked placeholder detection... "
 echo "// TODO: implement secret backdoor" > "${TEST_SANDBOX}/untracked_component.js"
 set +e
 OUTPUT=$(FAIL_ON_PLACEHOLDERS=1 "${SB_AUDIT_DIFF}" "${TEST_SANDBOX}" main "untracked_component.js" 2>&1)
@@ -393,7 +393,7 @@ else
 fi
 
 # Test 18: P23 - Worktree preservation on failed rescue commit
-echo -n "  [18/21] Testing P23 worktree preservation when rescue commit fails... "
+echo -n "  [18/25] Testing P23 worktree preservation when rescue commit fails... "
 "${SB_SETUP_WT}" main worker_fail_probe >/dev/null 2>&1
 FAIL_WT="${TEST_SANDBOX}/.git/.orch-worktrees/worker_fail_probe"
 echo "uncommitted critical" > "${FAIL_WT}/critical.txt"
@@ -414,7 +414,7 @@ else
 fi
 
 # Test 19: P24 - Unstaged modification test run rejected by release gate
-echo -n "  [19/21] Testing P24 unstaged working tree test run rejected by gate... "
+echo -n "  [19/25] Testing P24 unstaged working tree test run rejected by gate... "
 rm -rf "${TEST_SANDBOX}/.evidence"
 echo "console.log('unstaged');" >> "${TEST_SANDBOX}/index.js"
 "${SB_PROXY}" --label test_dirty_node node -e 'console.log("ℹ tests 1\nℹ pass 1\nℹ fail 0");' >/dev/null 2>&1
@@ -432,7 +432,7 @@ else
 fi
 
 # Test 20: P25 - Empty receipt {} and invalid waiver date rejection
-echo -n "  [20/21] Testing P25 empty receipt {} and invalid waiver date rejection... "
+echo -n "  [20/25] Testing P25 empty receipt {} and invalid waiver date rejection... "
 rm -rf "${TEST_SANDBOX}/.evidence"
 "${SB_PROXY}" --label test_clean node -e 'console.log("ℹ tests 1\nℹ pass 1\nℹ fail 0");' >/dev/null 2>&1
 RCPT_FILE=$(ls -t "${TEST_SANDBOX}/.evidence/receipts/"*.json | head -n 1)
@@ -450,7 +450,7 @@ else
 fi
 
 # Test 21: P26 - Antigravity protojson hook protocol compliance
-echo -n "  [21/21] Testing P26 Antigravity protojson hook protocol compliance... "
+echo -n "  [21/25] Testing P26 Antigravity protojson hook protocol compliance... "
 HOOK_PAYLOAD='{"toolCall": {"name": "run_command", "args": {"CommandLine": "git push origin main"}}}'
 set +e
 HOOK_OUT=$(echo "${HOOK_PAYLOAD}" | "${SB_GATE}" --pre-tool 2>/dev/null)
@@ -461,6 +461,134 @@ if [[ "${DECISION}" == "deny" ]]; then
   PASS_COUNT=$((PASS_COUNT + 1))
 else
   echo "FAIL (Hook failed protocol compliance: ${HOOK_OUT})"
+  exit 1
+fi
+
+# Test 22: P27 - Git option variants command matcher in hook mode
+echo -n "  [22/25] Testing P27 git option variants hook matching... "
+rm -rf "${TEST_SANDBOX}/.evidence"
+HOOK_PAYLOAD_C='{"toolCall": {"name": "run_command", "args": {"CommandLine": "git -C . push origin main"}}}'
+set +e
+HOOK_OUT_C=$(echo "${HOOK_PAYLOAD_C}" | "${SB_GATE}" --pre-tool 2>/dev/null)
+set -e
+DEC_C=$(python3 -c "import json, sys; d=json.loads(sys.argv[1]); print(d.get('decision'))" "${HOOK_OUT_C}" 2>/dev/null || echo "invalid")
+
+# Test non-release git command (commit with push in message)
+HOOK_PAYLOAD_COMMIT='{"toolCall": {"name": "run_command", "args": {"CommandLine": "git commit -m \"push something\""}}}'
+set +e
+HOOK_OUT_COMMIT=$(echo "${HOOK_PAYLOAD_COMMIT}" | "${SB_GATE}" --pre-tool 2>/dev/null)
+set -e
+DEC_COMMIT=$(python3 -c "import json, sys; d=json.loads(sys.argv[1]); print(d.get('decision'))" "${HOOK_OUT_COMMIT}" 2>/dev/null || echo "invalid")
+
+if [[ "${DEC_C}" == "deny" && "${DEC_COMMIT}" == "allow" ]]; then
+  echo "PASS (git -C . push denied without evidence, git commit -m 'push' allowed)"
+  PASS_COUNT=$((PASS_COUNT + 1))
+else
+  echo "FAIL (Expected deny and allow, got '${DEC_C}' and '${DEC_COMMIT}')"
+  exit 1
+fi
+
+# Test 23: P28 - Physical receipt field tampering detection
+echo -n "  [23/25] Testing P28 physical receipt field tampering detection... "
+rm -rf "${TEST_SANDBOX}/.evidence"
+"${SB_PROXY}" --label test_tamper node -e 'console.log("ℹ tests 1\nℹ pass 1\nℹ fail 0");' >/dev/null 2>&1
+RCPT_FILE=$(ls -t "${TEST_SANDBOX}/.evidence/receipts/"*.json | head -n 1)
+# Tamper receipt to report 999 failed tests
+python3 -c "
+import json, sys
+f = sys.argv[1]
+d = json.load(open(f))
+d['metrics']['failed'] = 999
+json.dump(d, open(f, 'w'))
+" "${RCPT_FILE}"
+set +e
+GATE_TAMPER_OUT=$("${SB_GATE}" 2>&1)
+GATE_TAMPER_CODE=$?
+set -e
+if [[ ${GATE_TAMPER_CODE} -ne 0 ]] && echo "${GATE_TAMPER_OUT}" | grep -qE "Test metric mismatch|failed tests"; then
+  echo "PASS (Gate detected tampered receipt with 999 failures)"
+  PASS_COUNT=$((PASS_COUNT + 1))
+else
+  echo "FAIL (Gate accepted tampered receipt: ${GATE_TAMPER_OUT})"
+  exit 1
+fi
+
+# Test 24: P29 - TDD Red-Green cycle snapshot isolation (not flaky retry)
+echo -n "  [24/25] Testing P29 TDD Red-Green cycle snapshot isolation... "
+rm -rf "${TEST_SANDBOX}/.evidence"
+# 1. TDD Red phase: test fails on current snapshot
+set +e
+"${SB_PROXY}" --label tdd_unit bash -c "exit 1" >/dev/null 2>&1
+set -e
+# 2. Implementation: commit fix creating new snapshot
+echo "console.log('tdd fix applied');" >> "${TEST_SANDBOX}/index.js"
+git -C "${TEST_SANDBOX}" add index.js
+git -C "${TEST_SANDBOX}" commit -m "fix: apply tdd fix" --quiet
+# 3. TDD Green phase: test passes on new snapshot
+"${SB_PROXY}" --label tdd_unit node -e 'console.log("ℹ tests 1\nℹ pass 1\nℹ fail 0");' >/dev/null 2>&1
+DISP=$(python3 -c "import json; m=json.load(open('${TEST_SANDBOX}/.evidence/manifest.v1.json')); print(m['policy_disposition'])")
+FLAKY_FLAG=$(python3 -c "import json; m=json.load(open('${TEST_SANDBOX}/.evidence/manifest.v1.json')); print(m['checks'][-1].get('flaky_retry', False))")
+if [[ "${DISP}" == "GREEN" && "${FLAKY_FLAG}" == "False" ]]; then
+  echo "PASS (TDD Red-Green progression classified as GREEN, not flaky retry)"
+  PASS_COUNT=$((PASS_COUNT + 1))
+else
+  echo "FAIL (TDD run falsely flagged as flaky retry: disposition=${DISP}, flaky=${FLAKY_FLAG})"
+  exit 1
+fi
+
+# Test 25: P30 - Date-only waiver ('YYYY-MM-DD') expiry parsing
+echo -n "  [25/25] Testing P30 date-only waiver expiry parsing... "
+CUR_TREE=$(git -C "${TEST_SANDBOX}" write-tree)
+RCPT_ID="rcpt_date_only_waiver_test"
+cat << REOF > "${TEST_SANDBOX}/.evidence/receipts/${RCPT_ID}.json"
+{
+  "receipt_id": "${RCPT_ID}",
+  "timestamp_utc": "2026-09-27T00:00:00Z",
+  "label": "warn_check",
+  "command": "node -e 'console.warn(1)'",
+  "exit_code": 0,
+  "duration_ms": 10,
+  "git_tree_sha": "${CUR_TREE}",
+  "working_tree_sha": "${CUR_TREE}",
+  "working_tree_dirty": false,
+  "metrics": { "collected": 0, "passed": 0, "failed": 0, "skipped": 0 }
+}
+REOF
+cat << MEOF > "${TEST_SANDBOX}/.evidence/manifest.v1.json"
+{
+  "schema_version": "manifest.v1",
+  "git_tree_sha": "${CUR_TREE}",
+  "policy_disposition": "AMBER",
+  "checks": [
+    {
+      "receipt_id": "${RCPT_ID}",
+      "label": "warn_check",
+      "command": "node -e 'console.warn(1)'",
+      "git_tree_sha": "${CUR_TREE}",
+      "working_tree_sha": "${CUR_TREE}",
+      "working_tree_dirty": false,
+      "exit_code": 0,
+      "metrics": { "collected": 0, "passed": 0, "failed": 0, "skipped": 0 }
+    }
+  ],
+  "open_waivers": [
+    {
+      "author": "team-lead",
+      "reason": "approved for release",
+      "expires_at": "2099-01-01"
+    }
+  ]
+}
+MEOF
+set +e
+DATE_GATE_OUT=$("${SB_GATE}" 2>&1)
+DATE_GATE_CODE=$?
+set -e
+if [[ ${DATE_GATE_CODE} -eq 0 ]] && echo "${DATE_GATE_OUT}" | grep -q "RELEASE GATE PASS"; then
+  echo "PASS (Date-only waiver '2099-01-01' evaluated successfully without error)"
+  PASS_COUNT=$((PASS_COUNT + 1))
+else
+  echo "FAIL (Date-only waiver crashed or was rejected: ${DATE_GATE_OUT})"
   exit 1
 fi
 

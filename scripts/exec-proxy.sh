@@ -309,15 +309,23 @@ with open(lock_path, "w") as lf:
         # F08 / P12: Record to immutable attempt history
         manifest["attempt_history"].append(receipt)
 
-        # Check if there were prior failed attempts for this label
-        prior_failed_attempts = [
+        # Check if there were prior failed attempts for this label on the EXACT SAME code snapshot.
+        # This distinguishes flaky retries on unchanged code from legitimate TDD Red-Green progress where code changed.
+        curr_tree = git_tree_sha
+        curr_wt_sha = receipt.get("working_tree_sha", "")
+
+        prior_failed_attempts_same_snapshot = [
             a for a in manifest["attempt_history"]
-            if a.get("label") == label and (a.get("exit_code") != 0 or a.get("metrics", {}).get("failed", 0) > 0)
+            if a.get("label") == label
+            and a.get("receipt_id") != receipt.get("receipt_id")
+            and (a.get("exit_code") != 0 or a.get("metrics", {}).get("failed", 0) > 0)
+            and a.get("git_tree_sha") == curr_tree
+            and a.get("working_tree_sha", "") == curr_wt_sha
         ]
 
-        if prior_failed_attempts and exit_code == 0 and failed == 0:
+        if prior_failed_attempts_same_snapshot and exit_code == 0 and failed == 0:
             receipt["flaky_retry"] = True
-            receipt["prior_failures_count"] = len(prior_failed_attempts)
+            receipt["prior_failures_count"] = len(prior_failed_attempts_same_snapshot)
 
         # Update checks array for this label
         manifest["checks"] = [c for c in manifest["checks"] if c.get("label") != label]

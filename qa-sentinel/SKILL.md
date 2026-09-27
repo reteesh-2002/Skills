@@ -23,6 +23,7 @@ Automated verification gatekeeper. Enforces that no code change, feature, or ref
 > 3. **GREEN**: Write the minimal implementation code to pass the test.
 > 4. **Verify GREEN**: Run via `scripts/exec-proxy.sh` and confirm all tests pass.
 > 5. **REFACTOR**: Clean up while maintaining green tests.
+> 6. **FINAL VERIFICATION ON COMMITTED SNAPSHOT**: Verification runs performed prior to committing verify the uncommitted working tree and become ineligible once committed because `git commit` changes the tree SHA. Before pushing or releasing, run an explicit final verification pass against the clean committed snapshot via `scripts/exec-proxy.sh` to generate the matching evidence manifest.
 
 ---
 
