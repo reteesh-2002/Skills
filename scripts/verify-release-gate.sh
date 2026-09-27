@@ -4,10 +4,11 @@
 
 set -euo pipefail
 
-PRE_TOOL_CMD=""
-PRE_TOOL_INPUT=""
+GATE_HOOK_MODE=0
 
 if [[ "$#" -gt 0 && "$1" == "--pre-tool" ]]; then
+  GATE_HOOK_MODE=1
+  export GATE_HOOK_MODE
   if [[ "$#" -gt 1 ]]; then
     PRE_TOOL_CMD="$2"
   elif ! [ -t 0 ]; then
@@ -15,13 +16,15 @@ if [[ "$#" -gt 0 && "$1" == "--pre-tool" ]]; then
     PRE_TOOL_CMD=$(python3 -c "import sys, json
 try:
     data = json.loads(sys.argv[1]) if sys.argv[1] else {}
-    print(data.get('tool_input', {}).get('CommandLine', '') or data.get('command', ''))
+    tool_call = data.get('toolCall', {})
+    args = tool_call.get('args', {})
+    print(args.get('CommandLine') or data.get('tool_input', {}).get('CommandLine') or data.get('command') or '')
 except Exception:
     print('')" "${PRE_TOOL_INPUT}" 2>/dev/null || echo "")
   fi
   # If pre-tool command doesn't attempt release/push, allow immediately
   if [[ -n "${PRE_TOOL_CMD}" ]] && ! echo "${PRE_TOOL_CMD}" | grep -qE 'git\s+(-[a-zA-Z0-9_\-\.]+\s+)*push|gh\s+pr\s+create|npm\s+publish'; then
-    if ! [ -t 0 ] && [[ -n "${PRE_TOOL_INPUT}" ]]; then
+    if [[ "${GATE_HOOK_MODE}" -eq 1 ]]; then
       echo '{"decision": "allow"}'
     fi
     exit 0
@@ -30,9 +33,11 @@ fi
 
 fail_gate() {
   local reason="$1"
-  echo "❌ [RELEASE GATE BLOCKED]: ${reason}" >&2
-  if [[ -n "${PRE_TOOL_INPUT}" ]]; then
-    echo "{\"decision\": \"deny\", \"reason\": \"${reason}\"}"
+  if [[ "${GATE_HOOK_MODE}" -eq 1 ]]; then
+    echo "❌ [RELEASE GATE BLOCKED]: ${reason}" >&2
+    python3 -c "import sys, json; print(json.dumps({'decision': 'deny', 'reason': sys.argv[1]}))" "${reason}"
+  else
+    echo "❌ [RELEASE GATE BLOCKED]: ${reason}" >&2
   fi
   exit 1
 }
@@ -75,22 +80,25 @@ manifest_path = sys.argv[1]
 repo_root = sys.argv[2]
 evidence_dir = os.path.dirname(manifest_path)
 
+def fail_python_gate(reason):
+    print(f"❌ [RELEASE GATE BLOCKED]: {reason}", file=sys.stderr)
+    if os.environ.get("GATE_HOOK_MODE") == "1":
+        print(json.dumps({"decision": "deny", "reason": reason}))
+    sys.exit(1)
+
 try:
     with open(manifest_path, "r", encoding="utf-8") as f:
         manifest = json.load(f)
 except Exception as e:
-    print(f"❌ [RELEASE GATE BLOCKED]: Invalid JSON in manifest: {e}", file=sys.stderr)
-    sys.exit(1)
+    fail_python_gate(f"Invalid JSON in manifest: {e}")
 
 # 1. Schema check (F11)
 if manifest.get("schema_version") != "manifest.v1":
-    print("❌ [RELEASE GATE BLOCKED]: Unsupported schema_version in manifest", file=sys.stderr)
-    sys.exit(1)
+    fail_python_gate("Unsupported schema_version in manifest")
 
 disposition = manifest.get("policy_disposition", "RED")
 if disposition not in ("GREEN", "AMBER"):
-    print(f"❌ [RELEASE GATE BLOCKED]: Invalid policy disposition '{disposition}'. Must be GREEN or AMBER.", file=sys.stderr)
-    sys.exit(1)
+    fail_python_gate(f"Invalid policy disposition '{disposition}'. Must be GREEN or AMBER.")
 
 # 2. Git Tree Freshness & Unknown Tree Rejection (F02, F05)
 try:
@@ -101,27 +109,20 @@ except Exception:
 manifest_tree = manifest.get("git_tree_sha", "")
 
 if not current_tree or current_tree in ("unknown", "uninitialized"):
-    print("❌ [RELEASE GATE BLOCKED]: Current git tree cannot be determined.", file=sys.stderr)
-    sys.exit(1)
+    fail_python_gate("Current git tree cannot be determined.")
 
 if not manifest_tree or manifest_tree in ("unknown", "uninitialized"):
-    print(f"❌ [RELEASE GATE BLOCKED]: Manifest contains invalid or uninitialized git_tree_sha: '{manifest_tree}'", file=sys.stderr)
-    sys.exit(1)
+    fail_python_gate(f"Manifest contains invalid or uninitialized git_tree_sha: '{manifest_tree}'")
 
 if current_tree != manifest_tree:
-    print(f"❌ [RELEASE GATE BLOCKED]: Stale evidence. Working tree changed since tests ran.", file=sys.stderr)
-    print(f"   Tested tree:  {manifest_tree}", file=sys.stderr)
-    print(f"   Current tree: {current_tree}", file=sys.stderr)
-    print(f"   Action: Re-run verification suite via scripts/exec-proxy.sh before releasing.", file=sys.stderr)
-    sys.exit(1)
+    fail_python_gate(f"Stale evidence. Working tree changed since tests ran. Tested: {manifest_tree[:8]}, Current: {current_tree[:8]}. Re-run verification suite via scripts/exec-proxy.sh before releasing.")
 
 # 3. Check inventory
 checks = manifest.get("checks", [])
 if not checks:
-    print("❌ [RELEASE GATE BLOCKED]: Manifest contains 0 verification checks.", file=sys.stderr)
-    sys.exit(1)
+    fail_python_gate("Manifest contains 0 verification checks.")
 
-# 4. Check results, False-green defense & Physical evidence verification (F01, F02b, F03, F06)
+# 4. Check results, False-green defense, Working tree disk check & Physical evidence verification (F01, F02b, F02c, F03, F06)
 total_collected_tests = 0
 has_test_checks = False
 
@@ -137,42 +138,57 @@ for c in checks:
     receipt_id = c.get("receipt_id")
     log_rel = c.get("log_path")
 
-    # F03: Physical receipt existence verification
+    # F03: Physical receipt existence and content verification
     if not receipt_id:
-        print(f"❌ [RELEASE GATE BLOCKED]: Check '{label}' missing receipt_id.", file=sys.stderr)
-        sys.exit(1)
+        fail_python_gate(f"Check '{label}' missing receipt_id.")
     receipt_file = os.path.join(evidence_dir, "receipts", f"{receipt_id}.json")
     if not os.path.exists(receipt_file):
-        print(f"❌ [RELEASE GATE BLOCKED]: Physical receipt file not found: {receipt_file}", file=sys.stderr)
-        sys.exit(1)
+        fail_python_gate(f"Physical receipt file not found: {receipt_file}")
+
+    try:
+        with open(receipt_file, "r", encoding="utf-8") as rf:
+            rcpt_data = json.load(rf)
+    except Exception as e:
+        fail_python_gate(f"Receipt '{receipt_id}' is corrupt or unreadable: {e}")
+
+    for req_field in ("receipt_id", "command", "exit_code", "git_tree_sha", "metrics"):
+        if req_field not in rcpt_data:
+            fail_python_gate(f"Receipt '{receipt_id}' missing mandatory field '{req_field}'.")
+
+    if rcpt_data.get("receipt_id") != receipt_id:
+        fail_python_gate(f"Receipt ID mismatch in {receipt_file}.")
+
+    if rcpt_data.get("exit_code") != exit_code:
+        fail_python_gate(f"Exit code mismatch between manifest and receipt for '{label}'.")
+
+    # F02c: Working tree disk state verification
+    if c.get("working_tree_dirty", False) or rcpt_data.get("working_tree_dirty", False):
+        fail_python_gate(f"Check '{label}' was executed against a dirty working tree with unstaged modifications.")
+
+    if c.get("working_tree_sha") and c.get("working_tree_sha") != current_tree:
+        fail_python_gate(f"Mixed snapshot detected. Check '{label}' was tested against disk tree {c.get('working_tree_sha')[:8]}, but current tree is {current_tree[:8]}.")
 
     # F03: Physical log existence verification
     if log_rel:
         log_file = os.path.normpath(os.path.join(evidence_dir, log_rel))
         if not os.path.exists(log_file):
-            print(f"❌ [RELEASE GATE BLOCKED]: Execution log file not found: {log_file}", file=sys.stderr)
-            sys.exit(1)
+            fail_python_gate(f"Execution log file not found: {log_file}")
 
     # F02b: Mixed snapshot defense (every check must match current tree)
     if not check_tree or check_tree in ("unknown", "uninitialized"):
-        print(f"❌ [RELEASE GATE BLOCKED]: Check '{label}' has invalid git_tree_sha '{check_tree}'.", file=sys.stderr)
-        sys.exit(1)
+        fail_python_gate(f"Check '{label}' has invalid git_tree_sha '{check_tree}'.")
     if check_tree != current_tree:
-        print(f"❌ [RELEASE GATE BLOCKED]: Mixed snapshot detected. Check '{label}' was tested against tree {check_tree[:8]}, but current tree is {current_tree[:8]}.", file=sys.stderr)
-        sys.exit(1)
+        fail_python_gate(f"Mixed snapshot detected. Check '{label}' was tested against tree {check_tree[:8]}, but current tree is {current_tree[:8]}.")
 
     # Exit code & failure verification
     if exit_code != 0:
-        print(f"❌ [RELEASE GATE BLOCKED]: Check '{label}' ('{cmd}') failed with exit code {exit_code}.", file=sys.stderr)
-        sys.exit(1)
+        fail_python_gate(f"Check '{label}' ('{cmd}') failed with exit code {exit_code}.")
 
     if failed > 0:
-        print(f"❌ [RELEASE GATE BLOCKED]: Check '{label}' reported {failed} failed tests.", file=sys.stderr)
-        sys.exit(1)
+        fail_python_gate(f"Check '{label}' reported {failed} failed tests.")
 
     if collected > 0 and passed != collected:
-        print(f"❌ [RELEASE GATE BLOCKED]: False-green trap in '{label}'. Passed ({passed}) != Collected ({collected}).", file=sys.stderr)
-        sys.exit(1)
+        fail_python_gate(f"False-green trap in '{label}'. Passed ({passed}) != Collected ({collected}).")
 
     # F01: Test-labeled checks must collect > 0 tests
     is_test_check = ("test" in label.lower()) or ("test" in cmd.lower()) or ("pytest" in cmd.lower()) or ("vitest" in cmd.lower()) or ("jest" in cmd.lower())
@@ -180,57 +196,56 @@ for c in checks:
         has_test_checks = True
         total_collected_tests += collected
         if collected == 0:
-            print(f"❌ [RELEASE GATE BLOCKED]: Test check '{label}' recorded 0 collected tests (Zero-inventory false green).", file=sys.stderr)
-            sys.exit(1)
+            fail_python_gate(f"Test check '{label}' recorded 0 collected tests (Zero-inventory false green).")
 
 if has_test_checks and total_collected_tests == 0:
-    print("❌ [RELEASE GATE BLOCKED]: Test checks were executed but total collected tests is 0.", file=sys.stderr)
-    sys.exit(1)
+    fail_python_gate("Test checks were executed but total collected tests is 0.")
 
 # 5. Policy disposition & Strict waiver objects (F11)
 disposition = manifest.get("policy_disposition", "RED")
 if disposition not in ("GREEN", "AMBER"):
-    print(f"❌ [RELEASE GATE BLOCKED]: Invalid policy disposition '{disposition}'. Must be GREEN or AMBER.", file=sys.stderr)
-    sys.exit(1)
+    fail_python_gate(f"Invalid policy disposition '{disposition}'. Must be GREEN or AMBER.")
 
 if disposition == "RED":
-    print("❌ [RELEASE GATE BLOCKED]: Manifest policy disposition is RED.", file=sys.stderr)
-    sys.exit(1)
+    fail_python_gate("Manifest policy disposition is RED.")
 
 if disposition == "AMBER":
     waivers = manifest.get("open_waivers", [])
     if not waivers:
-        print("❌ [RELEASE GATE BLOCKED]: Manifest policy is AMBER but no authorized waiver is registered.", file=sys.stderr)
-        sys.exit(1)
+        fail_python_gate("Manifest policy is AMBER but no authorized waiver is registered.")
 
     for w in waivers:
         if not isinstance(w, dict):
-            print("❌ [RELEASE GATE BLOCKED]: Invalid waiver format. Must be a structured object with author, reason, and expires_at.", file=sys.stderr)
-            sys.exit(1)
+            fail_python_gate("Invalid waiver format. Must be a structured object with author, reason, and expires_at.")
         author = w.get("author")
         reason = w.get("reason")
         expires_at = w.get("expires_at")
         if not author or not reason or not expires_at:
-            print("❌ [RELEASE GATE BLOCKED]: Incomplete waiver object. Missing author, reason, or expires_at.", file=sys.stderr)
-            sys.exit(1)
+            fail_python_gate("Incomplete waiver object. Missing author, reason, or expires_at.")
 
-        try:
-            exp = datetime.datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
-            now = datetime.datetime.now(datetime.timezone.utc)
-            if exp < now:
-                print(f"❌ [RELEASE GATE BLOCKED]: Waiver by '{author}' expired on {expires_at}.", file=sys.stderr)
-                sys.exit(1)
-        except Exception:
+        exp = None
+        for fmt in (None, "%Y-%m-%d", "%Y-%m-%dT%H:%M:%S%z", "%Y-%m-%dT%H:%M:%SZ"):
             try:
-                exp = datetime.datetime.strptime(expires_at, "%Y-%m-%d").replace(tzinfo=datetime.timezone.utc)
-                now = datetime.datetime.now(datetime.timezone.utc)
-                if exp < now:
-                    print(f"❌ [RELEASE GATE BLOCKED]: Waiver by '{author}' expired on {expires_at}.", file=sys.stderr)
-                    sys.exit(1)
+                if fmt is None:
+                    exp = datetime.datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+                else:
+                    exp = datetime.datetime.strptime(expires_at, fmt).replace(tzinfo=datetime.timezone.utc)
+                break
             except Exception:
-                pass
+                continue
+
+        if exp is None:
+            fail_python_gate(f"Waiver by '{author}' has invalid unparseable expires_at timestamp: '{expires_at}'.")
+
+        now = datetime.datetime.now(datetime.timezone.utc)
+        if exp < now:
+            fail_python_gate(f"Waiver by '{author}' expired on {expires_at}.")
 
 # Success
-print(f"✅ [RELEASE GATE PASS]: {len(checks)} check(s) verified against tree {current_tree[:8]}. Status: {disposition}")
+is_hook_mode = os.environ.get("GATE_HOOK_MODE") == "1"
+if is_hook_mode:
+    print(json.dumps({"decision": "allow"}))
+else:
+    print(f"✅ [RELEASE GATE PASS]: {len(checks)} check(s) verified against tree {current_tree[:8]}. Status: {disposition}")
 sys.exit(0)
 PYEOF

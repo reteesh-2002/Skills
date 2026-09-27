@@ -17,7 +17,7 @@ Before staging or committing, Ship It guarantees:
 
 ---
 
-## The 4-Step Release Workflow
+## The 5-Step Release Workflow
 
 ### Step 1: Pre-Flight Working Tree Audit
 Inspect the git status and diff:
@@ -35,29 +35,27 @@ git diff --cached | grep -iE 'api[_-]?key|secret|password|bearer|aizasy[0-9a-za-
 ```
 - If a potential secret is detected: **HALT IMMEDIATELY**. Alert the user and do not proceed with staging or committing.
 
-### Step 2.5: Deterministic Release Gate Evaluation (MANDATORY)
-Before constructing any commit or executing `git push`, evaluate the machine-readable evidence manifest:
+### Step 3: Atomic Conventional Commit Construction
+Stage the audited files and write commit messages following the **Conventional Commits 1.0.0** specification:
+
+```bash
+git add <files>
+git commit -m "<type>(<optional scope>): <imperative description>"
+```
+
+### Step 4: Deterministic Release Gate Evaluation (MANDATORY BEFORE PUSH)
+After committing and before executing `git push`, opening a PR, or tagging a release, evaluate the machine-readable evidence manifest against the clean committed tree:
 ```bash
 bash scripts/verify-release-gate.sh
 ```
 - **Fail-Closed Rule**: If `verify-release-gate.sh` exits non-zero, **HALT IMMEDIATELY**.
-- Do NOT proceed if:
-  1. The git tree SHA in `.evidence/manifest.v1.json` does not match the current `git write-tree` (stale evidence).
-  2. The manifest contains 0 verification checks.
-  3. Any check exited non-zero or reported failing tests.
-  4. The policy disposition is RED or un-waived AMBER.
+- Do NOT proceed with `git push` or PR creation if:
+  1. The git tree SHA in `.evidence/manifest.v1.json` does not match `HEAD` / current tree.
+  2. The working directory has unstaged modifications (`working_tree_dirty == true`).
+  3. The manifest contains 0 verification checks.
+  4. Any check exited non-zero or reported failing tests.
+  5. The policy disposition is RED or un-waived AMBER.
 - Never bypass this gate based on conversational chat statements or 1-line heartbeats.
-
-### Step 3: Atomic Conventional Commit Construction
-Write commit messages following the **Conventional Commits 1.0.0** specification:
-
-```
-<type>(<optional scope>): <imperative description>
-
-[optional body explaining motivation and architectural rationale]
-
-[optional footer: Closes #123, Breaking Changes]
-```
 
 #### Commit Types:
 - `feat`: New user-facing feature or capability.
@@ -73,7 +71,7 @@ Write commit messages following the **Conventional Commits 1.0.0** specification
 - First line max 72 characters.
 - Lowercase description after the colon.
 
-### Step 4: The Dual-Surface Release Card (15–20 Lines Foreground)
+### Step 5: The Dual-Surface Release Card (15–20 Lines Foreground)
 
 On routine commits or feature releases, emit a compact, transparent release card:
 

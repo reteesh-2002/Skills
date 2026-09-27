@@ -51,17 +51,30 @@ mkdir -p "${LOGS_DIR}" "${RECEIPTS_DIR}"
 LOG_PATH="${LOGS_DIR}/${RUN_ID}.log"
 RECEIPT_PATH="${RECEIPTS_DIR}/${RUN_ID}.json"
 
-# Calculate current git tree SHA if git is available
+# Calculate current git tree SHA and working tree disk SHA if git is available
 GIT_TREE_SHA="unknown"
+WORKING_TREE_SHA="unknown"
+WORKING_TREE_DIRTY="false"
+
 if git -C "${REPO_ROOT}" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   GIT_TREE_SHA=$(git -C "${REPO_ROOT}" write-tree 2>/dev/null || echo "unknown")
+
+  TMP_IDX=$(mktemp)
+  GIT_INDEX_FILE="$TMP_IDX" git -C "${REPO_ROOT}" read-tree HEAD 2>/dev/null || true
+  GIT_INDEX_FILE="$TMP_IDX" git -C "${REPO_ROOT}" add -A 2>/dev/null || true
+  WORKING_TREE_SHA=$(GIT_INDEX_FILE="$TMP_IDX" git -C "${REPO_ROOT}" write-tree 2>/dev/null || echo "unknown")
+  rm -f "$TMP_IDX"
+
+  if [ -n "$(git -C "${REPO_ROOT}" status --porcelain 2>/dev/null)" ]; then
+    WORKING_TREE_DIRTY="true"
+  fi
 fi
 
 # Pre-register check as RUNNING and invalidate GREEN in manifest under lock (F06, F09, P17)
-python3 - "${MANIFEST_PATH}" "${LOCK_PATH}" "${LABEL}" "${GIT_TREE_SHA}" "${COMMAND_STR}" "${RUN_ID}" << 'PYEOF'
+python3 - "${MANIFEST_PATH}" "${LOCK_PATH}" "${LABEL}" "${GIT_TREE_SHA}" "${COMMAND_STR}" "${RUN_ID}" "${WORKING_TREE_SHA}" "${WORKING_TREE_DIRTY}" << 'PYEOF'
 import sys, os, json, fcntl
 
-manifest_path, lock_path, label, tree_sha, cmd, run_id = sys.argv[1:7]
+manifest_path, lock_path, label, tree_sha, cmd, run_id, wt_sha, wt_dirty = sys.argv[1:9]
 
 with open(lock_path, "w") as lf:
     fcntl.flock(lf, fcntl.LOCK_EX)
@@ -88,7 +101,9 @@ with open(lock_path, "w") as lf:
             "label": label,
             "command": cmd,
             "status": "RUNNING",
-            "git_tree_sha": tree_sha
+            "git_tree_sha": tree_sha,
+            "working_tree_sha": wt_sha,
+            "working_tree_dirty": (wt_dirty.lower() == "true")
         }
         # Mark check as running
         existing = [c for c in manifest.get("checks", []) if c.get("label") != label]
@@ -173,10 +188,10 @@ DURATION_MS=$((END_MS - START_MS))
 trap - INT TERM
 
 # Parse framework counts and update manifest under lock (F07, F08, F09, P16, P18)
-python3 - "${COMMAND_STR}" "${EXIT_CODE}" "${DURATION_MS}" "${GIT_TREE_SHA}" "${LOG_PATH}" "${RECEIPT_PATH}" "${MANIFEST_PATH}" "${LOCK_PATH}" "${RUN_ID}" "${LABEL}" << 'PYEOF'
+python3 - "${COMMAND_STR}" "${EXIT_CODE}" "${DURATION_MS}" "${GIT_TREE_SHA}" "${LOG_PATH}" "${RECEIPT_PATH}" "${MANIFEST_PATH}" "${LOCK_PATH}" "${RUN_ID}" "${LABEL}" "${WORKING_TREE_SHA}" "${WORKING_TREE_DIRTY}" << 'PYEOF'
 import sys, os, re, json, fcntl
 
-command_str, exit_code_s, duration_ms_s, git_tree_sha, log_path, receipt_path, manifest_path, lock_path, run_id, label = sys.argv[1:11]
+command_str, exit_code_s, duration_ms_s, git_tree_sha, log_path, receipt_path, manifest_path, lock_path, run_id, label, working_tree_sha, working_tree_dirty = sys.argv[1:13]
 exit_code = int(exit_code_s)
 duration_ms = int(duration_ms_s)
 
@@ -246,6 +261,8 @@ receipt = {
     "exit_code": exit_code,
     "duration_ms": duration_ms,
     "git_tree_sha": git_tree_sha,
+    "working_tree_sha": working_tree_sha,
+    "working_tree_dirty": (working_tree_dirty.lower() == "true"),
     "log_path": os.path.relpath(log_path, os.path.dirname(manifest_path)),
     "metrics": {
         "collected": collected,
