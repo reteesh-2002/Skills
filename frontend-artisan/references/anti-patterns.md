@@ -65,3 +65,23 @@ These patterns identify uninspired, default AI generations. When writing or refa
 * **The Artisan Fix**:
   - Off-axis split layouts: bold left-aligned typography with an interactive live widget or code preview pinned on the right.
   - High-density status strip or breadcrumbs rather than the standard pill badge.
+
+---
+
+## 7. The Obligatory 4-Card Metric KPI Grid
+
+* **The Anti-Pattern**: Placing 4 metric cards (`Active Keys`, `Total Volume`, `Latency`, `Errors`) with neon icons in the top-right corner at the top of a utility tool, settings page, or table view.
+* **Why it fails**: It screams generic AI-generated template. Real developer tools (Stripe, OpenAI, GitHub, Linear) put the primary workflow—the table, editor, or configuration—front and center.
+* **The Artisan Fix**:
+  - Eliminate the stat row completely unless the user explicitly requested an analytics dashboard.
+  - Give 100% of the viewport to high-density tabular data, search filters, and action controls.
+
+---
+
+## 8. Faux Gimmick Controls & Fake Streamers
+
+* **The Anti-Pattern**: Adding fake "Simulate Traffic Pulse" buttons, glowing animated terminal logs, or unnecessary pulse animations to make a page look "alive".
+* **Why it fails**: It's theater over substance. It insults developer intelligence and clutters real utility workflows.
+* **The Artisan Fix**:
+  - Build real, functional state management: optimistic updates, instant copy-to-clipboard with visual confirmation, keyboard shortcuts (`⌘K`, `Esc`), and crisp empty states.
+
