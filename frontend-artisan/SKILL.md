@@ -1,58 +1,54 @@
 ---
 name: frontend-artisan
-description: Build distinctive, handcrafted, production-grade frontend applications and Generative UI widgets that break free from generic AI design clichés (purple gradients, identical 3-card grids, default Inter font). Works across any frontend stack (Vanilla HTML/CSS, Tailwind CSS, React, Vue, Svelte, Next.js, Astro). Enforces curated design archetypes, expressive typography, tactile micro-interactions, and strict WCAG AA accessibility. Use when building or styling web apps, dashboards, landing pages, or UI components.
+description: Elite frontend engineering and design architecture skill. Implements the Taste Skill anti-slop visual discipline, Vercel Web Interface Guidelines, DESIGN.md design system ingestion, Playwright headless browser verification, and Generative UI interactive previews. Enforces curated archetypes, image-first art direction, tactile micro-interactions, flicker-free loading states, and strict WCAG AA accessibility across any frontend stack (Tailwind, React, Vue, Svelte, Next.js, HTML/CSS).
 ---
 
-# Frontend Artisan
+# Frontend Artisan (Anti-Slop & Web Interface Engineering)
 
-Transform standard, repetitive AI frontend code into bespoke, memorable, and polished user interfaces. Replace cookie-cutter SaaS templates with curated design archetypes, thoughtful typography, sensory micro-interactions, and rock-solid responsive layouts across **any frontend stack**.
-
-## Boundaries and Core Invariants
-
-1. **Zero External Runtime Dependencies (By Default)**:
-   - Rely strictly on native CSS or Tailwind CSS utilities already installed in the project, plus inline SVG.
-   - Do NOT import uninstalled animation libraries (Framer Motion, GSAP, Anime.js) or external font packages unless explicitly requested and confirmed in `package.json`.
-2. **Framework & Stack Agnostic**:
-   - Seamlessly adapt styling idioms to the target stack: Vanilla HTML/CSS, Tailwind CSS, React (JSX/TSX), Vue 3 (`.vue`), Svelte 5 (`.svelte`), Next.js, or Astro.
-   - Consult [Framework Adapters](references/framework-adapters.md) for idiomatic component patterns.
-3. **Non-Negotiable Accessibility (WCAG 2.1 AA)**:
-   - Normal text must achieve a minimum contrast ratio of **4.5:1** against its background; large text/interactive borders must reach **3:1**.
-   - Interactive elements must include visible `:focus-visible` rings with proper contrast.
-4. **Mobile-First Responsiveness**:
-   - Every layout (bento grids, asymmetric splits) MUST collapse to a single column (`grid-cols-1` or `repeat(auto-fit, minmax(...))`) on mobile viewports (<640px). Zero horizontal scrolling.
-5. **Motion Safety**:
-   - All interactive scale, bounce, or translation classes must include `motion-reduce:transition-none motion-reduce:transform-none` or `@media (prefers-reduced-motion: reduce)`.
+Transform raw specifications into distinctive, handcrafted, production-grade frontend interfaces. Combines the **[Taste Skill](https://tasteskill.dev) Anti-Slop discipline**, **[Vercel Web Interface Guidelines](https://vercel.com/design/guidelines)**, **[DESIGN.md](references/design-md-presets.md) design systems**, **[Playwright](references/playwright-verification.md) headless verification**, and **[Generative UI](references/tokens-tailwind.md)** interactive mini-widget previews.
 
 ---
 
-## 1. The Expressiveness Knob
+## 🛡️ Non-Negotiable Engineering Invariants
 
-Tailor the visual personality to the domain by selecting one of three intensity levels:
+### 1. Anti-Slop Layout & Image-First Art Direction ([Taste Skill](references/image-first-art-direction.md))
+- **Image-First Protocol**: For major visual designs (landing pages, heroes, flagship dashboards), execute **Image Generation First** using `generate_image`. Inspect the generated image for tonal warmth, typography scale, asymmetry, and spatial rhythm *before* writing code.
+- **The Anti-Card Rule**: Never wrap every element in a rounded card with a border. Break the "cards-inside-cards-inside-cards" nesting loop using generous negative space, hairline dividers (`border-t border-neutral-200/60`), and tonal canvas shifts.
+- **Spacious Hero**: Heroes must breathe. Keep primary copy and CTAs comfortably legible on a 13-inch laptop screen without scrolling. Avoid badge spam and synthetic SaaS metric pills.
+- **Zero Generic AI Gradients**: Reject monotonous `from-purple-600 to-indigo-600` dark backdrops. Use curated palettes (Warm Stone & Ember, Obsidian & Emerald, Neo-Swiss Red, High-Tech Blueprint).
 
-| Level | Ideal Domain | Key Characteristics |
-| :--- | :--- | :--- |
-| **Subtle** | Enterprise B2B, developer tooling, financial dashboards | Clean, high-density layout; refined typography pairing; muted, professional palette; subtle 1px border elevation; standard accessible grid. |
-| **Balanced** *(Default)* | Modern SaaS, consumer web apps, productivity tools | Tactile micro-interactions (`active:scale-[0.98]`); bento grid rhythm; warm neutral background; distinct primary accent; subtle inner shadows. |
-| **Bold** | Landing pages, creative portfolios, Web3, consumer brands | High-contrast archetype expression (e.g. Neo-Brutalist offset shadows, Editorial stark typography, Cyber terminal minimalism); expressive layout asymmetry. |
+### 2. Vercel Web Interface Engineering ([Vercel Guidelines](references/vercel-interface-guidelines.md))
+- **Keyboard Works Everywhere**: All interactive flows must be fully keyboard-operable (WAI-ARIA). Use visible, unobscured `:focus-visible` rings with proper contrast. Set `:focus-within` for composite controls.
+- **Touch & Click Ergonomics**:
+  - Touch hit targets must be $\ge 44\text{px} \times 44\text{px}$ on mobile; desktop minimum is $\ge 24\text{px}$.
+  - Mobile `<input>` and `<textarea>` font size must be $\ge 16\text{px}$ to prevent iOS Safari auto-zooming.
+  - Apply `touch-action: manipulation` to interactive controls to eliminate the 300ms double-tap zoom delay.
+  - Never disable browser zoom (`user-scalable=no` is forbidden).
+  - Never intercept or disable paste in form inputs.
+- **Loading & State Discipline**:
+  - **Loading Buttons Retain Labels**: Show an inline spinner while **keeping the original button label visible** (e.g. `[ ⟳ Saving… ]`). Never replace button text with an isolated spinner.
+  - **Flicker-Free Skeletons**: Apply a 150–300ms show-delay to avoid flashing on fast responses, and maintain a 300–500ms minimum visible duration once shown.
+  - **URL as State**: Persist active tabs, filters, queries, and pagination in URL search parameters (`searchParams` / `nuqs`).
+  - **Optimistic Updates**: Update the UI immediately on user action; reconcile on response with graceful rollback on error.
+  - **Ellipsis Syntax**: Menu options or buttons opening a subsequent dialog (e.g. "Rename…", "Export…") must end with a typographical ellipsis (`…`).
+- **Layout & Motion Safety**:
+  - Apply `overscroll-behavior: contain` to modal dialogs and slide-over drawers.
+  - While dragging elements, apply `inert` and `select-none` to prevent erratic hover/selection.
+  - Enforce `@media (prefers-reduced-motion: reduce)` (`motion-reduce:transition-none motion-reduce:transform-none`).
+
+### 3. DESIGN.md & Brand System Ingestion ([Awesome Design MD](references/design-md-presets.md))
+- Check the workspace root for `DESIGN.md`. If present, adopt its design tokens, color scales, and typography hierarchies.
+- If absent, select and adhere to one of the curated [DESIGN.md Presets](references/design-md-presets.md):
+  - **Linear Dark Minimalist**: Ultra-clean `#08090a` canvas, tabular numerals, `#5e6ad2` indigo accent.
+  - **Vercel Monochrome Modern**: Razor-sharp high contrast black/white with Geist typography.
+  - **Stripe Editorial Opulence**: Expansive whitespace, soft multi-layer drop shadows, vibrant accents.
+  - **Supabase Emerald Studio**: Developer hacker utility with `#3ecf8e` emerald dark mode.
 
 ---
 
-## 2. Intentionality & Anti-Pattern Defense
+## 🎨 The 10 Archetypes Canon
 
-Avoid lazy defaults while respecting project context:
-- **Design System First**: If the project has existing design tokens, brand guidelines, or component libraries, **always respect and extend that system**. Inter, neutral cards, and standard columns are completely appropriate when justified by existing branding or content requirements.
-- **For Greenfield Builds Without a Design System**: Avoid falling into unconsidered AI clichés out of laziness:
-  - Avoid unconsidered "AI Purple Clichés" (`bg-slate-900` with `from-purple-500 to-indigo-500` glow).
-  - Avoid monotonous identical card grids where asymmetric editorial layouts, data tables, or tactile panels communicate better.
-  - Avoid unstyled, low-contrast placeholder text (`text-slate-400` on white).
-  - Avoid floating elements that lack tactile feedback on click or hover.
-  - Avoid generic centered heroes with two identical pill buttons ("Get Started" / "Learn More") without domain grounding.
-
----
-
-## 3. The 10 Archetypes Canon & Decision Triage Matrix
-
-Consult the matrix below to select the exact visual archetype matching your project domain, then load its dedicated reference guide:
+When starting greenfield work without an existing design system, consult the Archetype Canon:
 
 | # | Archetype | Ideal Project Domain | Core Commitment | Reference Guide |
 | :-: | :--- | :--- | :--- | :--- |
@@ -67,49 +63,32 @@ Consult the matrix below to select the exact visual archetype matching your proj
 | **09** | **Retro-OS Desktop** | Media Players, Playful Portfolios, Community Spaces | Draggable window chrome, 1-bit icons, system title bars, 90s OS warmth | [09-retro-desktop.md](references/archetypes/09-retro-desktop.md) |
 | **10** | **Cinematic Dark Kinetic** | Product Launches, Flagship Landing Pages, Interactive Hero | Pure CSS 3D perspective, ambient mesh gradients, optional Three.js | [10-kinetic-dark.md](references/archetypes/10-kinetic-dark.md) |
 
-### Archetype Non-Negotiable Invariants:
-- **Dot-Matrix (#06)**: NEVER set body text in dot-matrix font; use for metrics, counters, and hero badges only.
-- **Terminal & Telemetry (#01, #02)**: ALWAYS wrap dense multi-column tabular data in an `overflow-x-auto` container with sticky row headers to prevent mobile viewport clipping.
-- **Cinematic Dark Kinetic (#10)**: Achieve depth via native CSS 3D perspectives and ambient gradients by default. If Three.js is used, keep all typography and buttons in the accessible HTML DOM above the canvas.
-
 ---
 
-## 4. Multi-Stack Tokens & Micro-Interactions
-
-Select the token reference matching the project stack:
-
-- **Tailwind Projects (Vite, Next.js, Generative UI)**: Use [Tailwind Tokens](references/tokens-tailwind.md).
-  - Tactile button: `transition-all duration-150 ease-out hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]`
-  - Neo-brutalist stamp: `border-2 border-black shadow-[4px_4px_0px_#000] active:translate-x-1 active:translate-y-1 active:shadow-none`
-- **Vanilla HTML/CSS Projects (Zero Build Steps)**: Use [Vanilla CSS Tokens](references/tokens-vanilla-css.md).
-  - Fluid typography: `clamp(1rem, 0.95rem + 0.25vw, 1.25rem)`
-  - Native CSS custom properties: `--tactile-bg`, `--tactile-surface`, `--tactile-border`
-- **Framework Components (React / Vue / Svelte)**: Use [Framework Adapters](references/framework-adapters.md) for typed props, variant classes, and component encapsulation.
-
----
-
-## 5. Verification Checklist
-
-Before delivering frontend code, verify:
-1. Does it look distinct from a generic AI template, or faithfully respect the established design system?
-2. Does it resize gracefully across viewports (375px mobile to 1440px desktop) without horizontal clipping?
-3. Does all text pass WCAG AA contrast (≥4.5:1 for body text)?
-4. Are all interactive elements equipped with tactile `:hover`, `:active`, and accessible `:focus-visible` focus rings?
-5. Are loading skeletons, error fallbacks, and empty states explicitly handled?
-6. Is complete keyboard navigation intact (`Tab`, `Shift+Tab`, `Enter`, `Escape` for modals)?
-7. When browser automation / screenshot tools are not available in the host environment, explicitly disclose that responsive rendering was reviewed statically and requires manual visual confirmation.
-
----
-
-## 6. Generative UI Interactive Mini-Widget Preview
+## 📱 Mandatory Generative UI Interactive Mini-Widget
 
 Whenever any frontend design or UI component is being designed, styled, or implemented:
 1. **Generate a Mini Interactive Generative UI Widget**:
-   - Create a self-contained `.html` artifact in `<appDataDir>/brain/<conversation-id>/` with `UserFacing: true` following the `generative_ui` skill pattern.
-   - Use the host's semantic design system tokens: `--background`, `--card`, `--border`, `--foreground`, `--muted-foreground`, `--primary`, `--primary-foreground`, etc.
-   - Include interactive color palette choices, typography scale, tactile button states (`active:scale-[0.98]`), and interactive controls representing the interface.
-   - Include Tailwind script: `<script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>`.
+   - Save a self-contained `.html` artifact in `<appDataDir>/brain/<conversation-id>/` with `UserFacing: true` using the `generative_ui` skill pattern.
+   - Use semantic host tokens (`--background`, `--card`, `--border`, `--foreground`, `--primary`, etc.) and the official gstatic Tailwind CDN (`<script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>`).
+   - Include interactive color palette swatches, typography scales, tactile button states (`active:scale-[0.98]`), and interactive controls previewing the interface.
 2. **Embed in Chat**:
    - Embed the widget inline in the chat response using:
      `<agent-embed src="file:///<artifact_path>/widget.html"></agent-embed>`
      allowing the user to preview and interact with color choices and interface states directly.
+
+---
+
+## 🔍 Automated Verification & Playwright Protocol ([Playwright](references/playwright-verification.md))
+
+Before delivering frontend work, verify:
+1. **Viewport Responsiveness**: Test layout adaptation across 375px (mobile), 768px (tablet), and 1440px (desktop). Zero horizontal scrollbar clipping.
+2. **WCAG AA Contrast**: Ensure text contrast meets $\ge 4.5:1$ for normal body text and $\ge 3:1$ for large text/interactive borders.
+3. **Tactile Feedback**: Verify `:hover`, `:active`, and `:focus-visible` rings on all interactive elements.
+4. **Loading & Fallback Integrity**: Verify loading skeletons, empty states, and error fallbacks.
+5. **Headless Execution**:
+   - Where Playwright is available, execute automated viewport and accessibility audits via `scripts/exec-proxy.sh`:
+     ```bash
+     ./scripts/exec-proxy.sh --label test_ui_viewports npx playwright test
+     ```
+   - When automated browser tooling is not installed in the workspace, explicitly disclose that responsive rendering was statically verified and requires manual visual confirmation.
