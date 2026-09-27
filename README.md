@@ -1,88 +1,193 @@
-# 🛠️ Antigravity Engineering Skills Suite
+# 🛠️ Antigravity Engineering Skills Suite (v2.0)
 
-A lean, high-craft collection of 12 native Antigravity skills covering the full software lifecycle from prompt to production.
-
----
-
-## 🎯 The Master Entry Point: `/prompt-architect`
-
-If you have a rough idea, bug, or feature and don't know which skills to call:
-```text
-Use /prompt-architect.
-[Paste your raw idea, dilemma, or task here]
-```
-Prompt Architect will automatically classify the domain, pick the exact minimal skill team, inject anti-slop rules, and give you the execution-ready prompt.
+A battle-tested, high-craft software engineering operating system for **Google Antigravity**. Covers the full engineering lifecycle—from architectural intent extraction and visual image-first art direction to parallel worktree orchestration, adversarial diff review, and cryptographic release gate verification.
 
 ---
 
-## ⚡ Power Combos (Quick Copy-Paste)
+## 🏗️ Master Architecture Topology
 
-Instead of wondering which skills to use, use these standard combinations:
+The suite operates as a 5-tier hierarchical engineering operating system:
 
-### 1. 🎨 The UI & Frontend Sprint
-> Use for landing pages, web apps, components, and widgets with zero AI slop:
-```text
-Use /anti-slop-spec, /frontend-artisan, and /qa-sentinel.
-[Your request here]
-```
+```mermaid
+graph TD
+    subgraph "Tier 1: Core Autonomous Triad (Auto-Detected)"
+        PM["plan-master<br>(Architect & Planner)"]
+        DD["deep-debugger<br>(Root-Cause Repair)"]
+        QS["qa-sentinel<br>(Anti-Tautology Verifier)"]
+    end
 
-### 2. 🚀 The Full-Stack Feature Builder
-> Use for full-stack features with database schemas, APIs, and release hygiene:
-```text
-Use /plan-master, /schema-craft, /qa-sentinel, and /ship-it.
-[Your request here]
-```
+    subgraph "Tier 2: Frontend & Interface Superstructure"
+        FA["frontend-artisan<br>(Design Orchestrator)"]
+        ITC["image-to-code<br>(Taste Skill & Anti-Slop)"]
+        DMD["design-md<br>(15 Brand Design Systems)"]
+        WIG["web-interface-guidelines<br>(Vercel Standards)"]
+        PW["playwright-cli<br>(Headless Browser CLI)"]
+        GUI["generative_ui<br>(Interactive Mini-Widgets)"]
+        
+        FA --> ITC
+        FA --> DMD
+        FA --> WIG
+        FA --> PW
+        FA --> GUI
+    end
 
-### 3. 🩹 The Surgical Bugfix
-> Use when code crashes, tests break, or unexpected runtime behavior occurs:
-```text
-Use /deep-debugger and /qa-sentinel.
-[Paste error log or description here]
-```
+    subgraph "Tier 3: Specialist Systems Engineering"
+        SC["schema-craft<br>(DB Migrations & Integrity)"]
+        SV["security-verifier<br>(OWASP API & Boundary Audit)"]
+        RR["runtime-reliability<br>(Graceful Shutdown & Soak)"]
+        CR["code-reviewer<br>(Adversarial Diff Review)"]
+    end
 
-### 4. 🛡️ The Security & Auth Audit
-> Use for authentication changes, API endpoints, and sensitive data access:
-```text
-Use /security-verifier, /qa-sentinel, and /ship-it.
-[Your request here]
-```
+    subgraph "Tier 4: Distributed Orchestration & Council"
+        AWO["adaptive-worker-orchestrator-v2<br>(Git Worktrees & Recovery)"]
+        IC["idea-council<br>(Multi-Agent Deliberation)"]
+    end
 
-### 5. ⚙️ Production Operations & Reliability
-> Use for zero-downtime DB migrations, background workers, and memory soaks:
-```text
-Use /runtime-reliability, /schema-craft, and /ship-it.
-[Your request here]
+    subgraph "Tier 5: Runtime Enforcement & Gatekeeper"
+        EP["exec-proxy.sh<br>(Bounded Logs & Receipts)"]
+        RE["runtime_evidence.py<br>(Verification Engine)"]
+        TL["task_ledger.py<br>(Flock .evidence/tasks.json)"]
+        VRG["verify-release-gate.sh<br>(Anti-Tamper Release Gate)"]
+        SI["ship-it<br>(Git Hygiene & PR Engine)"]
+        
+        EP --> RE
+        TL --> RE
+        VRG --> RE
+        SI --> VRG
+    end
+
+    PM --> AWO
+    PM --> QS
+    DD --> QS
+    FA --> QS
+    SC --> QS
+    SV --> QS
+    RR --> QS
+    CR --> SI
+    QS --> EP
+    AWO --> TL
+
+    style PM fill:#e1f5fe,stroke:#0288d1,stroke-width:2px
+    style DD fill:#ffebee,stroke:#d32f2f,stroke-width:2px
+    style QS fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
+    style FA fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    style VRG fill:#fff3e0,stroke:#f57c00,stroke-width:2px
 ```
 
 ---
 
-## 🎛️ The Tri-Surface Evidence Standard & Release Gate
+## 🎯 Autonomous Skill Routing (Core 3 Triad)
 
-To eliminate output fatigue and close the self-grading trust boundary, all execution skills operate across three surfaces:
+Through `AGENTS.md` and `GEMINI.md` rules, the agent **automatically detects and activates** the 3 core engineering workflows from plain English requests—no manual slash commands required:
 
-1. **Surface 1: Foreground Executive Card (15–25 Lines)**: High-density, structured summary displayed in chat containing exact test counts, commands, and exit codes.
-2. **Surface 2: Background Forensic Log Sink**: Full raw `stdout`/`stderr` logs and traces are streamed directly to disk files (`.evidence/logs/`), eliminating context rot.
-3. **Surface 3: Machine-Readable Evidence Manifest**: Receipts bound to the immutable `git write-tree` SHA are recorded in `.evidence/manifest.v1.json`.
-4. **Deterministic Release Gate**: `scripts/verify-release-gate.sh` strictly blocks `ship-it` and `git push` if evidence is missing, stale, or fails non-zero test checks.
-5. **The Amber Protocol**: Clear 3-state signaling: 🟢 Clean Pass, 🟡 Pass with caveats/skips (requires authorized waiver), 🔴 Failure/regression.
-6. **Intermediate Pipeline Suppression**: Multi-skill chains suppress intermediate noise to single-line milestone heartbeats; only the terminal skill or coordinator emits the full Executive Card.
-
----
-
-## 📚 Skill Directory
-
-| Skill | Role | When to Use |
+| User Intent | Auto-Detected Skill | Operational Protocol |
 | :--- | :--- | :--- |
-| **`prompt-architect`**| Skill Director | **The Master Entry Point**: Transforms raw ideas into optimal skill teams & hardened prompts. |
-| **`anti-slop-spec`** | Design Sharpener | Purge AI clichés (Inter font, purple glows, rounded cards) before coding starts. |
-| **`frontend-artisan`** | UI Craft Canon | Implement 10 curated design archetypes, tactile physics, and framework adapters. |
-| **`idea-council`** | Evaluation Council | 6-seat multi-agent council to evaluate complex ideas with 5 emoji stances. |
-| **`plan-master`** | Task & Prompt Planner | Break complex requirements into dependency-aware plans with sanity validation. |
-| **`schema-craft`** | Database Architect | Production schemas, foreign key indexes, safe migrations, and edge-case seed data. |
-| **`deep-debugger`** | Root Cause Investigator | 6-stage scientific protocol (`Reproduce → Isolate → Hypothesis → Surgical Fix`). |
-| **`qa-sentinel`** | Sanity Gatekeeper | Automated verification runner via `scripts/exec-proxy.sh` with False-Green defense. |
-| **`security-verifier`**| API Security Verifier | OWASP API Top 10, BOLA/IDOR, input sanitization, SSRF, and dependency CVE checks. |
-| **`runtime-reliability`**| Resilience Engine | Reversible database migrations, memory leak soak tests, and graceful shutdown probes. |
-| **`ship-it`** | Release & Git Hygiene | Secret leak checks, atomic Conventional Commits, and gatekeeper verification. |
-| **`adaptive-orchestrator`** | Worktree Parallelism | Multi-worker subagents in isolated git worktrees for large projects (>12 files). |
+| **Fix a bug / Error / Breakage / Failure** | [`deep-debugger`](deep-debugger/SKILL.md) | 1. Execute 6-stage protocol: `Reproduce → Isolate → State Inspection → Hypothesis → Surgical Minimal Fix → Regression Proof`.<br>2. Strictly bound probes by the "3+5" cycle ceiling before blast-radius rollback. |
+| **Create new feature / System / Architecture** | [`plan-master`](plan-master/SKILL.md) | 1. Ingest requirements & formulate intent.<br>2. Generate dependency DAG with 1-writer-per-file bounds.<br>3. Enforce TDD Red-Green progression with [`qa-sentinel`](qa-sentinel/SKILL.md). |
+| **Verify / Test / Validate code changes** | [`qa-sentinel`](qa-sentinel/SKILL.md) | 1. Apply Anti-Tautology discipline (observable side-effects, real failure questions).<br>2. Execute tests through `scripts/exec-proxy.sh` for physical receipts. |
 
+*Note: All specialist skills (`frontend-artisan`, `schema-craft`, `code-reviewer`, `security-verifier`, `runtime-reliability`, `idea-council`, `ship-it`) remain **on-demand only** to prevent prompt bloat and unintended side-effects.*
+
+---
+
+## 🎨 Frontend Design & Generative UI Protocol
+
+Whenever any frontend design or UI component is being designed, styled, or implemented:
+1. **Master Orchestrator ([`frontend-artisan`](frontend-artisan/SKILL.md))**: Coordinates visual art direction, design system tokens, interaction guidelines, and browser audits.
+2. **Visual Art Direction ([`image-to-code`](image-to-code/SKILL.md))**: Mandatory Image-First protocol using Antigravity's native `generate_image` tool. Deeply inspects reference images with `view_file` to eliminate the "cards-inside-cards-inside-cards" nesting loop, purple gradients, and cramped mobile heroes.
+3. **Design System Ingestion ([`design-md`](design-md/SKILL.md))**: Ingests workspace `DESIGN.md` or adopts 15 production brand presets (**Linear, Vercel, Stripe, Supabase, Raycast, Resend, Apple, Figma, Framer, PostHog, Warp, etc.**).
+4. **Vercel Standards ([`web-interface-guidelines`](web-interface-guidelines/SKILL.md))**: Enforces keyboard accessibility (WAI-ARIA), touch targets $\ge 44\text{px}$, `<input>` font-size $\ge 16\text{px}$ (prevents iOS Safari zoom), loading button label retention, skeleton flicker delays, and URL state persistence.
+5. **Interactive Preview ([`generative_ui`](frontend-artisan/SKILL.md#mobile-mandatory-generative-ui-interactive-mini-widget))**: Creates a self-contained `.html` mini-widget artifact and embeds it inline in chat via `<agent-embed src="file:///<path>/widget.html"></agent-embed>` with interactive color palette swatches and tactile controls.
+6. **Automated Verification ([`playwright-cli`](playwright-cli/SKILL.md))**: Headless multi-viewport audits (375px mobile, 768px tablet, 1440px desktop) asserting zero horizontal overflow and full focus ring visibility.
+
+---
+
+## 📚 Complete Skills Directory
+
+### Tier 1: Core Autonomous Triad
+| Skill | Entry Point | Role |
+| :--- | :--- | :--- |
+| **`plan-master`** | [`plan-master/SKILL.md`](plan-master/SKILL.md) | **Master Planner & Intent Architect**: Breaks complex tasks into dependency-aware execution DAGs with TDD Red-Green discipline. |
+| **`deep-debugger`** | [`deep-debugger/SKILL.md`](deep-debugger/SKILL.md) | **Root Cause Investigator**: Systematic 6-stage scientific debugging protocol preventing shotgun patching and token loops. |
+| **`qa-sentinel`** | [`qa-sentinel/SKILL.md`](qa-sentinel/SKILL.md) | **Verification Gatekeeper**: Anti-tautology testing engine capturing physical evidence receipts via `scripts/exec-proxy.sh`. |
+
+### Tier 2: Frontend & Interface Superstructure
+| Skill | Entry Point | Role |
+| :--- | :--- | :--- |
+| **`frontend-artisan`** | [`frontend-artisan/SKILL.md`](frontend-artisan/SKILL.md) | **Master Frontend Orchestrator**: Coordinates visual generation, design tokens, interaction standards, and browser audits. |
+| **`image-to-code`** | [`image-to-code/SKILL.md`](image-to-code/SKILL.md) | **Taste Skill Anti-Slop Engine**: Full image-first art direction using `generate_image` to produce bespoke, breathable UIs. |
+| **`design-md`** | [`design-md/SKILL.md`](design-md/SKILL.md) | **Design System Token Manager**: Ingests project `DESIGN.md` or applies 15 bundled world-class company presets. |
+| **`web-interface-guidelines`** | [`web-interface-guidelines/SKILL.md`](web-interface-guidelines/SKILL.md) | **Vercel Production Standard**: Complete guidelines for keyboard accessibility, loading flickers, and touch targets. |
+| **`playwright-cli`** | [`playwright-cli/SKILL.md`](playwright-cli/SKILL.md) | **Headless Browser CLI**: Microsoft's official agent skill for automated viewport snapshots, tracing, and video recording. |
+| **`anti-slop-spec`** | [`anti-slop-spec/SKILL.md`](anti-slop-spec/SKILL.md) | **Design Sharpener**: Forwarding alias enforcing high-craft visual standards before UI coding starts. |
+
+### Tier 3: Specialist Systems Engineering
+| Skill | Entry Point | Role |
+| :--- | :--- | :--- |
+| **`schema-craft`** | [`schema-craft/SKILL.md`](schema-craft/SKILL.md) | **Database Architect**: Relational integrity, compound query indexing, and zero-downtime expand/contract migration rehearsal. |
+| **`security-verifier`** | [`security-verifier/SKILL.md`](security-verifier/SKILL.md) | **API Security Auditor**: Synthetic test probes targeting OWASP API Top 10 (BOLA/IDOR, auth, SSRF, injection). |
+| **`runtime-reliability`** | [`runtime-reliability/SKILL.md`](runtime-reliability/SKILL.md) | **Operational Resilience**: SIGTERM/SIGINT graceful shutdown verification and memory leak soak testing under concurrent load. |
+| **`code-reviewer`** | [`code-reviewer/SKILL.md`](code-reviewer/SKILL.md) | **Adversarial Diff Reviewer**: Independent diff inspection emitting structured finding cards (Critical / Warning / Suggestion). |
+
+### Tier 4: Parallel Orchestration & Deliberation
+| Skill | Entry Point | Role |
+| :--- | :--- | :--- |
+| **`adaptive-worker-orchestrator-v2`** | [`adaptive-worker-orchestrator-v2/SKILL.md`](adaptive-worker-orchestrator-v2/SKILL.md) | **Worktree Parallel Coordinator**: Task-shape gating (solo vs parallel), isolated git worktrees, and durable crash recovery. |
+| **`idea-council`** | [`idea-council/SKILL.md`](idea-council/SKILL.md) | **Multi-Agent Deliberation Council**: 6-seat structured meeting (Product, Red-Team, Architect, User Proxy, CFO, SecOps). |
+
+### Tier 5: Release & Runtime Infrastructure
+| Skill / Script | Path | Role |
+| :--- | :--- | :--- |
+| **`ship-it`** | [`ship-it/SKILL.md`](ship-it/SKILL.md) | **Release Automator**: Conventional Commits, clean working tree audits, and release gate compliance. |
+| **`exec-proxy.sh`** | [`scripts/exec-proxy.sh`](scripts/exec-proxy.sh) | **Execution Proxy**: Bounded log sink (`.evidence/logs/`), concise 3-line summaries, and receipt generation. |
+| **`runtime_evidence.py`** | [`scripts/runtime_evidence.py`](scripts/runtime_evidence.py) | **Verification Engine**: Shared cryptographic receipt validation, ISO waiver parsing, and policy disposition logic. |
+| **`task_ledger.py`** | [`scripts/task_ledger.py`](scripts/task_ledger.py) | **Live Task Flow Ledger**: Multi-process flock-protected task tracking (`.evidence/tasks.json`). |
+| **`verify-release-gate.sh`** | [`scripts/verify-release-gate.sh`](scripts/verify-release-gate.sh) | **Deterministic Release Gate**: Verifies clean tree, receipt matches, non-zero test counts, and protojson hook payloads. |
+
+---
+
+## ⚡ Standard Workflow Recipes
+
+```bash
+# 1. Frontend & Visual Design Sprint
+Use /frontend-artisan
+# Orchestrates image-to-code -> design-md -> web-interface-guidelines -> generative_ui -> playwright-cli
+
+# 2. Full-Stack Feature Builder
+Use /plan-master, /schema-craft, /qa-sentinel, and /ship-it
+
+# 3. Surgical Bug Investigation & Repair
+Use /deep-debugger and /qa-sentinel
+
+# 4. Security & Tenant Boundary Audit
+Use /security-verifier and /qa-sentinel
+
+# 5. Production Zero-Downtime Migration & Resilience Rehearsal
+Use /runtime-reliability and /schema-craft
+
+# 6. Strategic Architecture Deliberation
+Use /idea-council
+```
+
+---
+
+## 🔬 Token & Context Efficiency Engineering
+
+1. **Progressive Disclosure**: Core `SKILL.md` bodies stay under $\sim 1,000$ tokens. Heavy documentation, presets, and adapters are split into `references/` and `presets/` and loaded only on demand.
+2. **Bounded Log Capture (`exec-proxy.sh`)**: Raw `stdout`/`stderr` streams to disk (`.evidence/logs/<run_id>.log`). Terminal output is compressed to a clean 3-line status on pass, cutting model-facing log volume by **over 70%**.
+3. **Task-Shape Gating (`adaptive-worker-orchestrator-v2`)**: Small or tightly-coupled tasks remain in Solo mode, eliminating redundant subagent token burn. Only genuinely independent workstreams spawn isolated worktrees.
+
+---
+
+## 🛡️ Conformance & Verification Guarantee
+
+The runtime safeguards and execution proxies are verified by **27/27 automated adversarial tests**:
+
+```bash
+# Run the complete conformance & adversarial suite
+bash tests/verify_runtime.sh
+
+# Verify the cryptographic release gate against candidate commit
+./scripts/exec-proxy.sh --label test_conformance bash tests/verify_runtime.sh
+./scripts/verify-release-gate.sh
+```
