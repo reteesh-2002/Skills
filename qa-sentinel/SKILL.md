@@ -27,6 +27,18 @@ Automated verification gatekeeper. Enforces that no code change, feature, or ref
 
 ---
 
+## The Meaningful Test Standard (Anti-Tautology Discipline)
+
+Tests must defend real business invariants, not merely inflate coverage counts:
+
+1. **The Realistic Bug Question**: Before writing a test, identify the concrete bug it would catch. If an off-by-one, null reference, or boundary breach wouldn't trigger a failure, rewrite the test.
+2. **Independent Value Derivation**: Never calculate expected values by copying implementation algorithms into test files. Derive expectations from the domain spec or static truth fixtures.
+3. **Assert Observable Outcomes**: Test observable outputs, state changes, and side-effects. Do not write brittle tests that merely count internal method calls or assert mock invocations.
+4. **Targeted Mutation Probes**: For critical auth, financial, or data-integrity algorithms, verify the test by temporarily inverting a condition (e.g. `>=` to `>`, or bypassing a token check) and confirming the test fails RED.
+5. **No Source-Text Grepping as Behavior Tests**: Testing that a file contains the string `class Auth` is static linting, not behavioral verification. Behavioral tests must execute code.
+
+---
+
 ## 4-Tier Verification Matrix
 
 QA Sentinel checks the application across 4 escalating tiers:

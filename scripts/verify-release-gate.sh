@@ -3,6 +3,10 @@
 # Deterministically evaluates evidence manifests against current git tree to block unverified releases.
 
 set -euo pipefail
+export PYTHONDONTWRITEBYTECODE=1
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 GATE_HOOK_MODE=0
 
@@ -24,58 +28,13 @@ except Exception:
   fi
 
   # Check if pre-tool command invokes a release gate trigger (git push, gh pr create, npm publish)
-  # Uses shlex command tokenization to correctly handle git options with arguments (e.g. git -C . push origin main)
-  IS_RELEASE=$(python3 -c "import sys, shlex
+  # Uses shared runtime_evidence engine to tokenize and inspect command arguments
+  IS_RELEASE=$(python3 -c "import sys, os
+sys.path.insert(0, sys.argv[2])
+import runtime_evidence
 cmd = sys.argv[1]
-if not cmd or not cmd.strip():
-    print('0')
-    sys.exit(0)
-try:
-    tokens = shlex.split(cmd)
-except Exception:
-    tokens = cmd.split()
-
-cmds = []
-curr = []
-for t in tokens:
-    if t in (';', '&&', '||', '|', '&'):
-        if curr:
-            cmds.append(curr)
-            curr = []
-    else:
-        curr.append(t)
-if curr:
-    cmds.append(curr)
-
-is_rel = False
-for c in cmds:
-    if not c:
-        continue
-    if len(c) >= 2 and c[0] == 'npm' and c[1] == 'publish':
-        is_rel = True; break
-    if len(c) >= 3 and c[0] == 'gh' and c[1] in ('pr', 'release') and c[2] == 'create':
-        is_rel = True; break
-    if c[0] == 'git':
-        idx = 1
-        opts_with_arg = {'-C', '-c', '--git-dir', '--work-tree', '--namespace', '--super-prefix', '--exec-path', '--config-env'}
-        while idx < len(c):
-            arg = c[idx]
-            if arg in opts_with_arg:
-                idx += 2
-                continue
-            if any(arg.startswith(prefix + '=') for prefix in ('--git-dir', '--work-tree', '--namespace', '--super-prefix', '--exec-path', '--config-env')):
-                idx += 1
-                continue
-            if arg.startswith('-'):
-                idx += 1
-                continue
-            if arg == 'push':
-                is_rel = True
-            break
-    if is_rel:
-        break
-print('1' if is_rel else '0')
-" "${PRE_TOOL_CMD:-}" 2>/dev/null || echo "1")
+print('1' if runtime_evidence.is_release_command(cmd) else '0')
+" "${PRE_TOOL_CMD:-}" "${SCRIPT_DIR}" 2>/dev/null || echo "1")
 
   if [[ "${IS_RELEASE}" == "0" ]]; then
     if [[ "${GATE_HOOK_MODE}" -eq 1 ]]; then
@@ -97,9 +56,6 @@ fail_gate() {
 }
 
 # 1. Enforce git repository presence and CWD alignment (F05, P09)
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-
 if ! git -C "${REPO_ROOT}" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   fail_gate "Target directory ${REPO_ROOT} is not inside a git repository."
 fi
@@ -126,13 +82,17 @@ if [[ ! -f "${MANIFEST_PATH}" ]]; then
   fail_gate "Evidence manifest not found at ${MANIFEST_PATH}. Run verification via scripts/exec-proxy.sh first."
 fi
 
-# Evaluate manifest using python policy reducer
-python3 - "${MANIFEST_PATH}" "${REPO_ROOT}" << 'PYEOF'
+# Evaluate manifest using python policy reducer and shared runtime_evidence engine
+python3 - "${MANIFEST_PATH}" "${REPO_ROOT}" "${SCRIPT_DIR}" << 'PYEOF'
 import sys, os, subprocess, json, datetime
 
 manifest_path = sys.argv[1]
 repo_root = sys.argv[2]
+scripts_dir = sys.argv[3]
 evidence_dir = os.path.dirname(manifest_path)
+
+sys.path.insert(0, scripts_dir)
+import runtime_evidence
 
 def fail_python_gate(reason):
     print(f"❌ [RELEASE GATE BLOCKED]: {reason}", file=sys.stderr)
@@ -206,54 +166,12 @@ try:
         except Exception as e:
             fail_python_gate(f"Receipt '{receipt_id}' is corrupt or unreadable: {e}")
 
-        for req_field in ("receipt_id", "command", "exit_code", "git_tree_sha", "metrics"):
-            if req_field not in rcpt_data:
-                fail_python_gate(f"Receipt '{receipt_id}' missing mandatory field '{req_field}'.")
-
-        if rcpt_data.get("receipt_id") != receipt_id:
-            fail_python_gate(f"Receipt ID mismatch in {receipt_file}.")
-
-        rcpt_cmd = rcpt_data.get("command")
-        rcpt_exit = rcpt_data.get("exit_code")
-        rcpt_tree = rcpt_data.get("git_tree_sha")
-        rcpt_wt_sha = rcpt_data.get("working_tree_sha")
-        rcpt_wt_dirty = rcpt_data.get("working_tree_dirty", False)
-        rcpt_metrics = rcpt_data.get("metrics", {})
-        rcpt_failed = rcpt_metrics.get("failed", 0)
-        rcpt_passed = rcpt_metrics.get("passed", 0)
-        rcpt_collected = rcpt_metrics.get("collected", 0)
-
-        # Cross-validate manifest fields against physical receipt
-        if rcpt_cmd != cmd:
-            fail_python_gate(f"Command mismatch between manifest ('{cmd}') and receipt '{receipt_id}' ('{rcpt_cmd}').")
-
-        if rcpt_exit != exit_code:
-            fail_python_gate(f"Exit code mismatch between manifest ({exit_code}) and receipt '{receipt_id}' ({rcpt_exit}) for '{label}'.")
-
-        if rcpt_tree != check_tree:
-            fail_python_gate(f"Git tree SHA mismatch between manifest ({check_tree[:8]}) and receipt '{receipt_id}' ({rcpt_tree[:8]}) for '{label}'.")
-
-        if rcpt_wt_dirty or c.get("working_tree_dirty", False):
-            fail_python_gate(f"Check '{label}' was executed against a dirty working tree with unstaged modifications.")
-
-        if rcpt_wt_sha and c.get("working_tree_sha") and rcpt_wt_sha != c.get("working_tree_sha"):
-            fail_python_gate(f"Working tree SHA mismatch between manifest ({c.get('working_tree_sha')[:8]}) and receipt '{receipt_id}' ({rcpt_wt_sha[:8]}).")
-
-        if rcpt_failed != failed or rcpt_passed != passed or rcpt_collected != collected:
-            fail_python_gate(f"Test metric mismatch between manifest (P:{passed}, F:{failed}, C:{collected}) and receipt '{receipt_id}' (P:{rcpt_passed}, F:{rcpt_failed}, C:{rcpt_collected}) for '{label}'.")
-
-        # Independent physical receipt integrity checks
-        if rcpt_exit != 0:
-            fail_python_gate(f"Physical receipt '{receipt_id}' recorded non-zero exit code {rcpt_exit} for '{label}'.")
-
-        if rcpt_failed > 0:
-            fail_python_gate(f"Physical receipt '{receipt_id}' recorded {rcpt_failed} failed tests for '{label}'.")
-
-        if rcpt_tree != current_tree:
-            fail_python_gate(f"Mixed snapshot detected. Physical receipt '{receipt_id}' tree {rcpt_tree[:8]} does not match current git tree {current_tree[:8]}.")
-
-        if rcpt_wt_sha and rcpt_wt_sha != current_tree:
-            fail_python_gate(f"Mixed snapshot detected. Receipt '{receipt_id}' tested against disk tree {rcpt_wt_sha[:8]}, but current tree is {current_tree[:8]}.")
+        # Shared validation engine for physical receipt structure and manifest cross-consistency
+        try:
+            runtime_evidence.validate_receipt_structure(rcpt_data, receipt_id)
+            runtime_evidence.cross_validate_manifest_and_receipt(c, rcpt_data, current_tree)
+        except ValueError as ve:
+            fail_python_gate(str(ve))
 
         # F03: Physical log existence verification
         if log_rel:
@@ -310,23 +228,7 @@ try:
             if not author or not reason or not expires_at:
                 fail_python_gate("Incomplete waiver object. Missing author, reason, or expires_at.")
 
-            exp = None
-            for fmt in (None, "%Y-%m-%d", "%Y-%m-%dT%H:%M:%S%z", "%Y-%m-%dT%H:%M:%SZ"):
-                try:
-                    if fmt is None:
-                        parsed = datetime.datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
-                    else:
-                        parsed = datetime.datetime.strptime(expires_at, fmt)
-                    if parsed.tzinfo is None:
-                        if len(expires_at.strip()) == 10:
-                            parsed = parsed.replace(hour=23, minute=59, second=59, tzinfo=datetime.timezone.utc)
-                        else:
-                            parsed = parsed.replace(tzinfo=datetime.timezone.utc)
-                    exp = parsed
-                    break
-                except Exception:
-                    continue
-
+            exp = runtime_evidence.parse_waiver_expiry(expires_at)
             if exp is None:
                 fail_python_gate(f"Waiver by '{author}' has invalid unparseable expires_at timestamp: '{expires_at}'.")
 

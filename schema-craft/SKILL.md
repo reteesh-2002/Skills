@@ -14,7 +14,7 @@ When designing schemas or migrations, strictly enforce these 5 non-negotiable ru
 1. **Foreign Key Indexing Rule**: Every foreign key column MUST have an index. (PostgreSQL does *not* automatically index foreign keys; unindexed foreign keys cause table locks during deletes and 100x query slowdowns during joins).
 2. **Explicit Delete Behavior**: Every relationship must specify explicit cascading semantics: `ON DELETE CASCADE`, `ON DELETE SET NULL`, or `ON DELETE RESTRICT`. Never leave it implicit.
 3. **Timezone-Aware Timestamps**: Always use timezone-aware timestamps (`TIMESTAMPTZ` in Postgres, ISO-8601 strings in SQLite/Prisma). Never store local naive datetime.
-4. **Reversible Migrations**: Every forward migration (`UP`) must have a corresponding, tested rollback migration (`DOWN`).
+4. **Safe Migration & Recovery Strategy**: For every schema modification, determine whether rollback is safe or if forward-recovery (expand/contract) is required to avoid data destruction. Rehearse migrations against a disposable representative database.
 5. **Safe Column Addition**: Never add a `NOT NULL` column to an existing table without a `DEFAULT` value or a staged backfill protocol.
 6. **Destructive Action Safety Gate**: Never run destructive DDL (`DROP TABLE`, `DROP DATABASE`, `TRUNCATE`, or `ALTER TABLE ... DROP COLUMN`) without explicit, unambiguous user confirmation. Always offer an archival or rename alternative first.
 

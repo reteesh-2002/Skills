@@ -17,3 +17,5 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.swp
+__pycache__/
+*.py[cod]

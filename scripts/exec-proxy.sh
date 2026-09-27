@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Antigravity Trusted Execution Proxy
-# Enforces set -euo pipefail, captures child exit status, streams logs, and writes immutable receipts.
+# Enforces set -euo pipefail, captures child exit status, routes bounded logs, and writes verified receipts.
 
 set -euo pipefail
+export PYTHONDONTWRITEBYTECODE=1
 
 LABEL="check"
 if [[ "$#" -gt 1 && "$1" == "--label" ]]; then
@@ -51,37 +52,65 @@ mkdir -p "${LOGS_DIR}" "${RECEIPTS_DIR}"
 LOG_PATH="${LOGS_DIR}/${RUN_ID}.log"
 RECEIPT_PATH="${RECEIPTS_DIR}/${RUN_ID}.json"
 
-# Calculate current git tree SHA and working tree disk SHA if git is available
-GIT_TREE_SHA="unknown"
-WORKING_TREE_SHA="unknown"
-WORKING_TREE_DIRTY="false"
-
-if git -C "${REPO_ROOT}" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  GIT_TREE_SHA=$(git -C "${REPO_ROOT}" write-tree 2>/dev/null || echo "unknown")
-
-  TMP_IDX=$(mktemp)
-  GIT_INDEX_FILE="$TMP_IDX" git -C "${REPO_ROOT}" read-tree HEAD 2>/dev/null || true
-  GIT_INDEX_FILE="$TMP_IDX" git -C "${REPO_ROOT}" add -A 2>/dev/null || true
-  WORKING_TREE_SHA=$(GIT_INDEX_FILE="$TMP_IDX" git -C "${REPO_ROOT}" write-tree 2>/dev/null || echo "unknown")
-  rm -f "$TMP_IDX"
-
-  if [ -n "$(git -C "${REPO_ROOT}" status --porcelain 2>/dev/null)" ]; then
-    WORKING_TREE_DIRTY="true"
-  fi
+# Check working tree disk state (F02, P02, P24)
+PORCELAIN=$(git -C "${REPO_ROOT}" status --porcelain 2>/dev/null || true)
+if [[ -n "${PORCELAIN}" ]]; then
+  WORKING_TREE_DIRTY="true"
+else
+  WORKING_TREE_DIRTY="false"
 fi
 
-# Pre-register check as RUNNING and invalidate GREEN in manifest under lock (F06, F09, P17)
-python3 - "${MANIFEST_PATH}" "${LOCK_PATH}" "${LABEL}" "${GIT_TREE_SHA}" "${COMMAND_STR}" "${RUN_ID}" "${WORKING_TREE_SHA}" "${WORKING_TREE_DIRTY}" << 'PYEOF'
+# Compute true working directory disk state using a transient index
+TMP_INDEX=$(mktemp -t agy_proxy_idx_XXXXXX)
+cleanup_tmp_index() {
+  rm -f "${TMP_INDEX}"
+}
+trap cleanup_tmp_index EXIT
+
+GIT_INDEX_FILE="${TMP_INDEX}" git -C "${REPO_ROOT}" read-tree HEAD >/dev/null 2>&1 || true
+GIT_INDEX_FILE="${TMP_INDEX}" git -C "${REPO_ROOT}" add -A >/dev/null 2>&1 || true
+WORKING_TREE_SHA=$(GIT_INDEX_FILE="${TMP_INDEX}" git -C "${REPO_ROOT}" write-tree 2>/dev/null || echo "unknown")
+rm -f "${TMP_INDEX}"
+
+# Get repository tree hash
+GIT_TREE_SHA=$(git -C "${REPO_ROOT}" write-tree 2>/dev/null || echo "unknown")
+
+# Write initial receipt and preliminary RUNNING check to manifest under lock safely with json.dump
+python3 - "${MANIFEST_PATH}" "${LOCK_PATH}" "${LABEL}" "${GIT_TREE_SHA}" "${RUN_ID}" "${COMMAND_STR}" "${WORKING_TREE_SHA}" "${WORKING_TREE_DIRTY}" "${RECEIPT_PATH}" "${TIMESTAMP}" << 'PYEOF'
 import sys, os, json, fcntl
 
-manifest_path, lock_path, label, tree_sha, cmd, run_id, wt_sha, wt_dirty = sys.argv[1:9]
+manifest_path, lock_path, label, git_tree_sha, run_id, command_str, working_tree_sha, working_tree_dirty, receipt_path, timestamp = sys.argv[1:11]
+
+# Write initial receipt safely
+init_receipt = {
+    "receipt_id": run_id,
+    "timestamp_utc": timestamp,
+    "label": label,
+    "command": command_str,
+    "exit_code": -1,
+    "duration_ms": 0,
+    "git_tree_sha": git_tree_sha,
+    "working_tree_sha": working_tree_sha,
+    "working_tree_dirty": (working_tree_dirty.lower() == "true"),
+    "log_path": f".evidence/logs/{run_id}.log",
+    "metrics": {
+        "collected": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+    },
+    "has_warnings": False
+}
+with open(receipt_path, "w", encoding="utf-8") as rf:
+    json.dump(init_receipt, rf, indent=2)
+os.chmod(receipt_path, 0o644)
 
 with open(lock_path, "w") as lf:
     fcntl.flock(lf, fcntl.LOCK_EX)
     try:
         manifest = {
             "schema_version": "manifest.v1",
-            "git_tree_sha": tree_sha,
+            "git_tree_sha": git_tree_sha,
             "policy_disposition": "RED",
             "checks": [],
             "attempt_history": [],
@@ -94,21 +123,25 @@ with open(lock_path, "w") as lf:
             except Exception:
                 pass
 
-        manifest["policy_disposition"] = "RED"
-        # Record pending attempt
-        running_entry = {
+        manifest.setdefault("checks", [])
+        manifest.setdefault("attempt_history", [])
+        manifest.setdefault("open_waivers", [])
+
+        # Remove existing check for label and replace with RUNNING marker
+        manifest["checks"] = [c for c in manifest["checks"] if c.get("label") != label]
+        manifest["checks"].append({
             "receipt_id": run_id,
             "label": label,
-            "command": cmd,
+            "command": command_str,
             "status": "RUNNING",
-            "git_tree_sha": tree_sha,
-            "working_tree_sha": wt_sha,
-            "working_tree_dirty": (wt_dirty.lower() == "true")
-        }
-        # Mark check as running
-        existing = [c for c in manifest.get("checks", []) if c.get("label") != label]
-        existing.append(running_entry)
-        manifest["checks"] = existing
+            "exit_code": -1,
+            "git_tree_sha": git_tree_sha,
+            "working_tree_sha": working_tree_sha,
+            "working_tree_dirty": (working_tree_dirty.lower() == "true"),
+            "log_path": f".evidence/logs/{run_id}.log",
+            "metrics": {"collected": 0, "passed": 0, "failed": 0, "skipped": 0}
+        })
+        manifest["git_tree_sha"] = git_tree_sha
 
         tmp_path = manifest_path + ".tmp"
         with open(tmp_path, "w", encoding="utf-8") as f:
@@ -120,12 +153,8 @@ with open(lock_path, "w") as lf:
         fcntl.flock(lf, fcntl.LOCK_UN)
 PYEOF
 
-# Signal trap to record cancellation if interrupted (F06, P17)
-INTERRUPTED=0
 cleanup_trap() {
-  local sig=$?
-  INTERRUPTED=1
-  echo "[exec-proxy] Interrupted by signal. Recording cancellation..." >&2
+  echo "⚠️ [exec-proxy]: Process interrupted. Updating manifest to CANCELLED..." >&2
   python3 - "${MANIFEST_PATH}" "${LOCK_PATH}" "${LABEL}" << 'PYEOF'
 import sys, os, json, fcntl
 manifest_path, lock_path, label = sys.argv[1:4]
@@ -161,13 +190,20 @@ fi
 
 START_MS=$(python3 -c 'import time; print(int(time.time() * 1000))')
 
-# Run the command with pipefail preserved and stream to log via pipe (F06, P14)
+# Run the command with pipefail preserved
+# Compact output policy routes full raw log to file while providing concise summaries
 set +e
 set -o pipefail
-"${CMD_TO_RUN[@]}" 2>&1 | tee -a "${LOG_PATH}"
-PIPE_STATUSES=("${PIPESTATUS[@]}")
-CMD_EXIT="${PIPE_STATUSES[0]}"
-SINK_EXIT="${PIPE_STATUSES[1]:-0}"
+if [[ "${VERBOSE_STREAM:-0}" == "1" ]]; then
+  "${CMD_TO_RUN[@]}" 2>&1 | tee -a "${LOG_PATH}"
+  PIPE_STATUSES=("${PIPESTATUS[@]}")
+  CMD_EXIT="${PIPE_STATUSES[0]}"
+  SINK_EXIT="${PIPE_STATUSES[1]:-0}"
+else
+  "${CMD_TO_RUN[@]}" > "${LOG_PATH}" 2>&1
+  CMD_EXIT=$?
+  SINK_EXIT=0
+fi
 set -e
 
 # If the sink failed, fail immediately (P14)
@@ -187,13 +223,16 @@ DURATION_MS=$((END_MS - START_MS))
 # Disable interrupt trap before final atomic update
 trap - INT TERM
 
-# Parse framework counts and update manifest under lock (F07, F08, F09, P16, P18)
-python3 - "${COMMAND_STR}" "${EXIT_CODE}" "${DURATION_MS}" "${GIT_TREE_SHA}" "${LOG_PATH}" "${RECEIPT_PATH}" "${MANIFEST_PATH}" "${LOCK_PATH}" "${RUN_ID}" "${LABEL}" "${WORKING_TREE_SHA}" "${WORKING_TREE_DIRTY}" << 'PYEOF'
+# Parse framework counts, update manifest, and invoke runtime_evidence engine (F07, F08, F09, P16, P18)
+METRICS_JSON=$(python3 - "${COMMAND_STR}" "${EXIT_CODE}" "${DURATION_MS}" "${GIT_TREE_SHA}" "${LOG_PATH}" "${RECEIPT_PATH}" "${MANIFEST_PATH}" "${LOCK_PATH}" "${RUN_ID}" "${LABEL}" "${WORKING_TREE_SHA}" "${WORKING_TREE_DIRTY}" "${SCRIPT_DIR}" << 'PYEOF'
 import sys, os, re, json, fcntl
 
-command_str, exit_code_s, duration_ms_s, git_tree_sha, log_path, receipt_path, manifest_path, lock_path, run_id, label, working_tree_sha, working_tree_dirty = sys.argv[1:13]
+command_str, exit_code_s, duration_ms_s, git_tree_sha, log_path, receipt_path, manifest_path, lock_path, run_id, label, working_tree_sha, working_tree_dirty, script_dir = sys.argv[1:14]
 exit_code = int(exit_code_s)
 duration_ms = int(duration_ms_s)
+
+sys.path.insert(0, script_dir)
+import runtime_evidence
 
 log_content = ""
 if os.path.exists(log_path):
@@ -207,35 +246,39 @@ failed = 0
 skipped = 0
 has_deprecation_warning = False
 
-# Node.js built-in test runner (F07 / P16: handles intervening lines like 'ℹ suites' or 'ℹ cancelled')
-if "ℹ tests" in log_content:
-    m_tests = re.search(r'ℹ\s+tests\s+(\d+)', log_content)
-    m_pass = re.search(r'ℹ\s+pass\s+(\d+)', log_content)
-    m_fail = re.search(r'ℹ\s+fail\s+(\d+)', log_content)
-    m_skip = re.search(r'ℹ\s+skipped\s+(\d+)', log_content)
-    if m_tests: collected = int(m_tests.group(1))
-    if m_pass: passed = int(m_pass.group(1))
-    if m_fail: failed = int(m_fail.group(1))
-    if m_skip: skipped = int(m_skip.group(1))
-elif "# tests" in log_content: # TAP format from node/tap
-    m_tests = re.search(r'#\s+tests\s+(\d+)', log_content)
-    m_pass = re.search(r'#\s+pass\s+(\d+)', log_content)
-    m_fail = re.search(r'#\s+fail\s+(\d+)', log_content)
-    if m_tests: collected = int(m_tests.group(1))
-    if m_pass: passed = int(m_pass.group(1))
-    if m_fail: failed = int(m_fail.group(1))
-elif "passed" in log_content and ("failed" in log_content or "passed in" in log_content or "test session starts" in log_content):
-    # Pytest format
+# Heuristic parser for test frameworks
+if "passed in" in log_content or "failed in" in log_content:
+    # Pytest: "1 passed in 0.05s"
     m_pass = re.search(r'(\d+)\s+passed', log_content)
     m_fail = re.search(r'(\d+)\s+failed', log_content)
     m_skip = re.search(r'(\d+)\s+skipped', log_content)
-    if m_pass: passed = int(m_pass.group(1))
-    if m_fail: failed = int(m_fail.group(1))
-    if m_skip: skipped = int(m_skip.group(1))
+    if m_pass and m_pass.group(1): passed = int(m_pass.group(1))
+    if m_fail and m_fail.group(1): failed = int(m_fail.group(1))
+    if m_skip and m_skip.group(1): skipped = int(m_skip.group(1))
     collected = passed + failed + skipped
+elif "# tests" in log_content or "ℹ tests" in log_content or "✔" in log_content or "ℹ pass" in log_content:
+    # Node.js TAP: "# tests 1", "# pass 1", "# fail 0", or modern spec reporter "ℹ tests 1"
+    m_tests = re.search(r'(?:#|ℹ)\s+tests\s+(\d+)', log_content)
+    m_pass = re.search(r'(?:#|ℹ)\s+pass(?:ed)?\s+(\d+)', log_content)
+    m_fail = re.search(r'(?:#|ℹ)\s+fail(?:ed)?\s+(\d+)', log_content)
+    m_skip = re.search(r'(?:#|ℹ)\s+(?:cancelled|skipped)\s+(\d+)', log_content)
+
+    if m_tests and m_tests.group(1): collected = int(m_tests.group(1))
+    if m_pass and m_pass.group(1): passed = int(m_pass.group(1))
+    if m_fail and m_fail.group(1): failed = int(m_fail.group(1))
+    if m_skip and m_skip.group(1): skipped = int(m_skip.group(1))
+
+    # Fallback: if collected is still 0, scan for checkmarks/crosses
+    if collected == 0:
+        pass_matches = len(re.findall(r'✔\s+.+', log_content))
+        fail_matches = len(re.findall(r'✖\s+.+', log_content))
+        if pass_matches > 0 or fail_matches > 0:
+            passed = pass_matches
+            failed = fail_matches
+            collected = passed + failed
 elif "Tests:" in log_content:
-    # Vitest / Jest: "Tests: 2 passed, 2 total"
-    m_jest = re.search(r'Tests:\s+.*?(\d+)\s+passed.*?(\d+)\s+total', log_content)
+    # Jest/Vitest: "Tests:       1 passed, 1 total"
+    m_jest = re.search(r'Tests:\s+(\d+)\s+passed,\s+(\d+)\s+total', log_content)
     if m_jest:
         passed = int(m_jest.group(1))
         collected = int(m_jest.group(2))
@@ -309,42 +352,21 @@ with open(lock_path, "w") as lf:
         # F08 / P12: Record to immutable attempt history
         manifest["attempt_history"].append(receipt)
 
-        # Check if there were prior failed attempts for this label on the EXACT SAME code snapshot.
-        # This distinguishes flaky retries on unchanged code from legitimate TDD Red-Green progress where code changed.
+        # Flaky retry check using centralized runtime_evidence logic
         curr_tree = git_tree_sha
         curr_wt_sha = receipt.get("working_tree_sha", "")
 
-        prior_failed_attempts_same_snapshot = [
-            a for a in manifest["attempt_history"]
-            if a.get("label") == label
-            and a.get("receipt_id") != receipt.get("receipt_id")
-            and (a.get("exit_code") != 0 or a.get("metrics", {}).get("failed", 0) > 0)
-            and a.get("git_tree_sha") == curr_tree
-            and a.get("working_tree_sha", "") == curr_wt_sha
-        ]
-
-        if prior_failed_attempts_same_snapshot and exit_code == 0 and failed == 0:
+        if runtime_evidence.is_flaky_retry(manifest["attempt_history"], receipt, curr_tree, curr_wt_sha):
             receipt["flaky_retry"] = True
-            receipt["prior_failures_count"] = len(prior_failed_attempts_same_snapshot)
+            receipt["prior_failures_count"] = 1
 
         # Update checks array for this label
         manifest["checks"] = [c for c in manifest["checks"] if c.get("label") != label]
         manifest["checks"].append(receipt)
         manifest["git_tree_sha"] = git_tree_sha
 
-        # Calculate policy disposition
-        has_failure = any(c.get("exit_code") != 0 or c.get("metrics", {}).get("failed", 0) > 0 for c in manifest["checks"])
-        has_skips = any(c.get("metrics", {}).get("skipped", 0) > 0 for c in manifest["checks"])
-        has_flaky = any(c.get("flaky_retry", False) for c in manifest["checks"])
-        has_warnings = any(c.get("has_warnings", False) for c in manifest["checks"])
-
-        if has_failure:
-            manifest["policy_disposition"] = "RED"
-        elif has_skips or has_flaky or has_warnings:
-            # F08 / P12: Retried pass or warning results in AMBER disposition
-            manifest["policy_disposition"] = "AMBER"
-        else:
-            manifest["policy_disposition"] = "GREEN"
+        # Calculate policy disposition via shared runtime_evidence engine
+        manifest["policy_disposition"] = runtime_evidence.calculate_policy_disposition(manifest["checks"])
 
         tmp_manifest = manifest_path + ".tmp"
         with open(tmp_manifest, "w", encoding="utf-8") as f:
@@ -354,8 +376,29 @@ with open(lock_path, "w") as lf:
         os.replace(tmp_manifest, manifest_path)
     finally:
         fcntl.flock(lf, fcntl.LOCK_UN)
-PYEOF
 
-echo "[exec-proxy] Run ${RUN_ID} complete. Exit: ${EXIT_CODE} (${DURATION_MS}ms). Receipt: ${RECEIPT_PATH}"
+# Emit parsed metrics for compact summary formatting
+print(json.dumps({"collected": collected, "passed": passed, "failed": failed, "skipped": skipped}))
+PYEOF
+)
+
+# Output summary based on outcome and output policy (Release B / Task T3)
+if [[ "${EXIT_CODE}" -eq 0 ]]; then
+  PARSED_COLL=$(echo "${METRICS_JSON}" | python3 -c "import json, sys; print(json.load(sys.stdin).get('collected', 0))" 2>/dev/null || echo "0")
+  PARSED_PASS=$(echo "${METRICS_JSON}" | python3 -c "import json, sys; print(json.load(sys.stdin).get('passed', 0))" 2>/dev/null || echo "0")
+  if [[ "${PARSED_COLL}" -gt 0 ]]; then
+    echo "[exec-proxy] ✓ Check '${LABEL}' passed (${DURATION_MS}ms, tests: ${PARSED_PASS}/${PARSED_COLL})."
+  else
+    echo "[exec-proxy] ✓ Check '${LABEL}' passed (${DURATION_MS}ms)."
+  fi
+  echo "[exec-proxy] Receipt: ${RECEIPT_PATH}"
+  echo "[exec-proxy] Log: ${LOG_PATH}"
+else
+  echo "❌ [exec-proxy] Check '${LABEL}' failed with exit code ${EXIT_CODE} (${DURATION_MS}ms)." >&2
+  echo "[exec-proxy] Failure Excerpt (last 20 lines of ${LOG_PATH}):" >&2
+  tail -n 20 "${LOG_PATH}" >&2 || true
+  echo "[exec-proxy] Full Log: ${LOG_PATH}" >&2
+  echo "[exec-proxy] Receipt: ${RECEIPT_PATH}" >&2
+fi
 
 exit ${EXIT_CODE}

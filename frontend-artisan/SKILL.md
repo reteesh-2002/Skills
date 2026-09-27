@@ -91,8 +91,10 @@ Select the token reference matching the project stack:
 ## 5. Verification Checklist
 
 Before delivering frontend code, verify:
-1. Does it look distinct from a generic AI template?
-2. Does it resize gracefully to 375px without horizontal scrolling?
-3. Does all text pass WCAG AA contrast (≥4.5:1)?
-4. Are all interactive elements equipped with tactile `:hover`, `:active`, and `:focus-visible` states?
-5. Does it run with zero uninstalled external dependencies?
+1. Does it look distinct from a generic AI template, or faithfully respect the established design system?
+2. Does it resize gracefully across viewports (375px mobile to 1440px desktop) without horizontal clipping?
+3. Does all text pass WCAG AA contrast (≥4.5:1 for body text)?
+4. Are all interactive elements equipped with tactile `:hover`, `:active`, and accessible `:focus-visible` focus rings?
+5. Are loading skeletons, error fallbacks, and empty states explicitly handled?
+6. Is complete keyboard navigation intact (`Tab`, `Shift+Tab`, `Enter`, `Escape` for modals)?
+7. When browser automation / screenshot tools are not available in the host environment, explicitly disclose that responsive rendering was reviewed statically and requires manual visual confirmation.

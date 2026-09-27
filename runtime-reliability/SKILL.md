@@ -9,7 +9,7 @@ Verification of operational viability, production resilience, and lifecycle inva
 
 ## The Core Invariants
 
-1. **Reversible Migrations**: Never ship a database migration without rehearsing both forward migration and backward rollback on a test database.
+1. **Safe Migration Rehearsal**: Rehearse schema migrations against a representative disposable test database, proving either safe rollback or safe forward-recovery without data loss.
 2. **Leak-Free Resilience**: High-throughput endpoints and long-running loops must undergo a soak test to prove heap memory plateaus rather than growing monotonically.
 3. **Graceful Termination**: Services must trap `SIGTERM` and finish in-flight requests/jobs before closing connections.
 4. **Tri-Surface Output**: High-density 15–20 line Executive Reliability Card in chat, raw probe logs in `.evidence/logs/`, structured receipt in `.evidence/manifest.v1.json`.
