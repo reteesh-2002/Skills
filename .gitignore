@@ -19,3 +19,5 @@ Thumbs.db
 *.swp
 __pycache__/
 *.py[cod]
+# Playwright CLI output (may contain credentials)
+.playwright-cli/
