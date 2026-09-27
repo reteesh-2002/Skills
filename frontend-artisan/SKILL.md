@@ -98,3 +98,18 @@ Before delivering frontend code, verify:
 5. Are loading skeletons, error fallbacks, and empty states explicitly handled?
 6. Is complete keyboard navigation intact (`Tab`, `Shift+Tab`, `Enter`, `Escape` for modals)?
 7. When browser automation / screenshot tools are not available in the host environment, explicitly disclose that responsive rendering was reviewed statically and requires manual visual confirmation.
+
+---
+
+## 6. Generative UI Interactive Mini-Widget Preview
+
+Whenever any frontend design or UI component is being designed, styled, or implemented:
+1. **Generate a Mini Interactive Generative UI Widget**:
+   - Create a self-contained `.html` artifact in `<appDataDir>/brain/<conversation-id>/` with `UserFacing: true` following the `generative_ui` skill pattern.
+   - Use the host's semantic design system tokens: `--background`, `--card`, `--border`, `--foreground`, `--muted-foreground`, `--primary`, `--primary-foreground`, etc.
+   - Include interactive color palette choices, typography scale, tactile button states (`active:scale-[0.98]`), and interactive controls representing the interface.
+   - Include Tailwind script: `<script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>`.
+2. **Embed in Chat**:
+   - Embed the widget inline in the chat response using:
+     `<agent-embed src="file:///<artifact_path>/widget.html"></agent-embed>`
+     allowing the user to preview and interact with color choices and interface states directly.
