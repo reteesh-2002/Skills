@@ -68,18 +68,7 @@ If any of these 8 patterns appear in your code, the implementation is an immedia
 
 ---
 
-### Gate 3: Mandatory Generative UI Interactive Mini-Widget Artifact
-- Before declaring UI implementation complete, you **MUST** generate a self-contained `.html` mini-widget artifact in `<appDataDir>/brain/<conversation-id>/` with `UserFacing: true` using `generative_ui`.
-- Use semantic design tokens and the official gstatic Tailwind CDN:
-  `<script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>`
-- Include interactive color palette swatches, typography scales, tactile button states (`active:scale-[0.98]`), and a live functional preview of the core component.
-- Embed inline in the chat response using:
-  `<agent-embed src="file:///<artifact_path>/widget.html"></agent-embed>`
-  so the user can immediately interact with the design system tokens and interface states.
-
----
-
-### Gate 4: Production Interaction & Accessibility (`web-interface-guidelines`)
+### Gate 3: Production Interaction & Accessibility (`web-interface-guidelines`)
 - **Keyboard Navigation**: All interactive flows must be fully keyboard-operable following WAI-ARIA. Use visible, unobscured `:focus-visible` rings with proper contrast.
 - **Touch & Mobile Ergonomics**:
   - Hit targets must be $\ge 44\text{px} \times 44\text{px}$ on mobile ($\ge 24\text{px}$ desktop).
@@ -90,9 +79,10 @@ If any of these 8 patterns appear in your code, the implementation is an immedia
 
 ---
 
-### Gate 5: Automated Browser Verification (`playwright-cli`)
+### Gate 4: Automated Browser Verification (`playwright-cli`)
 - Test multi-viewport layout adaptation (375px mobile, 768px tablet, 1440px desktop) to ensure zero horizontal scrollbar clipping.
 - Assert focus ring visibility, WAI-ARIA accessibility tree correctness, and zero console errors routed through `scripts/exec-proxy.sh`:
   ```bash
   ./scripts/exec-proxy.sh --label test_ui_viewports npx playwright test
   ```
+

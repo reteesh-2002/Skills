@@ -12,16 +12,6 @@ Auto-detection and automatic activation are **strictly limited to the 3 core eng
 | **Create new feature / System / Architecture / Change** | `plan-master` | 1. Read `plan-master/SKILL.md`.<br>2. Formulate execution plan, acceptance criteria, and task dependency graph. |
 | **Verify / Test / Validate code changes** | `qa-sentinel` | 1. Read `qa-sentinel/SKILL.md`.<br>2. Apply Anti-Tautology discipline (observable side-effects, real failure questions).<br>3. Verify code actually executes via `scripts/exec-proxy.sh`. |
 
-## Frontend Design & Generative UI Mandatory Protocol
-
-Whenever ANY frontend design or UI component is being planned, designed, or implemented (whether via `frontend-artisan` or direct user request):
-1. **Interactive Mini-Widget**: You MUST generate a mini interactive widget with color palette choices, typography scales, tactile controls, and interface preview using `generative_ui`.
-2. **Artifact & Inline Embed**:
-   - Write a self-contained `.html` file to `<appDataDir>/brain/<conversation-id>/` with `UserFacing: true`.
-   - Use the host's semantic design system tokens (`--background`, `--card`, `--border`, `--foreground`, `--muted-foreground`, `--primary`, `--primary-foreground`, `--accent`, etc.) and `<script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>`.
-   - Embed the widget inline in the chat response using:
-     `<agent-embed src="file:///<artifact_path>/widget.html"></agent-embed>`
-     so the user can directly interact with the color choices and interface states.
 
 ## Manual & On-Demand Only Skills
 
