@@ -4,6 +4,71 @@ A battle-tested, high-craft software engineering operating system for **Google A
 
 ---
 
+## ⚡ Quick Start
+
+### 1. Supported Hosts & Prerequisites
+- **Host**: Google Antigravity (IDE & `agy` CLI).
+- **Core Dependencies**:
+  - `git` $\ge 2.30$
+  - `python3` $\ge 3.10$
+  - `bash` $\ge 4.0$
+  - `node` $\ge 18$ *(optional, required for `@playwright/cli`)*
+
+### 2. Installation Options
+
+#### Option A: Global Installation (Recommended)
+Make skills available across all your Antigravity workspaces:
+```bash
+# Clone the repository
+git clone https://github.com/reteesh-2002/Skills.git
+cd Skills
+
+# Install into Antigravity global configuration
+mkdir -p ~/.gemini/config/skills
+cp -r * ~/.gemini/config/skills/
+```
+
+#### Option B: Workspace-Local Installation
+Equip a single project workspace with the skills:
+```bash
+mkdir -p .gemini/skills
+cp -r /path/to/Skills/<selected-skills> .gemini/skills/
+```
+
+### 3. Release Gate Hook Setup
+To prevent unverified commits or unproven pull requests, configure the Antigravity PreToolUse hook in your repository at `.agents/hooks.json`:
+```json
+{
+  "evidence-policy": {
+    "PreToolUse": [
+      {
+        "matcher": "run_command",
+        "description": "Intercept git push and evaluate deterministic release gate",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash scripts/verify-release-gate.sh --pre-tool",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+### 4. First-Run Health & Conformance Check
+Verify the skill metadata, relative documentation links, and runtime conformance test suite:
+```bash
+# 1. Validate skill frontmatter, metadata, and link integrity
+python3 scripts/validate-skills.py
+
+# 2. Run the 27-test runtime conformance and adversarial suite
+./scripts/exec-proxy.sh --label test_runtime bash tests/verify_runtime.sh
+```
+
+---
+
 ## 🏗️ Master Architecture Topology
 
 The suite operates as a 5-tier hierarchical engineering operating system:
@@ -93,11 +158,11 @@ Through `AGENTS.md` and `GEMINI.md` rules, the agent **automatically detects and
 ## 🎨 Frontend Design & Generative UI Protocol
 
 Whenever any frontend design or UI component is being designed, styled, or implemented:
-1. **Master Orchestrator ([`frontend-artisan`](frontend-artisan/SKILL.md))**: Coordinates visual art direction, design system tokens, interaction guidelines, and browser audits.
+1. **Master Orchestrator ([`frontend-artisan`](frontend-artisan/SKILL.md))**: Coordinates visual art direction, design system tokens, interaction guidelines, and browser audits with **strict zero-slop hard gates**.
 2. **Visual Art Direction ([`image-to-code`](image-to-code/SKILL.md))**: Mandatory Image-First protocol using Antigravity's native `generate_image` tool. Deeply inspects reference images with `view_file` to eliminate the "cards-inside-cards-inside-cards" nesting loop, purple gradients, and cramped mobile heroes.
 3. **Design System Ingestion ([`design-md`](design-md/SKILL.md))**: Ingests workspace `DESIGN.md` or adopts 15 production brand presets (**Linear, Vercel, Stripe, Supabase, Raycast, Resend, Apple, Figma, Framer, PostHog, Warp, etc.**).
 4. **Vercel Standards ([`web-interface-guidelines`](web-interface-guidelines/SKILL.md))**: Enforces keyboard accessibility (WAI-ARIA), touch targets $\ge 44\text{px}$, `<input>` font-size $\ge 16\text{px}$ (prevents iOS Safari zoom), loading button label retention, skeleton flicker delays, and URL state persistence.
-5. **Interactive Preview ([`generative_ui`](frontend-artisan/SKILL.md#mobile-mandatory-generative-ui-interactive-mini-widget))**: Creates a self-contained `.html` mini-widget artifact and embeds it inline in chat via `<agent-embed src="file:///<path>/widget.html"></agent-embed>` with interactive color palette swatches and tactile controls.
+5. **Interactive Preview ([`generative_ui`](frontend-artisan/SKILL.md#gate-3-mandatory-generative-ui-interactive-mini-widget-artifact))**: Creates a self-contained `.html` mini-widget artifact and embeds it inline in chat via `<agent-embed src="file:///<path>/widget.html"></agent-embed>` with interactive color palette swatches and tactile controls.
 6. **Automated Verification ([`playwright-cli`](playwright-cli/SKILL.md))**: Headless multi-viewport audits (375px mobile, 768px tablet, 1440px desktop) asserting zero horizontal overflow and full focus ring visibility.
 
 ---
@@ -119,7 +184,6 @@ Whenever any frontend design or UI component is being designed, styled, or imple
 | **`design-md`** | [`design-md/SKILL.md`](design-md/SKILL.md) | **Design System Token Manager**: Ingests project `DESIGN.md` or applies 15 bundled world-class company presets. |
 | **`web-interface-guidelines`** | [`web-interface-guidelines/SKILL.md`](web-interface-guidelines/SKILL.md) | **Vercel Production Standard**: Complete guidelines for keyboard accessibility, loading flickers, and touch targets. |
 | **`playwright-cli`** | [`playwright-cli/SKILL.md`](playwright-cli/SKILL.md) | **Headless Browser CLI**: Microsoft's official agent skill for automated viewport snapshots, tracing, and video recording. |
-| **`anti-slop-spec`** | [`anti-slop-spec/SKILL.md`](anti-slop-spec/SKILL.md) | **Design Sharpener**: Forwarding alias enforcing high-craft visual standards before UI coding starts. |
 
 ### Tier 3: Specialist Systems Engineering
 | Skill | Entry Point | Role |
@@ -143,6 +207,12 @@ Whenever any frontend design or UI component is being designed, styled, or imple
 | **`runtime_evidence.py`** | [`scripts/runtime_evidence.py`](scripts/runtime_evidence.py) | **Verification Engine**: Shared cryptographic receipt validation, ISO waiver parsing, and policy disposition logic. |
 | **`task_ledger.py`** | [`scripts/task_ledger.py`](scripts/task_ledger.py) | **Live Task Flow Ledger**: Multi-process flock-protected task tracking (`.evidence/tasks.json`). |
 | **`verify-release-gate.sh`** | [`scripts/verify-release-gate.sh`](scripts/verify-release-gate.sh) | **Deterministic Release Gate**: Verifies clean tree, receipt matches, non-zero test counts, and protojson hook payloads. |
+
+### Forwarding Aliases
+| Alias | Target Skill | When to Install / Retain |
+| :--- | :--- | :--- |
+| **`prompt-architect`** | [`plan-master`](plan-master/SKILL.md) | Optional backward-compatibility alias. Retain if team members invoke `/prompt-architect`. |
+| **`anti-slop-spec`** | [`plan-master`](plan-master/SKILL.md) & [`frontend-artisan`](frontend-artisan/SKILL.md) | Optional design-phase alias. Retain if invoking `/anti-slop-spec` prior to UI implementation. |
 
 ---
 
@@ -173,15 +243,24 @@ Use /idea-council
 
 ## 🔬 Token & Context Efficiency Engineering
 
-1. **Progressive Disclosure**: Core `SKILL.md` bodies stay under $\sim 1,000$ tokens. Heavy documentation, presets, and adapters are split into `references/` and `presets/` and loaded only on demand.
-2. **Bounded Log Capture (`exec-proxy.sh`)**: Raw `stdout`/`stderr` streams to disk (`.evidence/logs/<run_id>.log`). Terminal output is compressed to a clean 3-line status on pass, cutting model-facing log volume by **over 70%**.
-3. **Task-Shape Gating (`adaptive-worker-orchestrator-v2`)**: Small or tightly-coupled tasks remain in Solo mode, eliminating redundant subagent token burn. Only genuinely independent workstreams spawn isolated worktrees.
+Rather than a one-size-fits-all claim, skill instructions follow strict tiered token budgeting:
+
+| Category | Typical Token Footprint | Skills | Loading Strategy |
+| :--- | :--- | :--- | :--- |
+| **Compact Protocols** | $250 - 900$ tokens | `design-md` (~257), `security-verifier` (~629), `runtime-reliability` (~633), `code-reviewer` (~750), `adaptive-worker-orchestrator-v2` (~820), `ship-it` (~898) | Ingested inline into worker prompts with negligible context cost. |
+| **Engineering Playbooks** | $1,200 - 2,000$ tokens | `schema-craft` (~1,209), `frontend-artisan` (~1,285), `deep-debugger` (~1,311), `qa-sentinel` (~1,635), `plan-master` (~1,953), `idea-council` (~2,017) | Structured operational workflows with hard gates and step-by-step protocols. |
+| **Deep Domain Specs** | $> 2,000$ tokens | `playwright-cli` (~2,340), `web-interface-guidelines` (~3,107), `image-to-code` (~7,593) | Comprehensive reference standards. Multi-framework adapters and presets reside in subdirectories (`references/`, `presets/`) and are loaded on-demand only. |
+| **Forwarding Aliases** | $< 200$ tokens | `prompt-architect` (~156), `anti-slop-spec` (~159) | Lightweight pointers that immediately route to their canonical targets. |
+
+**Additional Optimizations**:
+- **Bounded Log Capture (`exec-proxy.sh`)**: Raw `stdout`/`stderr` streams to disk (`.evidence/logs/<run_id>.log`). Terminal output is compressed to a clean 3-line status on pass, cutting model-facing log volume by **over 70%**.
+- **Task-Shape Gating (`adaptive-worker-orchestrator-v2`)**: Small or tightly-coupled tasks remain in Solo mode, eliminating redundant subagent token burn. Only genuinely independent workstreams spawn isolated worktrees.
 
 ---
 
 ## 🛡️ Conformance & Verification Guarantee
 
-The runtime safeguards and execution proxies are verified by **27/27 automated adversarial tests**:
+The runtime safeguards, cryptographic gates, and execution proxies are verified by **27 automated adversarial tests**:
 
 ```bash
 # Run the complete conformance & adversarial suite
@@ -191,3 +270,11 @@ bash tests/verify_runtime.sh
 ./scripts/exec-proxy.sh --label test_conformance bash tests/verify_runtime.sh
 ./scripts/verify-release-gate.sh
 ```
+
+---
+
+## 🤝 Contributing & License
+
+- **Contributing**: Please review [`CONTRIBUTING.md`](CONTRIBUTING.md) for architectural guidelines, frontmatter specifications, and testing requirements.
+- **License**: Released under the [MIT License](LICENSE).
+  - Attribution Notice: Portions of `plan-master` incorporate concepts or material from Prompt Master (Copyright © 2026 Nidhin Joseph Nelson, MIT License, see [`plan-master/LICENSE.prompt-master`](plan-master/LICENSE.prompt-master)).
