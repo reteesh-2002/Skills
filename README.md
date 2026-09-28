@@ -169,9 +169,10 @@ Whenever any frontend design or UI component is being designed, styled, or imple
 
 ## 📚 Complete Skills Directory
 
-### Tier 1: Core Autonomous Triad
+### Tier 1: Core Planning & Autonomous Triad
 | Skill | Entry Point | Role |
 | :--- | :--- | :--- |
+| **`prompt-architect`** | [`prompt-architect/SKILL.md`](prompt-architect/SKILL.md) | **Master Prompt Composer**: Translates raw ideas into optimal execution prompts and assigns surgical 2–4 skill teams. Zero disk-crawling law. |
 | **`plan-master`** | [`plan-master/SKILL.md`](plan-master/SKILL.md) | **Master Planner & Intent Architect**: Breaks complex tasks into dependency-aware execution DAGs with TDD Red-Green discipline. |
 | **`deep-debugger`** | [`deep-debugger/SKILL.md`](deep-debugger/SKILL.md) | **Root Cause Investigator**: Systematic 6-stage scientific debugging protocol preventing shotgun patching and token loops. |
 | **`qa-sentinel`** | [`qa-sentinel/SKILL.md`](qa-sentinel/SKILL.md) | **Verification Gatekeeper**: Anti-tautology testing engine capturing physical evidence receipts via `scripts/exec-proxy.sh`. |
@@ -211,7 +212,6 @@ Whenever any frontend design or UI component is being designed, styled, or imple
 ### Forwarding Aliases
 | Alias | Target Skill | When to Install / Retain |
 | :--- | :--- | :--- |
-| **`prompt-architect`** | [`plan-master`](plan-master/SKILL.md) | Optional backward-compatibility alias. Retain if team members invoke `/prompt-architect`. |
 | **`anti-slop-spec`** | [`plan-master`](plan-master/SKILL.md) & [`frontend-artisan`](frontend-artisan/SKILL.md) | Optional design-phase alias. Retain if invoking `/anti-slop-spec` prior to UI implementation. |
 
 ---
