@@ -354,7 +354,8 @@ def main():
             shutil.rmtree(sandbox, ignore_errors=True)
 
     print("-" * 85)
-    print(f"Execution Summary: {total_passed} PASS | {total_warned} WARN | {total_failed} FAIL (Total 51 Trials)\n")
+    print(f"Execution Summary: {total_passed} PASS | {total_warned} WARN | {total_failed} FAIL (Total 51 Trials)")
+    print(f"Tests: {total_passed} passed, {len(SKILLS) * 3} total\n")
 
     matrix_file = EVIDENCE_DIR / "benchmark_matrix.json"
     with open(matrix_file, "w", encoding="utf-8") as f:
