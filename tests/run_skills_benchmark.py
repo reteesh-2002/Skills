@@ -361,7 +361,8 @@ def main():
         json.dump(benchmark_matrix, f, indent=2)
     print(f"✅ Telemetry written to: {matrix_file}")
 
-    generate_master_report(benchmark_matrix)
+    if "--update-report" in sys.argv or not (REPORTS_DIR / "skills-empirical-audit.md").exists():
+        generate_master_report(benchmark_matrix)
 
 def generate_master_report(matrix: dict):
     """Compiles the 51-trial empirical findings into reports/skills-empirical-audit.md."""
