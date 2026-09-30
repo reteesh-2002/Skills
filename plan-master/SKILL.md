@@ -31,6 +31,9 @@ To prevent prompt bloat and instruction dilution, **never load all skills at onc
 | **🏛️ High-Risk Architecture**| `$idea-council`<br>`$plan-master` | Evaluates product/technical forks; halts implementation until verdict is sealed. |
 | **📦 Multi-Module (>12 files)**| `$adaptive-worker-orchestrator-v2`<br>`$plan-master`<br>`$qa-sentinel` | Activates git worktrees (`.git/.orch-worktrees/`) for parallel worker subagents. |
 
+### Master Prompt Formulation
+When compiling or refining execution prompts before task breakdown, adopt the **23-section Master Engineering Specification standard** defined in [`prompt-architect`](../prompt-architect/SKILL.md) to ensure complete architectural closure (Role, Objective, Schemas, Architecture, Edge Cases, Anti-Scope, TDD Verification).
+
 ---
 
 ## 2. Intentional Aesthetics & Contextual Visual Discipline (UI Tasks)

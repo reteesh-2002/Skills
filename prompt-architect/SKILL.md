@@ -74,17 +74,50 @@ Select the optimal **2 to 4 skills** based on domain classification:
 
 ---
 
-## 📐 The Inverted Pyramid Prompt Architecture
+## 📐 The Master Engineering Specification Architecture
 
-Every compiled prompt must follow this 4-tier structure:
+Every compiled execution prompt must be a **production-ready master engineering specification** formatted for immediate, autonomous execution by an AI coding agent.
 
-1. **Goal & Primary Directive**: 1–2 punchy sentences defining the technical objective.
-2. **Assigned Skill Tags**: Pre-selected skills (`/frontend-artisan`, `/schema-craft`, `/qa-sentinel`).
-3. **Phased Execution Contract**:
-   - **Pass 1 (Core Backbone & Data Engine)**: Free API integration, caching layer, or canvas engine.
-   - **Pass 2 (State & Interactivity)**: Zero-slop UI layout, keyboard shortcuts (`/`, `⌘K`), and state transitions.
-   - **Pass 3 (Verification & Guardrails)**: QA Sentinel testing, empty states, and accessibility compliance.
-4. **Negative Guardrails**: Explicit list of domain-specific anti-patterns to avoid.
+### Style Requirements:
+- **High Information Density**: Comprehensive but concise. Every paragraph, section, requirement, and example must add distinct engineering value. Zero fluff or filler.
+- **Concrete & Actionable**: Prefer short sentences, compact explanations, structured headings, examples, schemas, state machines, and directory layouts.
+- **Zero Redundancy**: State each requirement once under its proper section. Avoid repeating requirements across sections.
+- **No Chat Fluff**: Avoid motivational cheerleading, generic advice, pleasantries, conversational introductions, and summary conclusions.
+- **Self-Directed Architectural Closure**: Convert vague ideas into explicit technical requirements. Fill in missing technical/product details with production defaults.
+- **Constraint Hierarchy**: Explicitly distinguish `MUST`, `SHOULD`, `MAY`, and `DO NOT` requirements.
+- **Code Block Formatting**: Always use code blocks for data schemas, state definitions, directory layouts, and API contracts.
+
+---
+
+## 🏛️ Modular Specification Structure
+
+Adapt the specification structure to the task's shape and domain. Merge closely related items where sensible, considering these 23 architectural sections:
+
+```markdown
+1. Role                      # e.g., Senior Systems Engineer & Product Architect
+2. Objective                 # Single-paragraph technical mission statement
+3. Product Vision            # Target user, core value proposition, aesthetic bar
+4. Core Concepts             # Domain entities, nouns, lifecycle states
+5. User Experience           # Information hierarchy, visual density, responsive layout
+6. Functional Requirements   # Detailed capability breakdown (MUST / SHOULD / MAY)
+7. Important Interactions    # Keyboard shortcuts, optimistic UI, state transitions
+8. Data Model & Schemas      # Concrete types, TypeScript interfaces, SQL DDL (in code blocks)
+9. Architecture & Layout     # Clean directory layout, modular partitioning (in code blocks)
+10. Technology Choices       # Selected libraries with sensible defaults & trade-off rationale
+11. Performance Requirements # Latency budgets, memoization, virtualization, bundle bounds
+12. Local / Offline Behavior # Persistence strategy, localStorage/IndexedDB, graceful disconnect
+13. Security & Validation    # Input sanitization, auth boundaries, private subnet egress
+14. Error Handling           # Error boundaries, fallback states, user-facing error copy
+15. Edge Cases               # Boundary conditions, empty feeds, rate limits, clock skews
+16. AI Behavior (if applicable) # Context limits, streaming fallback, structured JSON extraction
+17. Things NOT to Build      # Explicit anti-scope, anti-slop clichés banned from this build
+18. MVP Scope                # Minimal shippable slice achievable in Turn 1
+19. Future Phases            # Explicitly postponed capabilities to prevent scope creep
+20. Implementation Order     # Dependency-aware phased execution sequence (Phase 1 -> 2 -> 3)
+21. Testing Requirements     # TDD Red-Green requirements, anti-tautology side-effect assertions
+22. Success Criteria         # Concrete, verifiable conditions for completion
+23. Final Delivery Checklist # Commits, clean working tree, verification receipts required
+```
 
 ---
 
@@ -93,6 +126,5 @@ Every compiled prompt must follow this 4-tier structure:
 When invoked, respond with:
 
 1. **Architectural Analysis & Blindspots Caught**: (Brief 2–4 bullet points highlighting missing data sources, caching needs, or performance hazards).
-2. **Domain Classification**: (e.g. *Full-Stack Immersive Application*)
-3. **Assigned Skill Team**: The exact 2–4 skills with a 1-line rationale for each.
-4. **The Refined Execution Prompt**: Formatted in a single copy-pasteable Markdown code block starting with the assigned slash commands.
+2. **Domain Classification & Assigned Skills**: (e.g., *Full-Stack Immersive Application* $\rightarrow$ `/frontend-artisan`, `/schema-craft`, `/qa-sentinel`).
+3. **Production Master Engineering Specification**: The complete, copy-pasteable execution prompt enclosed in a Markdown code block, starting with the assigned slash commands, fully formatted according to the 23-section standard.
