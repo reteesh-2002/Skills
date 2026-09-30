@@ -267,13 +267,54 @@ class TestTaskLedgerLiveFlow(unittest.TestCase):
 class TestOutputPolicy(unittest.TestCase):
     """O-01 through O-05: exec-proxy bounded output and compact formatting."""
 
+    def setUp(self):
+        """Create an isolated sandbox git repo for exec-proxy invocations.
+
+        Intentionally-failing exec-proxy calls (O-02, O-03, O-05) register RED
+        receipts in whatever directory they run in. Running them in a temp sandbox
+        keeps the main repo's .evidence/manifest.v1.json clean and GREEN so that
+        git push through the release gate is never blocked by test-infrastructure
+        receipts.
+        """
+        self.sandbox = tempfile.mkdtemp(prefix="agy_o_tests_")
+        scripts_src = os.path.join(REPO_ROOT, "scripts")
+        sandbox_scripts = os.path.join(self.sandbox, "scripts")
+        os.makedirs(sandbox_scripts, exist_ok=True)
+        for fname in ("exec-proxy.sh", "verify-release-gate.sh",
+                      "runtime_evidence.py", "task_ledger.py"):
+            src = os.path.join(scripts_src, fname)
+            if os.path.exists(src):
+                shutil.copy2(src, sandbox_scripts)
+        # Minimal git repo so exec-proxy can capture tree SHA
+        subprocess.run(["git", "init", "-b", "main", "--quiet", self.sandbox],
+                       check=True, capture_output=True)
+        subprocess.run(["git", "-C", self.sandbox, "config",
+                        "user.name", "Test"], check=True, capture_output=True)
+        subprocess.run(["git", "-C", self.sandbox, "config",
+                        "user.email", "t@t"], check=True, capture_output=True)
+        open(os.path.join(self.sandbox, "placeholder.txt"), "w").close()
+        subprocess.run(["git", "-C", self.sandbox, "add", "."],
+                       check=True, capture_output=True)
+        subprocess.run(["git", "-C", self.sandbox, "commit", "--quiet",
+                        "-m", "init"], check=True, capture_output=True)
+
+    def tearDown(self):
+        shutil.rmtree(self.sandbox, ignore_errors=True)
+
+    def _run_proxy(self, *args, **kwargs):
+        proxy = os.path.join(self.sandbox, "scripts", "exec-proxy.sh")
+        return subprocess.run(
+            ["bash", proxy] + list(args),
+            capture_output=True, text=True,
+            cwd=self.sandbox,
+            **kwargs
+        )
+
     def test_o01_success_emits_compact_summary(self):
         """O-01: routine success produces one compact summary line, not verbose dump."""
-        result = subprocess.run(
-            ["bash", EXEC_PROXY, "--label", "o01_check", "python3", "-c",
-             "for i in range(100): print(f'verbose line {i}')"],
-            capture_output=True, text=True,
-            cwd=REPO_ROOT
+        result = self._run_proxy(
+            "--label", "o01_check", "python3", "-c",
+            "for i in range(100): print(f'verbose line {i}')"
         )
         self.assertEqual(result.returncode, 0)
         stdout_lines = [l for l in result.stdout.splitlines() if l.strip()]
@@ -284,15 +325,10 @@ class TestOutputPolicy(unittest.TestCase):
 
     def test_o02_partial_failure_names_failing_part(self):
         """O-02: partial/failed run names the failing part in stderr, not just exit code."""
-        result = subprocess.run(
-            ["bash", EXEC_PROXY, "--label", "o02_fail", "bash", "-c", "exit 7"],
-            capture_output=True, text=True,
-            cwd=REPO_ROOT
-        )
+        result = self._run_proxy("--label", "o02_fail", "bash", "-c", "exit 7")
         self.assertNotEqual(result.returncode, 0)
         combined = result.stdout + result.stderr
         self.assertIn("o02_fail", combined)
-        # Failure excerpt or log reference must appear
         self.assertTrue(
             "Failure Excerpt" in combined or "Full Log:" in combined or "failed" in combined.lower(),
             f"Failure message missing from output: {combined!r}"
@@ -301,47 +337,10 @@ class TestOutputPolicy(unittest.TestCase):
     def test_o03_full_log_preserved_for_detail_retrieval(self):
         """O-03: requesting detail exposes preserved evidence (log file exists with full content)."""
         verbose_content = "VERBOSE_MARKER_LINE_12345"
-        result = subprocess.run(
-            ["bash", EXEC_PROXY, "--label", "o03_verbose",
-             "bash", "-c", f"echo {verbose_content}; exit 1"],
-            capture_output=True, text=True,
-            cwd=REPO_ROOT
+        result = self._run_proxy(
+            "--label", "o03_verbose",
+            "bash", "-c", f"echo {verbose_content}; exit 1"
         )
-        combined = result.stdout + result.stderr
-        # Find log path in output
-        log_path = None
-        for line in combined.splitlines():
-            if ".evidence/logs/" in line and ".log" in line:
-                parts = line.split()
-                for part in parts:
-                    if ".evidence/logs/" in part and ".log" in part:
-                        log_path = part.strip()
-                        if not os.path.isabs(log_path):
-                            log_path = os.path.join(REPO_ROOT, log_path)
-                        break
-        self.assertIsNotNone(log_path, f"No log path found in output: {combined!r}")
-        self.assertTrue(os.path.exists(log_path), f"Log file does not exist: {log_path}")
-        with open(log_path) as _lf: log_content = _lf.read()
-        self.assertIn(verbose_content, log_content,
-                      "Full verbose content must be in the log file")
-
-    def test_o05_compact_mode_does_not_lose_failure(self):
-        """O-05: compact mode reduces chat noise but preserves identified failures."""
-        marker = "UNIQUE_FAILURE_MARKER_99887"
-        result = subprocess.run(
-            ["bash", EXEC_PROXY, "--label", "o05_compact_fail",
-             "bash", "-c",
-             f"for i in $(seq 1 200); do echo noisy_line_$i; done; "
-             f"echo {marker}; exit 1"],
-            capture_output=True, text=True,
-            cwd=REPO_ROOT
-        )
-        self.assertNotEqual(result.returncode, 0)
-        # stdout must be compact (< 25 lines total)
-        stdout_lines = result.stdout.splitlines()
-        self.assertLessEqual(len(stdout_lines), 25,
-                             f"stdout not compact: {len(stdout_lines)} lines")
-        # But the log file must contain the marker
         combined = result.stdout + result.stderr
         log_path = None
         for line in combined.splitlines():
@@ -349,10 +348,39 @@ class TestOutputPolicy(unittest.TestCase):
                 for part in line.split():
                     if ".evidence/logs/" in part and ".log" in part:
                         lp = part.strip()
-                        log_path = lp if os.path.isabs(lp) else os.path.join(REPO_ROOT, lp)
+                        log_path = lp if os.path.isabs(lp) else os.path.join(self.sandbox, lp)
+                        break
+        self.assertIsNotNone(log_path, f"No log path found in output: {combined!r}")
+        self.assertTrue(os.path.exists(log_path), f"Log file does not exist: {log_path}")
+        with open(log_path) as _lf:
+            log_content = _lf.read()
+        self.assertIn(verbose_content, log_content,
+                      "Full verbose content must be in the log file")
+
+    def test_o05_compact_mode_does_not_lose_failure(self):
+        """O-05: compact mode reduces chat noise but preserves identified failures."""
+        marker = "UNIQUE_FAILURE_MARKER_99887"
+        result = self._run_proxy(
+            "--label", "o05_compact_fail",
+            "bash", "-c",
+            f"for i in $(seq 1 200); do echo noisy_line_$i; done; echo {marker}; exit 1"
+        )
+        self.assertNotEqual(result.returncode, 0)
+        stdout_lines = result.stdout.splitlines()
+        self.assertLessEqual(len(stdout_lines), 25,
+                             f"stdout not compact: {len(stdout_lines)} lines")
+        combined = result.stdout + result.stderr
+        log_path = None
+        for line in combined.splitlines():
+            if ".evidence/logs/" in line and ".log" in line:
+                for part in line.split():
+                    if ".evidence/logs/" in part and ".log" in part:
+                        lp = part.strip()
+                        log_path = lp if os.path.isabs(lp) else os.path.join(self.sandbox, lp)
                         break
         if log_path and os.path.exists(log_path):
-            with open(log_path) as _lf: log_content = _lf.read()
+            with open(log_path) as _lf:
+                log_content = _lf.read()
             self.assertIn(marker, log_content)
 
 
