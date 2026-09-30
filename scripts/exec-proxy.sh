@@ -291,6 +291,17 @@ elif "test result:" in log_content:
         failed = int(m_cargo.group(2))
         skipped = int(m_cargo.group(3))
         collected = passed + failed + skipped
+elif "Ran " in log_content and " tests in " in log_content:
+    # Python unittest: "Ran 16 tests in 0.004s" + "OK" or "FAILED (failures=N)"
+    m_ran = re.search(r'Ran\s+(\d+)\s+tests?\s+in', log_content)
+    m_fail = re.search(r'FAILED\s*\(.*?failures=(\d+)', log_content)
+    m_err  = re.search(r'FAILED\s*\(.*?errors=(\d+)', log_content)
+    m_skip = re.search(r'skipped=(\d+)', log_content)
+    if m_ran:
+        collected = int(m_ran.group(1))
+        failed    = (int(m_fail.group(1)) if m_fail else 0) + (int(m_err.group(1)) if m_err else 0)
+        skipped   = int(m_skip.group(1)) if m_skip else 0
+        passed    = collected - failed - skipped
 
 # Check for deprecation warnings (F08, P13)
 if "DeprecationWarning" in log_content or "ExperimentalWarning" in log_content:
