@@ -44,7 +44,7 @@ Whenever ANY user interface, component, dashboard, or website is involved:
    - **`design-md`**: Force a concrete design system token preset (**Linear**, **Vercel**, or **Stripe**).
    - **`image-to-code`**: Mandate Image-First art direction for heroes and atmospheric layouts.
    - **`web-interface-guidelines`**: Enforce Vercel touch targets ($\ge 44\text{px}$), `:focus-visible` keyboard navigation, and optimistic UI.
-   - **`generative_ui`**: Require an interactive mini-widget preview embedded via `<agent-embed>`.
+   - **`playwright-cli`**: Enforce multi-viewport layout audits (375px/768px/1440px) and WCAG AA contrast verification.
 3. **Inject Negative Anti-Slop Guardrails**: Explicitly ban 4-card metric rows on utility tools, muddy navy/neon glow palettes, cards-inside-cards nesting, and colored pill badge pollution.
 
 ---

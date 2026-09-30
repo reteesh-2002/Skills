@@ -53,7 +53,7 @@ When creating or modifying frontend skills:
    - 🚫 No muddy navy (`#0B132B`) with glowing neon green (`#00F5A0`) buttons.
    - 🚫 No infinite card-in-card nesting. Use clean 1px hairline dividers and whitespace.
    - 🚫 No pill badge wrappers on raw tabular data.
-2. **Generative UI Protocol**: Ensure visual artifacts generate a self-contained `.html` mini-widget embeddable via `<agent-embed>`.
+2. **Automated Verification**: Ensure visual components pass multi-viewport responsive checks (375px/768px/1440px) and meet WCAG AA contrast standards ($\ge 4.5:1$).
 
 ---
 

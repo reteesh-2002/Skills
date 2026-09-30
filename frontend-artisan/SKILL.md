@@ -1,6 +1,6 @@
 ---
 name: frontend-artisan
-description: Master frontend engineering and design orchestrator. Enforces zero-slop hard gates, coordinates image-to-code (Taste Skill visual generation), design-md (Linear, Stripe, Vercel design systems), web-interface-guidelines (Vercel production standards), playwright-cli (headless browser verification), and generative_ui (interactive mini-widgets). Use when building, styling, or refactoring web apps, landing pages, dashboards, or UI components.
+description: Master frontend engineering and design orchestrator. Enforces zero-slop hard gates, coordinates image-to-code (Taste Skill visual generation), design-md (Linear, Stripe, Vercel design systems), web-interface-guidelines (Vercel production standards), and playwright-cli (headless browser verification). Use when building, styling, or refactoring web apps, landing pages, dashboards, or UI components.
 ---
 
 # Frontend Artisan (Master UI/UX & Design Orchestrator)
