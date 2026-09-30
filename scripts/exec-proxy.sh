@@ -291,8 +291,8 @@ elif "test result:" in log_content:
         failed = int(m_cargo.group(2))
         skipped = int(m_cargo.group(3))
         collected = passed + failed + skipped
-elif "Ran " in log_content and " tests in " in log_content:
-    # Python unittest: "Ran 16 tests in 0.004s" + "OK" or "FAILED (failures=N)"
+elif "Ran " in log_content and (" tests in " in log_content or " test in " in log_content):
+    # Python unittest: "Ran 16 tests in 0.004s" or "Ran 1 test in 0.001s"
     m_ran = re.search(r'Ran\s+(\d+)\s+tests?\s+in', log_content)
     m_fail = re.search(r'FAILED\s*\(.*?failures=(\d+)', log_content)
     m_err  = re.search(r'FAILED\s*\(.*?errors=(\d+)', log_content)
