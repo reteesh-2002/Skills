@@ -79,10 +79,17 @@ If any of these 8 patterns appear in your code, the implementation is an immedia
 
 ---
 
-### Gate 4: Automated Browser Verification (`playwright-cli`)
-- Test multi-viewport layout adaptation (375px mobile, 768px tablet, 1440px desktop) to ensure zero horizontal scrollbar clipping.
-- Assert focus ring visibility, WAI-ARIA accessibility tree correctness, and zero console errors routed through `scripts/exec-proxy.sh`:
+### Gate 4: Automated Browser & Contrast Verification (`playwright-cli`)
+- **Responsive Viewport Matrix**: Test multi-viewport layout adaptation (375px mobile, 768px tablet, 1440px desktop) to ensure zero horizontal scrollbar clipping.
+- **WCAG AA Contrast**: Text contrast must meet $\ge 4.5:1$ for normal text ($\ge 3.0:1$ for large text). Verify programmatically via `scripts/specialist_probes.py`:
+  ```python
+  from specialist_probes import verify_wcag_aa, check_html_viewport_overflow
+  res_contrast = verify_wcag_aa(fg_hex="#ffffff", bg_hex="#08090a")
+  res_overflow = check_html_viewport_overflow(html_content, viewports=[375, 768, 1440])
+  ```
+- **Automated Browser Verification**:
   ```bash
   ./scripts/exec-proxy.sh --label test_ui_viewports npx playwright test
   ```
+- **Browser Tool Fallback & Transparency**: If Playwright or a graphic display environment is unavailable, execute static DOM/contrast checks with `scripts/specialist_probes.py` and explicitly record remaining visual checks as a **Manual Verification Limitation** rather than fabricating test passes.
 

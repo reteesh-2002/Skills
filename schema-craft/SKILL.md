@@ -133,10 +133,16 @@ When invoked, Schema Craft delivers:
 | `posts` | `idx_posts_author` | `author_id` | Join optimization on author posts |
 | `posts` | `idx_posts_feed` | `(published, created_at DESC)` | Public feed pagination |
 
-#### 4. Reversible Migration Plan
+#### 4. Reversible Migration Plan & Rehearsal
 *   **Up Migration**: `ALTER TABLE ...` / `CREATE TABLE ...`
 *   **Down Migration**: Safe rollback steps
-*   **Safety Audit**: Zero locks, safe column additions verified
+*   **Rehearsal Probe**: Verify idempotency and rollback safety using `scripts/specialist_probes.py`:
+    ```python
+    from specialist_probes import rehearse_sqlite_migration
+    res = rehearse_sqlite_migration(up_sql, down_sql, seed_sql, verify_query)
+    assert res["passed"], "Migration rehearsal failed"
+    ```
+*   **Safety Audit**: Zero table locks, safe column additions verified
 
 #### 5. Edge-Case Seed Generator
 [Self-contained script or SQL insert fixtures with realistic boundary data]

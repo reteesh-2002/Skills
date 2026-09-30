@@ -52,6 +52,7 @@ scripts/exec-proxy.sh --label test_conformance <your-test-command>
 bash scripts/verify-release-gate.sh
 ```
 - **Fail-Closed Rule**: If `verify-release-gate.sh` exits non-zero, **HALT IMMEDIATELY**.
+- **Readiness vs. Authorization Separation**: Technical verification proves release candidate readiness; it does NOT grant autonomous permission to push or publish. Always verify candidate readiness first, and obtain explicit user authorization before executing `git push` or publishing packages.
 - Do NOT proceed with `git push` or PR creation if:
   1. The git tree SHA in `.evidence/manifest.v1.json` does not match `HEAD` / current tree.
   2. The working directory has unstaged modifications (`working_tree_dirty == true`).

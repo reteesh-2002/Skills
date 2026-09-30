@@ -31,8 +31,14 @@ Inspect the changed files to determine relevant risk vectors:
 - **Dependency Audit**: Review dependency deltas for known CVEs (`npm audit`, `pip-audit`, `cargo audit`).
 
 ### Stage 2: Adversarial Probe Generation
-Write targeted, reproducible test probes using the project's test framework:
-- Exercise cross-tenant authorization (create User 1 and User 2; attempt `GET /api/documents/:user1_doc` with User 2's token -> must return `403 Forbidden` or `404 Not Found`).
+Write targeted, reproducible test probes using the project's test framework or `scripts/specialist_probes.py`:
+- **Dual-Tenant Isolation Probe**: Verify tenant separation deterministically:
+  ```python
+  from specialist_probes import probe_tenant_isolation
+  res = probe_tenant_isolation(access_fn, tenant_a_auth, tenant_b_auth, tenant_b_resource_id)
+  assert res["passed"], "IDOR vulnerability detected: Tenant A accessed Tenant B resource"
+  ```
+- Exercise cross-tenant authorization (attempt `GET /api/documents/:user1_doc` with User 2's token -> must return `403 Forbidden` or `404 Not Found`).
 - Pass malicious payloads to search/filter inputs (`' OR 1=1 --`, `{{7*7}}`, `../etc/passwd`).
 - Pass private IP addresses to URL ingestion handlers (`http://169.254.169.254/latest/meta-data`).
 

@@ -13,6 +13,7 @@ Systematic, hypothesis-driven root cause analysis and surgical defect remediatio
 2. **Never change multiple unrelated things at once**: "Shotgun fixes" obscure the root cause and introduce secondary regressions.
 3. **Never touch working files outside the failure path**: Preserve untouched code integrity.
 4. **Log before you patch**: When state is unclear, insert non-destructive diagnostic logging or probe with minimal inspector commands before making persistent edits.
+5. **Protect Unrelated User Edits**: During rollback or reversion, only touch files modified during the active defect investigation. Never execute indiscriminate `git reset --hard` or wipe unrelated uncommitted changes.
 
 ---
 
@@ -26,7 +27,7 @@ To balance deep investigation of stubborn race-conditions with zero tolerance fo
   ▼
 [⚠️ CYCLE-3 SANITY CHECKPOINT] ──> Resolved? ──(YES)──> [Exit 0 & Verify]
   │ (NO)
-  ├── 1. Blast Radius Check: Did we touch >2 files? If YES: REVERT uncommitted edits.
+  ├── 1. Blast Radius Check: Did we touch >2 files? If YES: REVERT investigation edits (protect unrelated user files).
   ├── 2. Anti-Shotgun Audit: Reject blind try/catch wrappers or typecasts (as any).
   └── 3. Escalate: Announce "Surgical fix failed. Escalating to Deep Trace Mode."
   ▼

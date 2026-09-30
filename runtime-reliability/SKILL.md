@@ -30,18 +30,19 @@ Determine the operational requirements based on modified files:
 - **Deployment / Service Lifecycle**: Health check endpoints (`/healthz`), shutdown hooks.
 
 ### Stage 2: Empirical Stress & Rehearsal Probes
+Execute programmatic probes via `scripts/specialist_probes.py` or framework test scripts:
 1. **Migration Rehearsal (Expand / Contract)**:
-   - Run forward migration on test database.
+   - Run forward migration on disposable test database.
    - Verify table structure and constraints.
    - Run rollback migration -> Verify clean reversion to previous schema version.
-   - Re-run forward migration -> Verify idempotency.
+   - Re-run forward migration -> Verify idempotency via `rehearse_sqlite_migration()`.
 2. **Memory Soak Testing**:
-   - Execute a loop of 5,000–10,000 synthetic operations.
-   - Sample heap memory usage at intervals (start, 25%, 50%, 75%, end).
-   - Verify memory returns to baseline after GC (no monotonically growing heap leak).
+   - Execute a loop of 2,000–10,000 synthetic operations via `probe_memory_soak_plateau()`.
+   - Sample heap/object telemetry at regular intervals.
+   - Verify resource growth plateaus rather than expanding monotonically.
 3. **Graceful Shutdown Probe**:
-   - Spawn the process, issue synthetic requests, send `SIGTERM` (`kill -15`).
-   - Verify process finishes active requests, cleanly closes database connections, and exits with code 0.
+   - Verify in-flight requests finish cleanly without aborting via `probe_graceful_drain()`.
+   - Send `SIGTERM` (`kill -15`) and assert 0 aborted tasks.
 
 ### Stage 3: Execution via Trusted Proxy
 Run all reliability probes via the execution capture proxy:
