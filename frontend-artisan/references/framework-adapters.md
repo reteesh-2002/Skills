@@ -1,6 +1,6 @@
 # Framework Adapters & Multi-Stack Guide
 
-`frontend-artisan` is 100% framework-agnostic. It translates curated design archetypes, typography, and micro-interactions into the idiomatic patterns of your target stack:
+`frontend-artisan` is 100% framework-agnostic. It translates curated design system presets, typography, and micro-interactions into the idiomatic patterns of your target stack:
 
 ---
 

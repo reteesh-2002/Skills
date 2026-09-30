@@ -41,8 +41,7 @@ Whenever planning a user-facing interface, website, or component, Plan Master en
 2. **Avoid Unconsidered AI Clichés (for Greenfield Builds)**: When building from scratch without an existing design system, avoid falling into the median AI aesthetic out of laziness:
    - Avoid defaulting blindly to dark `#0d0f12` + soft `#252a34` borders; explore warm parchment, brutalist monochrome, deep oxblood, or industrial matte slate when appropriate.
    - Avoid cookie-cutter card grids where tabular ledgers, physical chassis, or asymmetric editorial layouts fit the content better.
-   - Avoid unconsidered typography neutrality; select intentional pairings (expressive display serif or industrial grotesque with a monospace accent).
-3. **Archetype Selection**: For greenfield projects, select one of the 10 craft archetypes from `frontend-artisan` (e.g. *Terminal Density*, *Neo-Brutalist*, *Hardware Skeuomorphic*, *Neo-Swiss*).
+3. **Design System & Visual Anchor Lock**: For greenfield projects without an established identity, lock the visual architecture to an established design system (`DESIGN.md` or `frontend-artisan` production standards: *Apple Atmospheric Glass*, *Linear Dark Minimalist*, or *Vercel Modern Monochrome*) and mandate Gate 0 visual art direction before writing code.
 4. **Signature Tactile Detail**: Include at least one bespoke interaction (physical button depression `translateY(2px)`, mechanical toggle snap, slider, or subtle sound cue).
 
 ---
