@@ -16,10 +16,18 @@ Choose the execution strategy based on uncertainty, blast radius, interfaces, an
 
 | Task Shape | Execution Strategy | Rationale |
 | :--- | :--- | :--- |
-| **Small, clear change (<3 files)** | **Solo** | Fixed orchestration overhead exceeds task savings. |
+| **Small, clear change (≤3 files)** | **Solo** | Fixed orchestration overhead exceeds task savings. |
 | **Tightly coupled refactor** | **Solo / Sequenced** | Shared types and cyclic dependencies make parallel branching conflict-prone. |
 | **High-impact auth/data/release** | **Solo + Specialist Review** | Security boundaries and migrations require unified architectural oversight. |
 | **Independent modular chunks** | **Multi(N) Worktrees (N ≤ 4)** | Separable workstreams (e.g. backend API vs. frontend UI vs. standalone worker). |
+
+For a deterministic, tested decision call the canonical gating engine:
+```python
+import sys; sys.path.insert(0, "scripts")
+from task_shape_gating import gate_task
+d = gate_task(file_touch_count=..., workstream_count=..., tightly_coupled=..., is_auth_or_data=...)
+print(d.mode, d.reason)
+```
 
 Emit a concise status update: `[Orchestrator] Gating decision: solo | multi(n) (Reason: <summary>)`.
 If `solo`, the Boss completes the work sequentially without spawning subagents.
@@ -51,7 +59,19 @@ If workstreams share any API contracts, types, or schemas:
 
 1. **Mount Worktrees**: Run `scripts/setup_worktrees.sh <base-branch> <worker>...`.
    - Worktrees live in `.git/.orch-worktrees/<worker>` with dependencies (`node_modules`, `.venv`) symlinked.
-2. **Scoped Worker Briefs**: Give each worker a concise brief: goal, allowed file scope, contract, and test command.
+2. **Scoped Worker Briefs (E-04)**: Build each brief using `scripts/task_shape_gating.py`:
+   ```python
+   from task_shape_gating import build_worker_brief
+   brief = build_worker_brief(
+       worker_id="Worker_A", goal="...",
+       allowed_files=["api/routes.py"],
+       test_command="pytest tests/test_routes.py",
+       contract="<frozen schema snippet>",
+       constraints=["Do not modify auth.py"],
+   )
+   ```
+   Include only: goal, permitted scope, frozen contract, constraints, and test command.
+   Exclude conversation history and extraneous skill instructions.
 3. **Record Running State**:
    ```bash
    python3 scripts/task_ledger.py update --id <task_id> --status Running --detail "Implementing in worktree"
@@ -94,8 +114,10 @@ When a worker reports back:
    - Uncommitted modifications are automatically committed to `orch/rescue-<worker>-*` rescue branches before deletion.
    - If a rescue commit fails, deletion is aborted and the dirty worktree is preserved intact.
 2. **Durable Resume Protocol (Post-Interruption / Server Restart)**:
-   When resuming after a disconnect:
-   - Check `.evidence/tasks.json` against actual git branch/worktree status.
-   - Inspect `.git/.orch-worktrees/` and `git branch --list "orch/rescue-*"`.
-   - Re-validate stale evidence against current commit HEAD.
-   - Resume remaining pending tasks without duplicating already completed work.
+   When resuming after a disconnect, follow these steps in order:
+   1. `git status` and `git log --oneline -5` — inspect actual repository state.
+   2. `python3 scripts/task_ledger.py status` — read current task ledger revision.
+   3. `python3 scripts/task_ledger.py reconcile` — re-queue any interrupted Running/Verifying tasks to Pending.
+   4. Inspect `.git/.orch-worktrees/` and `git branch --list 'orch/rescue-*'` for surviving work.
+   5. Compare `.evidence/manifest.v1.json` tree SHA against `git write-tree` — re-validate stale evidence.
+   6. Resume from the first Pending task without re-running tasks already marked Done with valid evidence.
