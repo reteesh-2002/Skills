@@ -178,6 +178,50 @@ Through `AGENTS.md` and `GEMINI.md` rules, the agent **automatically detects and
 
 *Note: All specialist skills (`frontend-artisan`, `schema-craft`, `code-reviewer`, `security-verifier`, `runtime-reliability`, `idea-council`, `ship-it`) remain **on-demand only** to prevent prompt bloat and unintended side-effects.*
 
+### Mandatory Host Behaviors
+1. **Always read `SKILL.md`** using `view_file` when activating one of the 3 core skills.
+2. **Never auto-trigger specialist skills** without explicit user instruction.
+3. **Execution Discipline**: Route test commands through `scripts/exec-proxy.sh` for physical receipt generation and bounded log capture.
+4. **Concise Reporting**: Chat summaries must stay compact (4–8 lines default), highlighting outcome, verified tests, and evidence paths.
+5. **Master Prompt & Planning Depth**: Whenever formulating project structures, architecture master prompts, or execution specifications, ALWAYS generate the full-scale 23-section Master Engineering Specification standard (Role, Objective, Schemas, Directory Layout, Invariants, Edge Cases, Anti-Scope, TDD Verification). Never output a shallow summary or condensed outline.
+
+---
+
+## 📐 Master Engineering Specification Standard (23-Section Architecture)
+
+Implemented in [`prompt-architect`](prompt-architect/SKILL.md) and grounded into [`plan-master`](plan-master/SKILL.md), this standard ensures every project prompt or architectural plan achieves complete engineering closure before code is written:
+
+```markdown
+1. Role                      # e.g., Senior Systems Engineer & Product Architect
+2. Objective                 # Single-paragraph technical mission statement
+3. Product Vision            # Target user, core value proposition, aesthetic bar
+4. Core Concepts             # Domain entities, nouns, lifecycle states
+5. User Experience           # Information hierarchy, visual density, responsive layout
+6. Functional Requirements   # Detailed capability breakdown (MUST / SHOULD / MAY)
+7. Important Interactions    # Keyboard shortcuts, optimistic UI, state transitions
+8. Data Model & Schemas      # Concrete types, TypeScript interfaces, SQL DDL (in code blocks)
+9. Architecture & Layout     # Clean directory layout, modular partitioning (in code blocks)
+10. Technology Choices       # Selected libraries with sensible defaults & trade-off rationale
+11. Performance Requirements # Latency budgets, memoization, virtualization, bundle bounds
+12. Local / Offline Behavior # Persistence strategy, localStorage/IndexedDB, graceful disconnect
+13. Security & Validation    # Input sanitization, auth boundaries, private subnet egress
+14. Error Handling           # Error boundaries, fallback states, user-facing error copy
+15. Edge Cases               # Boundary conditions, empty feeds, rate limits, clock skews
+16. AI Behavior (if applicable) # Context limits, streaming fallback, structured JSON extraction
+17. Things NOT to Build      # Explicit anti-scope, anti-slop clichés banned from this build
+18. MVP Scope                # Minimal shippable slice achievable in Turn 1
+19. Future Phases            # Explicitly postponed capabilities to prevent scope creep
+20. Implementation Order     # Dependency-aware phased execution sequence (Phase 1 -> 2 -> 3)
+21. Testing Requirements     # TDD Red-Green requirements, anti-tautology side-effect assertions
+22. Success Criteria         # Concrete, verifiable conditions for completion
+23. Final Delivery Checklist # Commits, clean working tree, verification receipts required
+```
+
+### Style Laws:
+- **Anti-Condensation Law**: Never output shallow summaries, high-level overviews, or condensed outlines. Always output full schemas, concrete code blocks, and exhaustive edge cases.
+- **Zero Chat Fluff**: No motivational filler, pleasantries, or generic advice.
+- **Self-Directed Technical Closure**: Convert vague ideas into explicit engineering defaults without stalling for human clarification when sensible conventions exist.
+
 ---
 
 ## 📁 Complete Repository Directory & File Map
@@ -229,19 +273,19 @@ Every skill in the suite is optimized for high information density with zero flu
 
 | Skill | Entry Point | Tokens | Tier & Role | Loading Policy |
 | :--- | :--- | :---: | :--- | :--- |
-| **`anti-slop-spec`** | [`anti-slop-spec/SKILL.md`](anti-slop-spec/SKILL.md) | ~159 | **Alias**: Design sharpener alias to plan-master & frontend-artisan. | On-demand |
+| **`anti-slop-spec`** | [`anti-slop-spec/SKILL.md`](anti-slop-spec/SKILL.md) | ~169 | **Alias**: Design sharpener alias to plan-master & frontend-artisan. | On-demand |
 | **`design-md`** | [`design-md/SKILL.md`](design-md/SKILL.md) | ~257 | **Tier 2**: Token manager with 15 bundled world-class design systems. | On-demand |
 | **`runtime-reliability`** | [`runtime-reliability/SKILL.md`](runtime-reliability/SKILL.md) | ~631 | **Tier 3**: SIGTERM drain, soak testing, and lifecycle resilience. | On-demand |
 | **`security-verifier`** | [`security-verifier/SKILL.md`](security-verifier/SKILL.md) | ~664 | **Tier 3**: Synthetic dual-tenant IDOR, BOLA, injection, and SSRF audit. | On-demand |
 | **`code-reviewer`** | [`code-reviewer/SKILL.md`](code-reviewer/SKILL.md) | ~750 | **Tier 3**: Adversarial diff reviewer with structured finding cards. | On-demand |
 | **`adaptive-worker-orchestrator-v2`** | [`adaptive-worker-orchestrator-v2/SKILL.md`](adaptive-worker-orchestrator-v2/SKILL.md) | ~956 | **Tier 4**: Git worktree parallel coordinator & Phase 0 gating. | On-demand |
 | **`ship-it`** | [`ship-it/SKILL.md`](ship-it/SKILL.md) | ~947 | **Tier 5**: Conventional Commits, secret scanner, and release gate readiness. | On-demand |
-| **`frontend-artisan`** | [`frontend-artisan/SKILL.md`](frontend-artisan/SKILL.md) | ~1,202 | **Tier 2**: Master frontend orchestrator with zero-slop hard gates. | On-demand |
+| **`frontend-artisan`** | [`frontend-artisan/SKILL.md`](frontend-artisan/SKILL.md) | ~1,198 | **Tier 2**: Master frontend orchestrator with zero-slop hard gates. | On-demand |
 | **`schema-craft`** | [`schema-craft/SKILL.md`](schema-craft/SKILL.md) | ~1,248 | **Tier 3**: Database schema, ESR indexing, and migration rehearsal. | On-demand |
-| **`prompt-architect`** | [`prompt-architect/SKILL.md`](prompt-architect/SKILL.md) | ~1,259 | **Tier 1**: Master prompt composer with zero disk-crawling discipline. | On-demand |
 | **`deep-debugger`** | [`deep-debugger/SKILL.md`](deep-debugger/SKILL.md) | ~1,354 | **Tier 1**: 6-stage root-cause repair engine with 3+5 cycle ceiling. | **Auto-detected** |
 | **`qa-sentinel`** | [`qa-sentinel/SKILL.md`](qa-sentinel/SKILL.md) | ~1,635 | **Tier 1**: Anti-tautology verifier & trusted execution proxy manager. | **Auto-detected** |
-| **`plan-master`** | [`plan-master/SKILL.md`](plan-master/SKILL.md) | ~1,953 | **Tier 1**: Intent extraction, dependency DAGs, and TDD planner. | **Auto-detected** |
+| **`prompt-architect`** | [`prompt-architect/SKILL.md`](prompt-architect/SKILL.md) | ~1,765 | **Tier 1**: Master prompt composer with 23-section engineering spec standard. | On-demand |
+| **`plan-master`** | [`plan-master/SKILL.md`](plan-master/SKILL.md) | ~2,012 | **Tier 1**: Intent extraction, dependency DAGs, and TDD planner. | **Auto-detected** |
 | **`idea-council`** | [`idea-council/SKILL.md`](idea-council/SKILL.md) | ~2,017 | **Tier 4**: 6-seat adversarial deliberation council (Product, Risk, Arch, UX, CFO, SecOps). | Manual only |
 | **`playwright-cli`** | [`playwright-cli/SKILL.md`](playwright-cli/SKILL.md) | ~2,340 | **Tier 2**: Headless browser automation for multi-viewport audits. | Reference |
 | **`web-interface-guidelines`** | [`web-interface-guidelines/SKILL.md`](web-interface-guidelines/SKILL.md) | ~3,107 | **Tier 2**: Vercel official production interface engineering standards. | Reference |
