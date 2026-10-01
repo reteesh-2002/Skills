@@ -30,3 +30,4 @@ Do **NOT** automatically activate the following specialist skills unless the use
 2. **Never auto-trigger specialist skills** without explicit user instruction.
 3. **Execution Discipline**: Route test commands through `scripts/exec-proxy.sh` for physical receipt generation and bounded log capture.
 4. **Concise Reporting**: Chat summaries must stay compact (4–8 lines default), highlighting outcome, verified tests, and evidence paths.
+5. **Master Prompt & Planning Depth**: Whenever formulating project structures, architecture master prompts, or execution specifications, ALWAYS generate the full-scale 23-section Master Engineering Specification standard (Role, Objective, Schemas, Directory Layout, Invariants, Edge Cases, Anti-Scope, TDD Verification). Never output a shallow summary or condensed outline.

@@ -86,6 +86,7 @@ Every compiled execution prompt must be a **production-ready master engineering 
 - **Self-Directed Architectural Closure**: Convert vague ideas into explicit technical requirements. Fill in missing technical/product details with production defaults.
 - **Constraint Hierarchy**: Explicitly distinguish `MUST`, `SHOULD`, `MAY`, and `DO NOT` requirements.
 - **Code Block Formatting**: Always use code blocks for data schemas, state definitions, directory layouts, and API contracts.
+- **Mandatory Production Depth (Anti-Condensation Law)**: Never output a shallow summary, condensed outline, or high-level overview. Always generate the full-scale, exhaustive specification with complete SQL/TypeScript DDL schemas, concrete directory layout trees, exact state machine diagrams, curl examples, and comprehensive edge cases.
 
 ---
 
