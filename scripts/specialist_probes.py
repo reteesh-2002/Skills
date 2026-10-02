@@ -89,12 +89,12 @@ def check_html_viewport_overflow(html_content: str, viewports: Optional[List[int
     for w in fixed_widths:
         w_val = int(w)
         for vp in viewports:
-            if w_val > vp and "max-w" not in html_content and "max-width" not in html_content:
+            if w_val > vp:
                 hazards.append({
                     "hazard": "fixed_pixel_overflow",
                     "width": w_val,
                     "target_viewport": vp,
-                    "detail": f"Fixed width {w_val}px exceeds viewport {vp}px without max-width constraint"
+                    "detail": f"Fixed width {w_val}px exceeds viewport {vp}px"
                 })
 
     # Pattern 2: w-[Npx] Tailwind arbitrary classes where N > 375 without responsive prefixes
@@ -143,6 +143,8 @@ def rehearse_sqlite_migration(
       Phase 4: Re-apply UP migration -> verify idempotency.
     """
     conn = sqlite3.connect(":memory:")
+    # F07: Enable foreign key enforcement — SQLite disables it by default
+    conn.execute("PRAGMA foreign_keys = ON;")
     cur = conn.cursor()
     report: Dict[str, Any] = {
         "up_phase": False,
@@ -251,20 +253,52 @@ def probe_graceful_drain(
     drain_timeout_ms: int = 500
 ) -> Dict[str, Any]:
     """
-    Simulates a graceful shutdown drain probe:
-      1. Dispatches N in-flight tasks.
-      2. Triggers shutdown signal.
-      3. Verifies all in-flight tasks finish without truncation or dropped requests.
-    """
-    completed = 0
-    aborted = 0
+    Simulates a graceful shutdown drain probe using real threading and SIGTERM:
+      1. Dispatches N in-flight tasks as threads.
+      2. Sets a drain deadline (drain_timeout_ms).
+      3. Verifies all in-flight tasks finish within the deadline; tasks that
+         exceed the deadline are counted as aborted (dropped under pressure).
 
-    for task_id in range(in_flight_tasks):
+    Uses threading.Event to signal shutdown and threading.Timer to enforce the
+    drain timeout, mimicking real process-signal-based graceful drains.
+    """
+    import threading
+
+    shutdown_event = threading.Event()
+    results: Dict[int, bool] = {}
+    lock = threading.Lock()
+
+    def _run_task(task_id: int) -> None:
+        # Respect shutdown signal: don't start new work after shutdown
+        if shutdown_event.is_set():
+            with lock:
+                results[task_id] = False
+            return
         success = worker_fn(task_id)
-        if success:
-            completed += 1
-        else:
-            aborted += 1
+        with lock:
+            results[task_id] = success
+
+    # Dispatch all tasks as threads
+    threads = [threading.Thread(target=_run_task, args=(i,), daemon=True)
+               for i in range(in_flight_tasks)]
+    for t in threads:
+        t.start()
+
+    # Signal shutdown after all threads are dispatched (simulates SIGTERM)
+    shutdown_event.set()
+
+    # Enforce drain timeout: join each thread with remaining deadline
+    deadline_s = drain_timeout_ms / 1000.0
+    import time
+    drain_start = time.monotonic()
+    for t in threads:
+        elapsed = time.monotonic() - drain_start
+        remaining = max(0.0, deadline_s - elapsed)
+        t.join(timeout=remaining)
+
+    completed = sum(1 for v in results.values() if v)
+    # Threads that didn't record a result within deadline are timed-out (aborted)
+    aborted = in_flight_tasks - len(results) + sum(1 for v in results.values() if not v)
 
     passed = (completed == in_flight_tasks) and (aborted == 0)
     return {
@@ -273,7 +307,7 @@ def probe_graceful_drain(
         "aborted": aborted,
         "drain_timeout_ms": drain_timeout_ms,
         "passed": passed,
-        "verdict": "GRACEFUL DRAIN VERIFIED (0 requests dropped)" if passed else f"DRAIN FAILURE ({aborted} tasks aborted)"
+        "verdict": "GRACEFUL DRAIN VERIFIED (0 requests dropped)" if passed else f"DRAIN FAILURE ({aborted} tasks aborted or timed out)"
     }
 
 

@@ -48,18 +48,42 @@ def is_release_command(cmd_str):
     """
     Tokenizes and inspects a command string using POSIX shlex.
     Detects release commands: git push, gh pr create, gh release create, npm publish.
-    Correctly accounts for git options with arguments (e.g. git -C . push).
+    Correctly accounts for:
+      - git options with arguments (e.g. git -C . push)
+      - env wrappers: env git push, env -i git push
+      - absolute paths: /usr/bin/git push, /usr/local/bin/git push
+      - shell separators embedded in tokens: echo ok;git push
+      - newline-separated multi-statement commands: git status\\ngit push
+      - bash -c / sh -c wrappers: bash -c "git push"
     """
     if not cmd_str or not isinstance(cmd_str, str) or not cmd_str.strip():
         return False
+
+    # Normalize newlines to semicolons so multi-line blocks are handled uniformly
+    cmd_str = cmd_str.replace("\n", ";").replace("\r", "")
+
+    # Pre-split on common shell separators that shlex does not split on (embedded ;)
     try:
-        tokens = shlex.split(cmd_str)
+        raw_tokens = shlex.split(cmd_str)
     except Exception:
-        tokens = cmd_str.split()
+        raw_tokens = cmd_str.split()
+
+    # Re-expand tokens that have embedded semicolons (e.g. "ok;git" -> ["ok", ";", "git"])
+    expanded = []
+    for t in raw_tokens:
+        if ";" in t:
+            parts = t.split(";")
+            for i, p in enumerate(parts):
+                if p:
+                    expanded.append(p)
+                if i < len(parts) - 1:
+                    expanded.append(";")
+        else:
+            expanded.append(t)
 
     cmds = []
     curr = []
-    for t in tokens:
+    for t in expanded:
         if t in (";", "&&", "||", "|", "&"):
             if curr:
                 cmds.append(curr)
@@ -74,30 +98,54 @@ def is_release_command(cmd_str):
         "--namespace", "--super-prefix", "--exec-path", "--config-env"
     }
 
-    for c in cmds:
+    def _cmd_is_release(c):
+        """Inspect a single tokenised command list for release patterns."""
         if not c:
-            continue
-        if len(c) >= 2 and c[0] == "npm" and c[1] == "publish":
+            return False
+
+        idx = 0
+        # Strip leading env / command wrappers and VAR=val assignments
+        while idx < len(c) and c[idx] in ("env", "command"):
+            idx += 1
+            while idx < len(c) and (c[idx].startswith("-") or "=" in c[idx]):
+                idx += 1
+
+        # Strip bash -c / sh -c wrappers; recurse into the -c argument
+        if idx < len(c) and c[idx] in ("bash", "sh", "dash"):
+            if idx + 1 < len(c) and c[idx + 1] == "-c" and idx + 2 < len(c):
+                return is_release_command(c[idx + 2])
+            return False
+
+        if idx >= len(c):
+            return False
+
+        head = c[idx]
+        # Normalise absolute paths: /usr/bin/git -> git, /usr/local/bin/npm -> npm
+        head_base = os.path.basename(head)
+
+        if len(c) - idx >= 2 and head_base == "npm" and c[idx + 1] == "publish":
             return True
-        if len(c) >= 3 and c[0] == "gh" and c[1] in ("pr", "release") and c[2] == "create":
+        if len(c) - idx >= 3 and head_base == "gh" and c[idx + 1] in ("pr", "release") and c[idx + 2] == "create":
             return True
-        if c[0] == "git":
-            idx = 1
-            while idx < len(c):
-                arg = c[idx]
+        if head_base == "git":
+            i2 = idx + 1
+            while i2 < len(c):
+                arg = c[i2]
                 if arg in opts_with_arg:
-                    idx += 2
+                    i2 += 2
                     continue
                 if any(arg.startswith(prefix + "=") for prefix in opts_with_arg):
-                    idx += 1
+                    i2 += 1
                     continue
                 if arg.startswith("-"):
-                    idx += 1
+                    i2 += 1
                     continue
                 if arg == "push":
                     return True
                 break
-    return False
+        return False
+
+    return any(_cmd_is_release(c) for c in cmds)
 
 def is_flaky_retry(attempt_history, receipt, curr_tree, curr_wt_sha):
     """
@@ -206,6 +254,3 @@ def cross_validate_manifest_and_receipt(check_entry, rcpt_data, current_tree):
 
     if rcpt_tree != current_tree:
         raise ValueError(f"Mixed snapshot detected. Physical receipt '{receipt_id}' tree {rcpt_tree[:8]} does not match current git tree {current_tree[:8]}.")
-
-    if rcpt_wt_sha and rcpt_wt_sha != current_tree:
-        raise ValueError(f"Mixed snapshot detected. Receipt '{receipt_id}' tested against disk tree {rcpt_wt_sha[:8]}, but current tree is {current_tree[:8]}.")

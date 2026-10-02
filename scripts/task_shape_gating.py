@@ -93,7 +93,9 @@ def gate_task(
 
     # E-02: independent workstreams → parallel multi mode
     if workstream_count >= 2 and subagent_tools_available:
-        n_workers = min(workstream_count, max_workers)
+        # Hard cap: never exceed 4 workers regardless of caller-supplied max_workers
+        effective_max = min(max_workers, 4)
+        n_workers = min(workstream_count, effective_max)
         reason = (
             f"{workstream_count} independent workstream(s): multi({n_workers}) workers in parallel."
         )

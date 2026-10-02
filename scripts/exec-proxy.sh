@@ -247,10 +247,10 @@ skipped = 0
 has_deprecation_warning = False
 
 # Heuristic parser for test frameworks
-if "passed in" in log_content or "failed in" in log_content:
-    # Pytest: "1 passed in 0.05s"
+if re.search(r'\d+\s+(?:passed|failed|error(?:ed)?|skipped)\b', log_content) and re.search(r'in \d+\.?\d*s', log_content):
+    # Pytest: "1 passed in 0.05s", "1 passed, 1 skipped in 0.01s", "2 failed in 0.3s"
     m_pass = re.search(r'(\d+)\s+passed', log_content)
-    m_fail = re.search(r'(\d+)\s+failed', log_content)
+    m_fail = re.search(r'(\d+)\s+(?:failed|error(?:ed)?)', log_content)
     m_skip = re.search(r'(\d+)\s+skipped', log_content)
     if m_pass and m_pass.group(1): passed = int(m_pass.group(1))
     if m_fail and m_fail.group(1): failed = int(m_fail.group(1))

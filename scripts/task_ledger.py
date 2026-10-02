@@ -116,16 +116,22 @@ class TaskLedger:
         if status == "Done" and evidence_ref:
             evidence_dir = os.path.dirname(self.ledger_path)
             rcpt_path = os.path.join(evidence_dir, "receipts", f"{evidence_ref}.json")
-            if os.path.exists(rcpt_path):
-                try:
-                    with open(rcpt_path, "r", encoding="utf-8") as rf:
-                        rcpt_data = json.load(rf)
-                    exit_code = rcpt_data.get("exit_code", 0)
-                    failed_count = rcpt_data.get("metrics", {}).get("failed", 0)
-                    if exit_code != 0 or failed_count > 0:
-                        raise ValueError(f"Cannot mark task '{task_id}' Done: Evidence '{evidence_ref}' recorded failure (exit code {exit_code}, {failed_count} failed tests).")
-                except (json.JSONDecodeError, OSError):
-                    pass
+            if not os.path.exists(rcpt_path):
+                raise ValueError(
+                    f"Cannot mark task '{task_id}' Done: Physical receipt file not found at '{rcpt_path}'. "
+                    f"Run verification via scripts/exec-proxy.sh first."
+                )
+            try:
+                with open(rcpt_path, "r", encoding="utf-8") as rf:
+                    rcpt_data = json.load(rf)
+                exit_code = rcpt_data.get("exit_code", 0)
+                failed_count = rcpt_data.get("metrics", {}).get("failed", 0)
+                if exit_code != 0 or failed_count > 0:
+                    raise ValueError(f"Cannot mark task '{task_id}' Done: Evidence '{evidence_ref}' recorded failure (exit code {exit_code}, {failed_count} failed tests).")
+            except (json.JSONDecodeError, OSError) as e:
+                raise ValueError(
+                    f"Cannot mark task '{task_id}' Done: Receipt '{evidence_ref}' is corrupt or unreadable: {e}"
+                )
 
         def _update(data):
             target = None

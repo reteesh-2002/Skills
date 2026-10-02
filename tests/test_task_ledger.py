@@ -58,7 +58,19 @@ class TestTaskLedger(unittest.TestCase):
         t = ledger.get_task("T1")
         self.assertEqual(t["status"], "Verifying")
 
-        # Verifying -> Done
+        # Verifying -> Done (requires a real receipt file — F08 fix)
+        import json as _json
+        receipts_dir = os.path.join(os.path.dirname(ledger.ledger_path), "receipts")
+        os.makedirs(receipts_dir, exist_ok=True)
+        receipt_path = os.path.join(receipts_dir, "rcpt_12345.json")
+        with open(receipt_path, "w") as rf:
+            _json.dump({
+                "receipt_id": "rcpt_12345",
+                "command": "pytest tests/",
+                "exit_code": 0,
+                "git_tree_sha": "abc123",
+                "metrics": {"collected": 5, "passed": 5, "failed": 0, "skipped": 0}
+            }, rf)
         ledger.update_task("T1", status="Done", detail="All tests pass", evidence_ref="rcpt_12345")
         t = ledger.get_task("T1")
         self.assertEqual(t["status"], "Done")

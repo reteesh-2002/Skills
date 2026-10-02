@@ -195,13 +195,22 @@ try:
         if collected > 0 and passed != collected:
             fail_python_gate(f"False-green trap in '{label}'. Passed ({passed}) != Collected ({collected}).")
 
-        # F01: Test-labeled checks must collect > 0 tests
-        is_test_check = ("test" in label.lower()) or ("test" in cmd.lower()) or ("pytest" in cmd.lower()) or ("vitest" in cmd.lower()) or ("jest" in cmd.lower())
+        # F03: Any check whose command invokes a known test runner must collect > 0 tests
+        # Also catches "test" keyword in label for backwards compatibility
+        TEST_RUNNER_BINS = ("pytest", "vitest", "jest", "mocha", "cargo test",
+                            "python -m pytest", "python3 -m pytest",
+                            "node --test", "npx jest", "npx vitest",
+                            "go test", "rspec")
+        cmd_lower = cmd.lower()
+        is_test_check = (
+            "test" in label.lower()
+            or any(runner in cmd_lower for runner in TEST_RUNNER_BINS)
+        )
         if is_test_check:
             has_test_checks = True
             total_collected_tests += collected
             if collected == 0:
-                fail_python_gate(f"Test check '{label}' recorded 0 collected tests (Zero-inventory false green).")
+                fail_python_gate(f"Test check '{label}' (cmd: '{cmd}') recorded 0 collected tests (Zero-inventory false green).")
 
     if has_test_checks and total_collected_tests == 0:
         fail_python_gate("Test checks were executed but total collected tests is 0.")
