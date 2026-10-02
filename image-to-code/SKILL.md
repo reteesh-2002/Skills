@@ -113,10 +113,12 @@ Validate the implemented code against the design reference and accessibility sta
 
 ---
 
-## Output Format
+## Output Format & Source Record
 
-Follow the suite concise output standard (4–8 lines):
-- **Outcome**: Reference analyzed and component implemented.
-- **Key Design Decisions**: Palette, typography, and layout structure chosen.
-- **Verification**: Viewports and accessibility checks conducted.
+Follow [`references/output-policy.md`](../references/output-policy.md):
+- **Source & Budget Record**: `Source: [Supplied Reference (<file/url>) | New Concept] | Image Budget: [N used / 2 max default]`
+- **Key Design Decisions**: Palette, typography scale, container widths, and layout primitives.
+- **Copy Discipline**: Existing content and user-provided claims preserved; placeholder content explicitly tagged `[PLACEHOLDER]`; zero invented pricing or fake customer testimonials.
+- **Verification**: Viewports and accessibility checks conducted across 375px/768px/1440px.
 - **Evidence / Location**: Link to implemented files and captured screenshots.
+

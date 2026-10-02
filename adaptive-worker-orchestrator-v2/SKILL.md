@@ -41,8 +41,12 @@ If `solo`, the Boss executes the work sequentially without spawning subagents.
    python3 scripts/task_ledger.py init "<Plan Title>"
    python3 scripts/task_ledger.py add --id T1 --title "<Module A>" --owner "Worker_A"
    ```
-2. **File Isolation Invariant**: Enforce strict **1-writer-per-file** partitioning. No two workers may write to the same file.
-3. **Hard Worker Cap**: Enforce $N \le 4$ active workers. Concurrency must never exceed 4 workers. Queue remaining workstreams.
+2. **File Isolation & Lockfile Ownership**:
+   - Enforce strict **1-writer-per-file** partitioning. Two workers cannot own the same output file.
+   - **Lockfiles and Root Manifests**: Root files (`package.json`, `package-lock.json`, `Cargo.lock`, `pyproject.toml`, root configuration manifests) are **exclusively owned by the Coordinator/Boss**. Workers must not modify shared lockfiles concurrently.
+3. **Dependency & Cycle Validation**:
+   - Run `python3 scripts/task_ledger.py validate` to ensure zero dependency cycles or missing prerequisites before worker dispatch.
+4. **Hard Worker Cap**: Enforce $N \le 4$ active workers (suite policy cap reserving coordinator capacity). Concurrency must never exceed 4 workers. Queue remaining workstreams.
 
 ---
 
@@ -52,6 +56,7 @@ If workstreams share any API contracts, types, or schemas:
 1. Define interfaces up front in `contract.yaml` (or shared TypeScript/Python types).
 2. Paste the contract verbatim into each worker's prompt brief.
 3. Boss exclusively owns shared types, root manifests, and configuration wiring.
+
 
 ---
 

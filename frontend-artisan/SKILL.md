@@ -103,9 +103,24 @@ Text, prices, testimonials, and claims provided by the user are authoritative. W
 
 ---
 
+## 7. Design-Source Decision & Output Format
+
+Follow [`references/output-policy.md`](../references/output-policy.md). Every frontend delivery must document its governing design authority:
+
+```markdown
+### 🎨 Frontend Artisan: [Mode] — [Summary]
+* **Design Source**: `[Existing project tokens (DESIGN.md) | Supplied reference (path/url) | Approved concept (preset)]`
+* **Components / Surface**: [`file1.ext`](file:///...) (components styled), [`file2.ext`](file:///...)
+* **States Preserved**: Loading, empty, error, focus-visible, and mobile responsive boundaries.
+* **Verification Proof**: [Playwright browser measurement / Heuristic static scan] across 375px/768px/1440px.
+```
+
+---
+
 ## Reference files
 
 - [`references/anti-patterns.md`](references/anti-patterns.md) — consolidated anti-pattern reference
 - [`references/tokens-tailwind.md`](references/tokens-tailwind.md) — Tailwind token reference
 - [`references/tokens-vanilla-css.md`](references/tokens-vanilla-css.md) — vanilla CSS token reference
 - [`references/framework-adapters.md`](references/framework-adapters.md) — React, Vue, Svelte adapters
+

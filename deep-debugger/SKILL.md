@@ -90,6 +90,7 @@ Formulate a single, testable hypothesis that answers three questions:
 ### Stage 5: Minimal Surgical Fix
 Implement the smallest necessary change that directly resolves the root cause:
 - Change the minimum number of lines required.
+- **Multi-File Repairs Allowed**: While single-file edits are preferred when possible, multi-file fixes (e.g. 2–3 files spanning caller, callee, and schema) are fully permitted when the defect's architectural cause requires it.
 - Do not refactor surrounding architecture during a bug fix unless explicitly requested.
 - Maintain existing style, variable naming conventions, and docstrings.
 - Add defensive guards or assertions if appropriate to prevent future silent degradation.
@@ -104,17 +105,25 @@ Prove the fix works using empirical evidence:
 
 ---
 
-## Output Policy & Reporting
+## Output Policy & Hypothesis Log
 
 Follow the suite output policy ([`references/output-policy.md`](../references/output-policy.md)):
 
-1. **Background Disk Sink**: Full stack traces, bisect logs, and verbose inspector traces are saved to `.evidence/logs/` or `<appDataDir>/brain/<conversation-id>/scratch/debug-[id].log`.
-2. **Routine Summary (4–8 lines target in chat)**:
+1. **Background Disk Sink & Log Redaction**: Full stack traces, bisect logs, and verbose inspector traces are saved to `.evidence/logs/` or `<appDataDir>/brain/<conversation-id>/scratch/debug-[id].log`. Redact sensitive environment variables, credentials, and API keys.
+2. **Compact Hypothesis Log (For Multi-Cycle Investigations)**:
+   ```markdown
+   | # | Observation | Proposed Cause | Discriminating Check | Outcome |
+   |---|---|---|---|---|
+   | H1 | Null dereference | Config missing key | Inspect `config.json` | ❌ Falsified |
+   | H2 | Async listener race | Missing await | Isolated probe | 🟢 Confirmed |
+   ```
+3. **Intermittent / Unreproduced Bugs**: If a bug cannot be reproduced reliably, preserve explicit uncertainty. Do not invent speculative root causes. State observed facts, tested hypotheses, and instrumentation added to catch the next occurrence.
+4. **Routine Summary (4–8 lines target in chat)**:
    - **Outcome**: Defect identified and surgically resolved.
    - **Root Cause & Location**: Concrete mechanism and file link (`path/to/file.ext:L12-15`).
    - **Surgical Fix**: 1-sentence summary of the minimal change.
    - **Verification**: Command executed, exit code, and observed result.
    - **Evidence & Log Path**: Link to preserved diagnostic log.
-3. **Pipeline Suppression**: When running as an intermediate stage in a multi-skill pipeline, emit a single-line milestone heartbeat:
+5. **Pipeline Suppression**: When running as an intermediate stage in a multi-skill pipeline, emit a single-line milestone heartbeat:
    `✓ [deep-debugger]: Fixed <bug> in <file.ext:L12> (verified with <cmd>, exit 0)`
-   The terminal coordinator emits the final summary.
+

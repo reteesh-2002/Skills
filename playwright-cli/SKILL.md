@@ -132,3 +132,24 @@ Advanced flows and specialized workflows are documented in modular reference fil
 - **Playwright Test Runner & E2E**: [references/playwright-tests.md](references/playwright-tests.md)
 - **Test Generation (Plan / Generate / Heal)**: [references/test-generation.md](references/test-generation.md)
 - **PR Attachments with `gh`**: [references/pr-attachments.md](references/pr-attachments.md)
+
+---
+
+## 6. Session Ownership & Evidence Summary
+
+Follow [`references/output-policy.md`](../references/output-policy.md):
+
+- **Task-Owned Session Identity**: Use unique session flags (e.g. `--session=task_<id>`). When closing, close only task-owned sessions; **never execute broad killall commands or terminate unrelated browser processes**.
+- **Functional Assertions vs. Screenshots**: A screenshot alone does **not** count as a functional assertion. Functional assertions must check DOM state, computed styles, text values, or network responses.
+- **Unavailable Browser Disclosure**: If Playwright or browser binaries are missing, report status as `UNVERIFIED (browser unavailable)` rather than fabricating a pass.
+
+### Evidence Summary Format:
+```markdown
+### 🎭 Playwright Verification: [Target Page / Component]
+* **Session**: `task_[id]` (isolated session closed cleanly)
+* **Assertions Executed**: [N] checks (e.g. input font-size >= 16px, focus-visible outline, scrollWidth <= innerWidth)
+* **Viewports Tested**: Mobile 375x667, Desktop 1440x900
+* **Console / Network**: 0 console errors, 0 unhandled 5xx failures
+* **Captured Artifacts**: `[screenshot_path.png]`
+```
+

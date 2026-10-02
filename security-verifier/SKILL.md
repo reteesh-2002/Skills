@@ -51,14 +51,32 @@ bash scripts/exec-proxy.sh --label security_audit <test-command>
 ```
 Verify that tests genuinely fail when vulnerabilities are present and pass cleanly once hardened.
 
-### Stage 4: Assessment & Output Format
-Follow [`references/output-policy.md`](../references/output-policy.md):
+### Stage 4: Boundary Assessment & Finding Format
+Follow [`references/output-policy.md`](../references/output-policy.md). Categorize probed boundaries into 4 explicit statuses:
+- **`VULNERABLE`**: Reproducible security exploit demonstrated with payload evidence.
+- **`TESTED_CLEAN`**: Probed with discriminating payloads; access denied and response verified.
+- **`BLOCKED`**: Probing could not execute (e.g. missing synthetic credentials, endpoint unreachable).
+- **`UNTESTED`**: Changed attack surface that was out of scope for this pass.
 
-1. **Routine Summary (4–8 lines target in chat)**:
-   - **Outcome**: Status (🟢 GREEN / 🔴 RED) and 1-sentence verdict.
-   - **Tested Boundaries**: Explicit list of probed boundaries (e.g. Tenant isolation, SQL injection).
-   - **Payload & Effect Results**: Confirmation that response bodies and side-effects were verified.
-   - **Untested Boundaries**: Explicit note of any out-of-scope surfaces.
-   - **Evidence**: Receipt ID and manifest path in `.evidence/manifest.v1.json`.
-2. **Intermediate Milestone**:
-   `✓ [security-verifier]: Security audit PASS (<N> boundaries verified, rcpt_id)`
+#### Actionable Finding Format:
+When a vulnerability is discovered, present:
+```markdown
+### 🚨 Security Finding: [Vulnerability Type] — [Target Endpoint/Operation]
+* **Operation**: `[METHOD /api/path]`
+* **Scenario**: Under conditions X, attacker sends Y, resulting in Z.
+* **Demonstrated Impact**: Cross-tenant data leakage / unauthorized mutation / SQL injection.
+* **Empirical Evidence**: Tested command and verified response body snippet (secrets redacted).
+* **Minimal Remediation**: Exact surgical code fix (e.g. add tenant filter to WHERE clause).
+* **Unchecked Scope Note**: What adjacent endpoints or auth flows remain unverified.
+```
+
+### Routine Summary (4–8 lines target in chat):
+- **Outcome**: Status (🟢 GREEN / 🔴 RED) and boundary summary.
+- **Tested Boundaries**: `TESTED_CLEAN: [list]`, `VULNERABLE: [list]`.
+- **Payload & Side-Effect Validation**: Confirmed response bodies inspected (not status codes alone).
+- **Unchecked Scope**: Disclosed `UNTESTED` surfaces.
+- **Evidence**: Receipt ID and manifest path in `.evidence/manifest.v1.json`.
+
+### Intermediate Milestone:
+`✓ [security-verifier]: Security audit PASS (<N> boundaries clean, rcpt_id)`
+

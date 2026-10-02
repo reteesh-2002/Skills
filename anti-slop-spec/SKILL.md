@@ -22,4 +22,9 @@ When `anti-slop-spec` is invoked, route directly to the active specialist withou
    - Forward directly to [`frontend-artisan`](../frontend-artisan/SKILL.md).
    - Frontend Artisan natively enforces tactile interactions, responsive viewports, contrast compliance, and anti-pattern avoidance ([`anti-patterns.md`](../frontend-artisan/references/anti-patterns.md)).
 
-No second planning pass, duplicate spec generation, or separate checklist is executed by this alias.
+---
+
+## Single-Hop Routing Guarantee
+
+To prevent recursive routing loops, `anti-slop-spec` executes exactly **one delegation handoff**. The target skill consumes requirements directly without re-invoking this alias. No second planning pass or duplicate checklist is executed.
+

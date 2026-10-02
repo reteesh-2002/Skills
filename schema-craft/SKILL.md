@@ -58,7 +58,20 @@ Generate minimal, targeted seed fixtures that validate key data boundaries witho
 
 ---
 
-## 5. Output Policy & Database Blueprint
+## 5. Migration Impact Checklist
+
+Before declaring a schema migration ready, evaluate the **Migration Impact Checklist**:
+
+1. **Existing Data Volume**: Does adding a column require backfilling existing rows? Avoid `NOT NULL` without a default value or phased backfill.
+2. **Application Compatibility**: Can active application instances continue to read and write during migration (Expand / Contract pattern)?
+3. **Lock Expectations**: Engine-specific lock semantics (e.g., PostgreSQL `CREATE INDEX CONCURRENTLY` outside transactions vs. SQLite table-exclusive write locks).
+4. **Recovery Strategy**: Is down-migration safely reversible, or is a forward-recovery script required when rollback is unsafe or causes data loss?
+5. **Fixture & FK Validation**: In SQLite constraint tests, explicitly enforce `PRAGMA foreign_keys = ON;` and assert invalid foreign key fixtures are rejected.
+6. **Temporal Semantics**: Distinguish UTC instants (`TIMESTAMPTZ`, ISO-8601 with offset) from domain-specific local calendar dates/times (e.g. `DATE`, `TIME`).
+
+---
+
+## 6. Output Policy & Database Blueprint
 
 Follow [`references/output-policy.md`](../references/output-policy.md):
 
@@ -66,7 +79,8 @@ Follow [`references/output-policy.md`](../references/output-policy.md):
    - **Models & Relationships**: 1-sentence summary of updated models or tables.
    - **Target Database & Adapter**: Identified engine (PostgreSQL, SQLite, etc.) and ORM adapter used.
    - **Indexing & Lock Evidence**: Indexes added and target-DB specific lock characteristics noted.
-   - **Migration Safety**: Rehearsal result against disposable database.
+   - **Migration Impact & Recovery**: Rehearsal result and recovery strategy (reversible vs. forward-recovery).
    - **Evidence & Files**: Paths to generated migrations and seed files.
 2. **Intermediate Milestone**:
    `✓ [schema-craft]: Migrations defined & rehearsed for <engine> (<N> models, rcpt_id)`
+

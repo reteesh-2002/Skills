@@ -68,3 +68,18 @@ Available on-demand in `presets/`:
 - **Token Discipline**: Avoid hardcoded hex colors or arbitrary values (e.g. `bg-[#1a2b3c]`) scattered across markup; reference defined CSS variables or Tailwind theme keys.
 - **Responsive Primitives**: Ensure typography scales down cleanly on mobile (`text-3xl sm:text-5xl lg:text-7xl`).
 - **Accessible Contrast**: All text color tokens must maintain WCAG AA minimum contrast (≥ 4.5:1 against their surface token).
+
+---
+
+## 5. Token Provenance & Change Record
+
+When modifying or proposing design tokens, record token provenance so subsequent agents know what was established vs proposed:
+
+```markdown
+### 📐 Design-MD Change Record
+* **Priority Order Applied**: [1. User Explicit Direction | 2. Local DESIGN.md | 3. Optional Preset]
+* **Tokens Modified**:
+  - `[token-name]`: `[old_value]` ➔ `[new_value]` (Provenance: [Approved / Proposed])
+* **Scope**: Specific tokens updated; unselected presets kept unloaded.
+```
+

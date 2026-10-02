@@ -77,10 +77,15 @@ When defects are found, present actionable findings:
 
 ---
 
-## 6. Review Lifecycle & Resolution
+## 6. Review Lifecycle & Output Format
 
-1. **One Correction Pass**: Implementer resolves agreed `CRITICAL` and `WARNING` items.
-2. **Re-Verification**: Implementer re-runs tests via `scripts/exec-proxy.sh`.
-3. **Closure**: Reviewer verifies the fix against the probe. Stop diminishing-returns review loops.
-4. **Clean Pass Output**: If no issues are found, emit a concise 3-line statement:
-   `✓ [code-reviewer]: Review clean (0 defects found across 4 dimensions; diff approved)`
+1. **Review Header**:
+   - **Reviewer Mode**: `[Independent Subagent (code-reviewer) | Self-Review (Independent delegation unavailable)]`.
+   - **Diff Scope**: `[N] files evaluated against task requirements`.
+   - **Missing Acceptance Coverage**: Identify any acceptance criteria from requirements lacking test coverage.
+2. **One Correction Pass**: Implementer resolves agreed `CRITICAL` and `WARNING` items.
+3. **Re-Verification**: Implementer re-runs tests via `scripts/exec-proxy.sh`.
+4. **Closure**: Reviewer verifies the fix against the probe. Stop diminishing-returns review loops.
+5. **Clean Pass Output**: If no issues are found, emit a concise statement:
+   `✓ [code-reviewer]: Review clean (0 defects found across 4 dimensions; all acceptance criteria covered; diff approved)`
+

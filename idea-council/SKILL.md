@@ -80,23 +80,29 @@ Collect results. Optionally update `council-deliberation.md` if an artifact was 
 
 Deliver an actionable, prioritized decision record:
 
-1. **Executive Verdict Card**:
+1. **Executive Verdict & Decision Record**:
    ```markdown
    ┌──────────────────────────────────────────────────────────────┐
    │ VERDICT: [Go Ahead / Test First / Fix First / On Hold / Drop It]
-   │ CONFIDENCE: [Low / Medium / High]
-   │ DECISIVE FACTOR: [1-2 sentences on the primary rationale]
-   │ TOP PRE-MORTEM RISK: [Single most dangerous failure mode]
-   │ REVERSAL TRIGGER: [Specific condition that would flip this verdict]
+   │ RECOMMENDATION: [Concrete 1-sentence product/architectural directive]
+   │ STRONGEST OBJECTION: [Most serious material risk raised by council]
+   │ REVERSAL CONDITIONS: [Specific empirical evidence that flips the verdict]
+   │ UNRESOLVED EVIDENCE: [Data or tests currently unknown]
+   │ NEXT ACTION: [Immediate concrete next step]
    └──────────────────────────────────────────────────────────────┘
    ```
+   > [!IMPORTANT]
+   > **Authorization Boundary**: A favorable council verdict (`Go Ahead` / `Test First`) does **not** automatically authorize code implementation. The decision record is presented to the user for explicit approval before invoking any implementation skill.
+
 2. **Parameterized Roster Positions Table**:
    Summary table covering the active participants (3 in Express, 6 in Full):
    | Seat / Role | R1 Stance | Final Stance | Confidence | Core Argument |
    |---|:---:|:---:|:---:|---|
    | [Active Seat 1] | ... | ... | High/Med/Low | ... |
+
 3. **Key Clashes & Concessions**: 2–3 key technical debates and how they were resolved.
 4. **Ruthless Scope (80/20 Plan)**:
    - **P0 (Build Now)**: Non-negotiable core.
    - **P2/P3 (Cut / Defer)**: Features ruthlessly cut to accelerate shipping.
-5. **1-Click Execution Prompt**: Formatted prompt ready for `plan-master` to begin implementation.
+5. **Execution Handoff**: Formatted prompt ready for `plan-master` once user approves implementation.
+

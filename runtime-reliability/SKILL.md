@@ -11,54 +11,60 @@ Verification of operational resilience, resource plateaus, and lifecycle invaria
 
 ## 1. Core Invariants
 
-1. **Migration Rehearsal**: Rehearse schema migrations against a representative disposable test database, proving either safe rollback or safe forward-recovery without data loss.
-2. **Resource Plateau Probing**: High-throughput loops and caches undergo bounded soak tests to verify heap memory and descriptor counts plateau rather than grow monotonically.
-3. **Graceful Termination**: Services must intercept termination signals (`SIGTERM`) and drain in-flight jobs before exiting.
+1. **Migration Rehearsal**: Rehearse schema migrations against a disposable representative database, proving either safe rollback or safe forward-recovery without data loss. Share migration fixtures and schemas with `schema-craft` rather than building duplicate rehearsal environments.
+2. **Resource Plateau Probing**: High-throughput loops and caches undergo bounded soak tests to verify heap memory and descriptor counts plateau rather than grow monotonically. Zero-iteration tests are marked **UNVERIFIED**.
+3. **Graceful Process Termination**: Services must intercept termination signals (`SIGTERM`), complete or safely persist in-flight work, and exit cleanly within declared deadlines.
 4. **No Blanket Readiness Claims**: Avoid claims like "production ready" or "bulletproof." Expose exact sample sufficiency, measured scope, and test environment limits.
 
 ---
 
-## 2. Empirical Reliability Probes
+## 2. Operational Verification Profiles
 
-Execute programmatic probes via test scripts or `scripts/specialist_probes.py`:
+Select checks based on the operational surface changed:
 
-### A. Migration Rehearsal (Expand / Contract)
-- Execute forward migration on disposable test database.
+### Profile A: Memory Soak & Resource Plateau
+*When to run: Caches, long-running batch workers, event listeners, websocket servers.*
+- Warm up process (run initial iterations to prime JIT/caches).
+- Sample RSS memory via `probe_memory_soak_plateau(use_rss=True)` across bounded synthetic operations (e.g. 1,000–5,000 ops).
+- Measure memory delta across sample intervals. Verify consumption stabilizes within an acceptable threshold rather than climbing monotonically.
+- If iterations $\le 0$: mark as `UNVERIFIED (insufficient iterations)`.
+
+### Profile B: Graceful Shutdown & Drain
+*When to run: Background workers, queue consumers, HTTP servers with in-flight transactions.*
+- Spawn a real child process using `probe_graceful_drain_subprocess()`.
+- Dispatch synthetic in-flight work.
+- Send real `SIGTERM` (`os.kill(child.pid, signal.SIGTERM)`).
+- Assert process exits within declared deadline (`drain_timeout_ms`) with 0 aborted tasks. A process that drops work or hangs past deadline fails.
+
+### Profile C: Database Migration Rehearsal (Expand / Contract)
+*When to run: Schema modifications, table migrations, column additions.*
+- Apply forward migration on disposable test database.
 - Insert representative fixture data and verify queries.
-- Execute rollback migration (or forward recovery script) and verify state integrity.
+- Rehearse rollback migration (or forward-recovery strategy) and verify data integrity.
 - Re-apply migration to prove idempotency.
-
-### B. Memory Soak & Resource Plateau
-- Run bounded iterations (e.g. 1,000–5,000 synthetic operations) via `probe_memory_soak_plateau()`.
-- Record sample intervals, start/peak heap usage, and post-GC baseline.
-- Verify memory consumption stabilizes within an acceptable bound rather than climbing linearly.
-
-### C. Graceful Shutdown & Drain
-- Start service/worker in background.
-- Trigger in-flight asynchronous operations.
-- Send `SIGTERM` (`kill -15`) and observe drain behavior via `probe_graceful_drain()`.
-- Confirm 0 aborted tasks and clean process termination.
 
 ---
 
 ## 3. Scope, Sample Sufficiency & Limits Disclosure
 
 Every reliability report must explicitly disclose:
-- **Measured Scope**: Which exact services, endpoints, or migration scripts were exercised.
+- **Measured Scope**: Exact services, endpoints, or migration scripts exercised.
 - **Sample Sufficiency**: Exact iteration count, test duration, concurrency level, and memory delta measured.
-- **Environmental Limits**: Boundary limits of the test setup (e.g., single-node local environment, simulated network latency, synthetic database volume vs production scale).
+- **Environmental Limits**: Single-node local limits vs. production multi-node cluster realities.
+- **Inconclusive Evidence**: If iterations were insufficient or environment simulated, declare result **INCONCLUSIVE / UNVERIFIED** rather than fabricating a pass.
 
 ---
 
-## 4. Output Policy & Reporting
+## 4. Output Policy & Reliability Card
 
 Follow [`references/output-policy.md`](../references/output-policy.md):
 
-1. **Routine Summary (4–8 lines target in chat)**:
-   - **Outcome**: Status (🟢 GREEN / 🟡 AMBER / 🔴 RED) and operational findings.
-   - **Measured Scope**: Modules tested (e.g. background job queue, schema migration).
-   - **Sample Sufficiency**: Iteration count, test duration, and measured resource metrics.
-   - **Limits & Unverified Conditions**: Disclosed boundaries (e.g. single-process local test, not multi-node cluster).
-   - **Evidence**: Receipt ID and log location in `.evidence/manifest.v1.json`.
-2. **Intermediate Milestone**:
-   `✓ [runtime-reliability]: Soak & lifecycle check PASS (N samples, rcpt_id)`
+### Routine Summary (4–8 lines target in chat):
+- **Outcome**: Status (🟢 GREEN / 🟡 AMBER / 🔴 RED) and operational verdict.
+- **Profile Executed**: Profile A (Memory), Profile B (Shutdown), or Profile C (Migration).
+- **Sample Sufficiency**: Iterations, duration, samples, and measured deltas.
+- **Limits & Unverified Conditions**: Disclosed boundaries (e.g. local single-process, local SQLite, not distributed Postgres).
+- **Evidence**: Receipt ID and log location in `.evidence/manifest.v1.json`.
+
+### Intermediate Milestone:
+`✓ [runtime-reliability]: Soak & lifecycle check PASS (N samples, rcpt_id)`

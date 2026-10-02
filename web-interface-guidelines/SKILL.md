@@ -7,6 +7,20 @@ description: Vercel's official Web Interface Guidelines. Production engineering 
 
 Production engineering standard for full-stack user interfaces, web components, and frontend interactions.
 
+## Scenario Selector
+
+Load the specific checklist matching the component or workflow being modified:
+
+| Component / Flow Being Changed | Relevant Sections to Apply |
+|---|---|
+| **Forms, inputs, auth, checkout** | **Section 4** (Forms & Input UX), **Section 2** (Mobile input font-size $\ge 16$px) |
+| **Navigation, menus, modals, dialogs** | **Section 1** (Keyboard, focus traps, hit targets), **Section 5** (Interruptible motion) |
+| **Buttons, submission, async actions** | **Section 3** (Button spinner labels, flicker-free loading, optimistic updates) |
+| **Tables, pricing, data counters** | **Section 6** (Tabular numbers, layout stability), **Section 1** (Semantic links) |
+| **Mobile responsive layouts** | **Section 2** (Touch & Mobile Ergonomics), **Section 6** (Explicit image dimensions, safe areas) |
+
+Avoid loading every section for a simple local edit.
+
 ---
 
 ## 1. Interactions & Keyboard Navigation
