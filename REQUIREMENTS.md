@@ -94,3 +94,40 @@ node -e "require('playwright'); console.log('✅ Playwright & Node OK')" && \
 playwright --version && \
 echo "🎉 All Antigravity skill requirements are satisfied!"
 ```
+
+---
+
+## 🩺 6. Automated Diagnostics (`scripts/skills-doctor.py`)
+
+Run the automated health doctor to verify core host paths, Python version ($\ge 3.9$), runtime helpers (`exec-proxy.sh`, `verify-release-gate.sh`, `runtime_evidence.py`, `task_ledger.py`, `task_shape_gating.py`), and hook configuration (`.agents/hooks.json`):
+
+```bash
+# Human-readable diagnostic report:
+python3 scripts/skills-doctor.py
+
+# Machine-readable JSON output (for automated CI/CD and subagents):
+python3 scripts/skills-doctor.py --json
+
+# Inspect a specific target workspace or project directory:
+python3 scripts/skills-doctor.py --project-dir /path/to/project
+```
+
+Missing optional tools (`pytest`, `playwright`, `git`, `node`) are reported with graceful degradation as `"Optional: missing"` without failing the core health check (exit code 0). Missing critical helpers or invalid hooks yield exit code 1.
+
+---
+
+## 📦 7. Skills Suite Installation & Manifest Management (`scripts/install-skills.py`)
+
+Install an explicit inventory of all 17 suite skills and runtime helpers, with safe merging of hooks and routing rules and clean manifest tracking (`.skills-install-manifest.json`):
+
+```bash
+# Project workspace installation:
+python3 scripts/install-skills.py --workspace --target-dir /path/to/project
+
+# Global installation across all Antigravity projects:
+python3 scripts/install-skills.py --global
+
+# Clean uninstallation and restoration of pre-existing user configurations:
+python3 scripts/install-skills.py --target-dir /path/to/project --uninstall
+```
+

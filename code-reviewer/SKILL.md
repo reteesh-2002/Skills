@@ -9,71 +9,78 @@ Provide an independent, adversarial second pair of eyes on proposed changes. Det
 
 ---
 
-## 1. When to Invoke
+## 1. When to Invoke & Reviewer Policy
 
 | Change Scope | Review Policy | Reviewer Type |
-| :--- | :--- | :--- |
+|---|---|---|
 | **Trivial fix / docs (<3 files)** | Self-review in solo mode. | Implementer |
 | **Standard feature / component** | Single independent review pass. | Subagent (`code-reviewer`) |
 | **High-Risk (>12 files, auth, DB)** | Mandatory independent review before release. | Subagent (`code-reviewer`) |
 
 > [!IMPORTANT]
-> **Subagent Transparency**: If subagent execution tools (`invoke_subagent`) are unavailable or disabled in the host environment, explicitly record review as a **Self-Review Limitation**. Never claim independent review was conducted without an actual separate agent.
+> **Self-Review Limitation (Subagent Transparency)**: If subagent delegation tools (`invoke_subagent`) are unavailable or disabled, the review must be explicitly labeled as **Self-Review (Independent delegation unavailable)**. Never claim independent review was performed without an actual separate agent.
 
 ---
 
-## 2. Reviewer Input Package
+## 2. Zero-Quota Review Discipline
 
-The reviewer evaluates a focused, self-contained context package without reading the entire historical chat:
-1. **Task Requirements & Acceptance IDs**: The original goals, constraints, and acceptance criteria (e.g. `A1`, `A2`).
+- **No Finding Quotas**: There is **no mandatory finding quota**. If a change is clean, well-tested, and adheres to invariants, a clean pass with zero findings is expected and encouraged.
+- **No Manufactured Nitpicks**: Do not invent trivial style critiques or fabricate hypothetical problems to satisfy a perceived review quota.
+- **Actionable Findings First**: When defects are identified, present actionable findings first, ordered by severity (`CRITICAL`, `WARNING`, `SUGGESTION`).
+
+---
+
+## 3. Reviewer Input Package
+
+The reviewer evaluates a focused, self-contained context package without reading historical chat:
+1. **Task Requirements & Acceptance IDs**: Target goals, invariants, and acceptance criteria.
 2. **Changed Diff**: `git diff --staged` or `git diff <base>..<branch>`.
-3. **Surrounding Context**: Targeted reads of imported interfaces or modified function boundaries.
-4. **Verification Evidence**: The actual executed test receipts from `.evidence/receipts/`.
+3. **Surrounding Context**: Function boundaries and imported interfaces adjacent to the diff.
+4. **Verification Evidence**: Executed test receipts from `.evidence/receipts/`.
 
 ---
 
-## 3. The 4-Dimension Review Rubric
-
-Reviewers probe beyond syntax and style, focusing on four high-impact areas:
+## 4. The 4-Dimension Review Rubric
 
 1. **Correctness & Edge Cases**:
    - Off-by-one errors, null/undefined dereferences, unhandled async promise rejections.
-   - Resource leaks: unclosed file handles, dangling timers, orphaned background tasks.
-2. **Regression & Backward Compatibility**:
+   - Resource leaks: unclosed descriptors, lingering timers, orphaned background tasks.
+2. **Regression & Compatibility**:
    - Does this edit break existing API contracts or implicit assumptions?
-   - Are database migrations reversible or safe for zero-downtime deployment?
+   - Are database migrations safe and compatible?
 3. **Test Blindspots (The "Realistic Bug" Question)**:
-   - What realistic bug could exist in this implementation that the test suite completely misses?
-   - Are tests asserting observable behavior, or are they tautological echoes of implementation code?
+   - What realistic defect could exist in this code that the test suite completely misses?
+   - Are tests asserting observable behavior, or are they tautological mirrors of implementation?
 4. **Security & Data Isolation**:
-   - Injection vulnerabilities, improper input validation, boundary escapes, unescaped shell arguments.
-   - Tenant leaks: cross-account data exposure or missing authorization checks.
+   - Injection vectors, improper sanitization, unescaped shell inputs.
+   - Tenant leaks: cross-account data exposure or broken authorization checks.
 
 ---
 
-## 4. Structured Finding Card Format
+## 5. Structured Finding Format
 
-Every reported issue must be actionable and grounded. Vague philosophical complaints are prohibited:
+When defects are found, present actionable findings:
 
 ```markdown
 ### 🚨 [CRITICAL | WARNING | SUGGESTION]: <Short Title>
 - **Location**: `path/to/file.ext:L123-L135`
 - **Failure Scenario**: Under conditions X, if input Y occurs, the system will Z.
 - **Impact**: Production data corruption / silent false pass / service crash.
-- **Verification Probe**: Test command or snippet demonstrating the defect.
+- **Verification Probe**: Command or test snippet demonstrating the defect.
 - **Recommended Remediation**: Minimal surgical fix.
 ```
 
-### Severity Levels:
-- **CRITICAL**: Blocks release. Direct correctness defect, data loss risk, or security vulnerability. Must be resolved before merge.
-- **WARNING**: Material concern or test blindspot. Requires either a code fix or an explicit documented rationale.
-- **SUGGESTION**: Non-blocking craft or readability improvement. Implementer may accept or defer without blocking.
+### Severity Definitions:
+- **CRITICAL**: Blocks release. Correctness defect, data loss risk, or security breach. Must be resolved before merge.
+- **WARNING**: Material concern or test blindspot. Requires a code fix or an explicit documented rationale.
+- **SUGGESTION**: Non-blocking craft or readability improvement.
 
 ---
 
-## 5. Review Lifecycle & Resolution
+## 6. Review Lifecycle & Resolution
 
-1. **One Correction Pass**: Implementer applies fixes for agreed `CRITICAL` and `WARNING` items.
-2. **Re-Verification**: Implementer runs test suite via `scripts/exec-proxy.sh` against the updated code.
-3. **Closure**: Reviewer validates the fix against the verification probe. Stop repetitive, diminishing-returns review loops.
-4. **Unresolved Issues**: If an issue remains disputed or deferred, record it explicitly in `.evidence/tasks.json` as a tracked limitation rather than hiding it.
+1. **One Correction Pass**: Implementer resolves agreed `CRITICAL` and `WARNING` items.
+2. **Re-Verification**: Implementer re-runs tests via `scripts/exec-proxy.sh`.
+3. **Closure**: Reviewer verifies the fix against the probe. Stop diminishing-returns review loops.
+4. **Clean Pass Output**: If no issues are found, emit a concise 3-line statement:
+   `✓ [code-reviewer]: Review clean (0 defects found across 4 dimensions; diff approved)`

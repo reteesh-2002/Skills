@@ -625,6 +625,15 @@ echo -n "  [27/27] Testing P32 canonical live task ledger tracking & rendering..
 python3 "${SB_LEDGER}" init "Release B Ledger Conformance" >/dev/null 2>&1
 python3 "${SB_LEDGER}" add --id T1 --title "Core Contract" --owner "Coordinator" >/dev/null 2>&1
 python3 "${SB_LEDGER}" update --id T1 --status Running --detail "Implementing" >/dev/null 2>&1
+mkdir -p "${TEST_SANDBOX}/.evidence/receipts"
+cat << REOF > "${TEST_SANDBOX}/.evidence/receipts/rcpt_sample.json"
+{
+  "receipt_id": "rcpt_sample",
+  "exit_code": 0,
+  "git_tree_sha": "${CUR_TREE}",
+  "metrics": { "collected": 1, "passed": 1, "failed": 0, "skipped": 0 }
+}
+REOF
 python3 "${SB_LEDGER}" update --id T1 --status Done --detail "Completed" --evidence "rcpt_sample" >/dev/null 2>&1
 LEDGER_MD=$(python3 "${SB_LEDGER}" status 2>/dev/null)
 if echo "${LEDGER_MD}" | grep -q "1 of 1 tasks complete" && echo "${LEDGER_MD}" | grep -q "Core Contract" && echo "${LEDGER_MD}" | grep -q "Done"; then

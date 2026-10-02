@@ -1,33 +1,30 @@
-# Antigravity Core Autonomous Skill Routing Rule
+# Antigravity Skills Suite — Routing Rules
 
-You are equipped with a specialized suite of skills located in `~/.gemini/config/skills/`.
+Routing policy is defined in [`suite-policy.json`](suite-policy.json). This file summarizes the active rules.
 
-## Core Autonomous Intent-to-Skill Routing (Only 3 Skills)
+## Automatic skill activation (3 skills only)
 
-Auto-detection and automatic activation are **strictly limited to the 3 core engineering workflows**:
+| User intent | Auto-activated skill |
+|---|---|
+| Fix a bug / error / breakage / failure | `deep-debugger` |
+| Plan / implement / architect / build a multi-step feature or system | `plan-master` |
+| Verify / test / validate code changes | `qa-sentinel` |
 
-| User Intent | Auto-Detected Skill | Operational Protocol |
-| :--- | :--- | :--- |
-| **Fix a bug / Error / Breakage / Failure** | `deep-debugger` | 1. Read `deep-debugger/SKILL.md`.<br>2. Execute 6-stage protocol: Reproduce → Isolate → State Inspection → Hypothesis → Surgical Minimal Fix → Regression Proof. |
-| **Create new feature / System / Architecture / Change** | `plan-master` | 1. Read `plan-master/SKILL.md`.<br>2. Formulate execution plan, acceptance criteria, and task dependency graph. |
-| **Verify / Test / Validate code changes** | `qa-sentinel` | 1. Read `qa-sentinel/SKILL.md`.<br>2. Apply Anti-Tautology discipline (observable side-effects, real failure questions).<br>3. Verify code actually executes via `scripts/exec-proxy.sh`. |
+## All other skills: explicit only
 
+`prompt-architect`, `frontend-artisan`, `schema-craft`, `adaptive-worker-orchestrator-v2`, `code-reviewer`, `security-verifier`, `runtime-reliability`, `idea-council`, `ship-it`, `anti-slop-spec`, `design-md`, `image-to-code`, `playwright-cli`, `web-interface-guidelines`
 
-## Manual & On-Demand Only Skills
+These activate only when the user explicitly requests them or invokes their slash commands.
 
-Do **NOT** automatically activate the following specialist skills unless the user explicitly requests them (or invokes their slash commands / tags):
-- `frontend-artisan`: Manual only (UI / design / CSS).
-- `schema-craft`: Manual only (database schema / migrations / models).
-- `adaptive-worker-orchestrator-v2`: Manual only (multi-worktree parallel subagents).
-- `code-reviewer`: Manual only (adversarial diff code review).
-- `security-verifier`: Manual only (OWASP API / synthetic tenant audits).
-- `runtime-reliability`: Manual only (soak tests / memory leak / migration rehearsal).
-- `idea-council`: Manual only (multi-agent deliberation council).
-- `ship-it`: Manual only (git release / tag / publish).
+## Key rules
 
-## Mandatory Behaviors
-1. **Always read `SKILL.md`** using `view_file` when activating one of the 3 core skills.
-2. **Never auto-trigger specialist skills** without explicit user instruction.
-3. **Execution Discipline**: Route test commands through `scripts/exec-proxy.sh` for physical receipt generation and bounded log capture.
-4. **Concise Reporting**: Chat summaries must stay compact (4–8 lines default), highlighting outcome, verified tests, and evidence paths.
-5. **Master Prompt & Planning Depth**: Whenever formulating project structures, architecture master prompts, or execution specifications, ALWAYS generate the full-scale 23-section Master Engineering Specification standard (Role, Objective, Schemas, Directory Layout, Invariants, Edge Cases, Anti-Scope, TDD Verification). Never output a shallow summary or condensed outline.
+- `prompt-architect` does **not** auto-run before `plan-master`. Plan Master may plan directly from user requirements.
+- A valid existing specification skips specification generation.
+- Small tasks (< 3 files, obvious edit) go directly to implementation with a proportionate check — no specification, council, worktree, or image generation required.
+- Explicitly requested specialists may load their reference files but must not start a council, publish, or create workers without explicit instruction.
+- Planning does not authorize publishing. A prior "implement" request does not require re-authorization when a skill changes stage.
+
+## Output defaults
+
+See `suite-policy.json` → `output_defaults` for per-context defaults.
+A full 24-section master prompt request always receives all 24 sections regardless of effort profile.

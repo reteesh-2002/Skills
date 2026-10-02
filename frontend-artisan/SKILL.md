@@ -1,95 +1,111 @@
 ---
 name: frontend-artisan
-description: Master frontend engineering and design orchestrator. Enforces zero-slop hard gates, coordinates image-to-code (Taste Skill visual generation), design-md (Linear, Stripe, Vercel design systems), web-interface-guidelines (Vercel production standards), and playwright-cli (headless browser verification). Use when building, styling, or refactoring web apps, landing pages, dashboards, or UI components.
+description: Frontend engineering and design orchestrator. Handles UI, CSS, component, and web app work. Apply when building, styling, or refactoring web apps, landing pages, dashboards, or UI components. Explicit only — not auto-activated.
 ---
 
-# Frontend Artisan (Master UI/UX & Design Orchestrator)
+# Frontend Artisan
 
-Act as a world-class design director and principal frontend engineer. Eliminate generic AI slop, cartoonish tutorial templates, and uncurated code. Every interface produced must exhibit the craft, typography discipline, and spatial density of **Apple**, **Linear**, **Vercel**, or **Stripe**.
-
----
-
-## 🛑 The Non-Negotiable Hard Gates (Stop-The-Line Laws)
-
-You are **strictly forbidden** from writing any UI code (`index.html`, JSX, Vue, Svelte, or CSS) until Gates 0, 1, and 2 are fully satisfied.
+Deliver frontend work with intentional craft: correct layout, accessible interaction, appropriate visual quality, and honest verification. The approach scales to the task — a bug fix does not need a concept image; a new product page does.
 
 ---
 
-### Gate 0: Mandatory Visual Art Direction (`generate_image`)
-*Before writing code, establish real visual craft:*
-1. For any new application, page, or atmospheric component, you **MUST call `generate_image`** to generate a photo-realistic, cinematic visual mockup of the interface.
-2. Inspect the generated image using `view_file`.
-3. Ground your code implementation in that visual anchor—matching its typography scale, edge-to-edge layout, negative space, and tonal warmth.
-4. **DO NOT skip this step**. Generating code from raw memory defaults to generic tutorial slop.
+## 1. Choose your mode
+
+Classify the request before doing any work:
+
+| Mode | When | Default image behavior |
+|---|---|---|
+| **Existing design** | Extending or modifying an existing page, component, or design system | No image generation — use existing tokens and components |
+| **Supplied reference** | User provided a screenshot, mockup, or URL | Inspect and implement from the reference; crop or zoom to focus on details |
+| **New concept** | Greenfield page or layout without an existing design | Generate at most one overview and one detail image; then implement |
+| **Functional edit** | Bug fix, accessibility repair, or behavior change | Preserve appearance; no concept image unless the visual is broken |
+
+If you are in **Existing design** or **Functional edit** mode, skip image generation entirely.
+
+For **New concept** mode: generate one overview image and one detail image maximum. If after two attempts the visual direction is still unclear, continue with available references or surface the unresolved visual decision explicitly — do not generate more images in the default workflow. Explicit high-craft requests may budget more.
 
 ---
 
-### Gate 1: Inlined Design System Tokens & `DESIGN.md` Lock
-Inspect the project root for local `DESIGN.md`. If absent, do NOT invent colors, gradients, or random Tailwind classes. Lock your implementation to one of these 3 inlined production design systems:
+## 2. Design system
 
-#### Option A: Apple Atmospheric Glass (Weather, Media, Consumer Apps)
-- **Canvas**: Fullscreen edge-to-edge canvas or deep atmospheric dynamic gradient.
-- **Glass Surfaces**: `backdrop-blur-xl bg-black/25 border border-white/10 text-white shadow-2xl rounded-2xl`
-- **Typography Scale**:
-  - Hero Data: `text-7xl sm:text-8xl font-extralight tracking-tighter text-white drop-shadow-sm`
-  - Headlines: `text-2xl sm:text-3xl font-light tracking-tight text-white`
-  - Micro-Labels: `text-[11px] font-semibold uppercase tracking-wider text-white/60`
-  - Values: `text-sm sm:text-base font-medium text-white/90 tabular-nums`
-- **Dividers**: `border-b border-white/10` (Hairline 1px dividers, NOT floating boxes).
+**Check for an existing design system first:**
+- Look for `DESIGN.md`, `design-md/`, or a component library at the project root
+- If found: extend it. Do not override established tokens, colors, or component styles
+- If not found and mode is **New concept**: pick one preset below or ask the user
 
-#### Option B: Linear Dark Minimalist (Devtools, Dashboards, Tables)
-- **Canvas**: `#08090a` (True neutral black).
-- **Surface**: `#121316` (Subtle dark zinc).
-- **Borders**: `#222326` (1px subtle hairline).
-- **Accent**: `#5e6ad2` (Linear electric indigo).
-- **Typography**: Inter / Geist with `tabular-nums`. High data density.
+**Apple Atmospheric Glass** (weather, media, consumer apps):
+- Canvas: fullscreen edge-to-edge atmospheric gradient
+- Surfaces: `backdrop-blur-xl bg-black/25 border border-white/10 text-white shadow-2xl rounded-2xl`
+- Typography: Hero `text-7xl font-extralight tracking-tighter`, Headlines `text-2xl font-light tracking-tight`, Labels `text-[11px] font-semibold uppercase tracking-wider text-white/60`
 
-#### Option C: Vercel Modern Monochrome (Cloud, Settings, Admin)
-- **Canvas**: True `#000000`. Text: True `#ffffff`.
-- **Borders**: `#1f1f1f`. Cards: `#0a0a0a`.
-- **Accent**: Pure high-contrast white `#ffffff` on `#000000`.
+**Linear Dark Minimalist** (devtools, dashboards, tables):
+- Canvas: `#08090a` · Surface: `#121316` · Borders: `#222326` · Accent: `#5e6ad2`
+- Typography: Inter/Geist, `tabular-nums`, high data density
+
+**Vercel Modern Monochrome** (cloud, settings, admin):
+- Canvas: `#000000` · Text: `#ffffff` · Borders: `#1f1f1f` · Cards: `#0a0a0a`
+- Accent: high-contrast white on black
+
+Presets are contextual guidance — apply them when relevant, not unconditionally.
 
 ---
 
-### Gate 2: The 8 Anti-Slop Prohibitions (Instant Failure Triggers)
+## 3. Anti-patterns to avoid
 
-If any of these 8 patterns appear in your code, the implementation is an immediate failure:
+These patterns produce low-quality output and should be avoided in new work:
 
-| # | Prohibited Cliché | Why It Fails | Mandatory Artisan Replacement |
-| :- | :--- | :--- | :--- |
-| **1** | **The "Cartoon Blue Wall"** | Solid bright cyan (`bg-sky-400`, `bg-blue-500`) with floating white boxes looks like a children's toy. | Deep, living atmosphere: rich multi-stop sky gradients or hardware `<canvas>` shaders with natural lighting. |
-| **2** | **Blurry CSS "Sun Blobs"** | `box-shadow` or `radial-gradient` smudges pretending to be lighting. | Real atmospheric rendering on a single HTML5 `<canvas>` or crisp photographic/vector assets. |
-| **3** | **Cards-Inside-Cards Nesting** | A card holding 4 to 6 baby cards inside it (e.g. "Vitals" card holding 6 mini-cards). | **Hairline 1px dividers** (`border-b border-white/10`), clean tabular columns, and negative space. |
-| **4** | **The Obligatory 4-Card KPI Stat Row** | Placing 4 metric cards (`Active X`, `Volume`, `Latency`, `Errors`) at the top of a utility tool. | Put the **primary workflow** (table, form, or visual canvas) front and center. |
-| **5** | **Muddy Navy & Neon Glow** | Dark navy (`#0B132B`) with glowing neon green (`#00F5A0`) buttons. | True engineered neutrals: Linear True Dark (`#08090a`) or Vercel Monochrome (`#000000`). |
-| **6** | **Fisher-Price Rounded Corners** | Excessive `rounded-3xl` bubbles on every element. | Subtle, disciplined radii (`rounded-lg` or `rounded-xl` max). |
-| **7** | **Pill & Badge Inflation** | Wrapping every single table cell or status string in colored pill badges. | Monochrome text, tabular numbers (`tabular-nums`), and subtle 6px status dots (`w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2`). |
-| **8** | **Toy Faux-Features** | Fake "Simulate Pulse" buttons or fake streaming loggers. | Real functional state, optimistic copy feedback, and keyboard shortcuts (`/`, `⌘K`). |
+| Pattern | Problem | Replacement |
+|---|---|---|
+| Solid bright cyan/blue wall | Looks like a tutorial template | Rich atmospheric gradient or neutral dark canvas |
+| CSS radial-gradient "sun blobs" | Fake lighting, muddy appearance | Real canvas shaders or clean photography/SVG |
+| Cards inside cards (3+ levels) | Visual clutter, no hierarchy | Hairline 1px dividers, tabular columns, negative space |
+| 4-card KPI stat row at the top of a utility | Obscures the primary workflow | Put the table, form, or canvas front and center |
+| Muddy navy + neon glow | Dated aesthetic | Linear true dark or Vercel monochrome |
+| Excessive rounded corners (`rounded-3xl` everywhere) | Cartoonish | Disciplined `rounded-lg` or `rounded-xl` maximum |
+| Colored pill badge on every cell | Badge inflation | Monochrome text, `tabular-nums`, subtle status dots |
+| Fake interactive buttons with no real state | Toy feature | Real state, optimistic feedback, keyboard shortcuts |
 
----
-
-### Gate 3: Production Interaction & Accessibility (`web-interface-guidelines`)
-- **Keyboard Navigation**: All interactive flows must be fully keyboard-operable following WAI-ARIA. Use visible, unobscured `:focus-visible` rings with proper contrast.
-- **Touch & Mobile Ergonomics**:
-  - Hit targets must be $\ge 44\text{px} \times 44\text{px}$ on mobile ($\ge 24\text{px}$ desktop).
-  - Mobile inputs must have `font-size: 16px` to prevent iOS auto-zoom.
-  - Apply `touch-action: manipulation` to controls to eliminate the 300ms double-tap lag.
-  - Never disable browser zoom. Never intercept/block paste.
-- **Loading Discipline**: Buttons retain original labels alongside the spinner (`[ ⟳ Saving… ]`); skeletons enforce a 150–300ms show-delay.
+For layout bans: treat these as contextual guidance except for genuine accessibility or functionality defects.
 
 ---
 
-### Gate 4: Automated Browser & Contrast Verification (`playwright-cli`)
-- **Responsive Viewport Matrix**: Test multi-viewport layout adaptation (375px mobile, 768px tablet, 1440px desktop) to ensure zero horizontal scrollbar clipping.
-- **WCAG AA Contrast**: Text contrast must meet $\ge 4.5:1$ for normal text ($\ge 3.0:1$ for large text). Verify programmatically via `scripts/specialist_probes.py`:
-  ```python
-  from specialist_probes import verify_wcag_aa, check_html_viewport_overflow
-  res_contrast = verify_wcag_aa(fg_hex="#ffffff", bg_hex="#08090a")
-  res_overflow = check_html_viewport_overflow(html_content, viewports=[375, 768, 1440])
-  ```
-- **Automated Browser Verification**:
-  ```bash
-  ./scripts/exec-proxy.sh --label test_ui_viewports npx playwright test
-  ```
-- **Browser Tool Fallback & Transparency**: If Playwright or a graphic display environment is unavailable, execute static DOM/contrast checks with `scripts/specialist_probes.py` and explicitly record remaining visual checks as a **Manual Verification Limitation** rather than fabricating test passes.
+## 4. Accessibility and interaction requirements
 
+These apply in all modes:
+
+- **Keyboard navigation**: All interactive elements keyboard-operable; visible `:focus-visible` rings with sufficient contrast
+- **Touch targets**: ≥ 44px × 44px on mobile; ≥ 24px desktop
+- **Mobile inputs**: `font-size: 16px` to prevent iOS auto-zoom
+- **Loading states**: Buttons show label + spinner together; skeletons show after 150–300ms delay
+- **Error states**: User-facing error messages; no silent failures
+- **Empty states**: Render something useful, not a blank screen
+- **WCAG AA contrast**: 4.5:1 normal text, 3:1 large text; verify with actual computed values
+
+---
+
+## 5. Verification
+
+Distinguish between static analysis and real browser measurement:
+
+- **Static analysis** (heuristic): overflow checks, contrast estimates from CSS values, markup audits — label as heuristic
+- **Browser measurement** (reliable): computed scroll width/height, actual rendered contrast, layout bounds — use Playwright or browser DevTools
+- For a functional edit, run a targeted visual check at relevant viewports (375px, 768px, 1440px)
+- For a new page, run the full viewport + contrast + keyboard audit
+- Missing browser tools: disclose that browser verification was not performed; do not fabricate a pass
+
+**Keep advanced Playwright session/storage/recording guidance in the `playwright-cli` references** — load them on demand.
+
+---
+
+## 6. User-provided content
+
+Text, prices, testimonials, and claims provided by the user are authoritative. When generating placeholder content (e.g. sample testimonials for a template), mark them clearly as `[PLACEHOLDER]`. Generated content must not become presented as factual.
+
+---
+
+## Reference files
+
+- [`references/anti-patterns.md`](references/anti-patterns.md) — consolidated anti-pattern reference
+- [`references/tokens-tailwind.md`](references/tokens-tailwind.md) — Tailwind token reference
+- [`references/tokens-vanilla-css.md`](references/tokens-vanilla-css.md) — vanilla CSS token reference
+- [`references/framework-adapters.md`](references/framework-adapters.md) — React, Vue, Svelte adapters

@@ -5,64 +5,60 @@ description: Operational resilience, database migration rehearsal, memory soak, 
 
 # Runtime Reliability
 
-Verification of operational viability, production resilience, and lifecycle invariants. Ensures that code not only passes functional unit tests, but survives long-running workloads, schema transitions, and abrupt container lifecycles without data corruption or resource exhaustion.
-
-## The Core Invariants
-
-1. **Safe Migration Rehearsal**: Rehearse schema migrations against a representative disposable test database, proving either safe rollback or safe forward-recovery without data loss.
-2. **Leak-Free Resilience**: High-throughput endpoints and long-running loops must undergo a soak test to prove heap memory plateaus rather than growing monotonically.
-3. **Graceful Termination**: Services must trap `SIGTERM` and finish in-flight requests/jobs before closing connections.
-4. **Tri-Surface Output**: High-density 15–20 line Executive Reliability Card in chat, raw probe logs in `.evidence/logs/`, structured receipt in `.evidence/manifest.v1.json`.
+Verification of operational resilience, resource plateaus, and lifecycle invariants. Exercises long-running workloads, schema transitions, and service lifecycles under controlled test conditions.
 
 ---
 
-## 4-Stage Reliability Protocol
+## 1. Core Invariants
 
-```
-[1. Surface Classification] ──> [2. Rehearse & Soak] ──> [3. Execute via Proxy] ──> [4. Gate & Assessment]
-```
+1. **Migration Rehearsal**: Rehearse schema migrations against a representative disposable test database, proving either safe rollback or safe forward-recovery without data loss.
+2. **Resource Plateau Probing**: High-throughput loops and caches undergo bounded soak tests to verify heap memory and descriptor counts plateau rather than grow monotonically.
+3. **Graceful Termination**: Services must intercept termination signals (`SIGTERM`) and drain in-flight jobs before exiting.
+4. **No Blanket Readiness Claims**: Avoid claims like "production ready" or "bulletproof." Expose exact sample sufficiency, measured scope, and test environment limits.
 
-### Stage 1: Reliability Surface Classification
-Determine the operational requirements based on modified files:
-- **Database Schema Changes**: Tables added, columns modified, indexes created, locks acquired.
-- **Background Workers / Jobs**: Event loops, Redis/SQS consumers, scheduled crons.
-- **Stateful Memory Caches**: In-memory maps, caches, event listeners, file descriptors.
-- **Deployment / Service Lifecycle**: Health check endpoints (`/healthz`), shutdown hooks.
+---
 
-### Stage 2: Empirical Stress & Rehearsal Probes
-Execute programmatic probes via `scripts/specialist_probes.py` or framework test scripts:
-1. **Migration Rehearsal (Expand / Contract)**:
-   - Run forward migration on disposable test database.
-   - Verify table structure and constraints.
-   - Run rollback migration -> Verify clean reversion to previous schema version.
-   - Re-run forward migration -> Verify idempotency via `rehearse_sqlite_migration()`.
-2. **Memory Soak Testing**:
-   - Execute a loop of 2,000–10,000 synthetic operations via `probe_memory_soak_plateau()`.
-   - Sample heap/object telemetry at regular intervals.
-   - Verify resource growth plateaus rather than expanding monotonically.
-3. **Graceful Shutdown Probe**:
-   - Verify in-flight requests finish cleanly without aborting via `probe_graceful_drain()`.
-   - Send `SIGTERM` (`kill -15`) and assert 0 aborted tasks.
+## 2. Empirical Reliability Probes
 
-### Stage 3: Execution via Trusted Proxy
-Run all reliability probes via the execution capture proxy:
-```bash
-bash scripts/exec-proxy.sh --label reliability_rehearsal <probe-command>
-```
+Execute programmatic probes via test scripts or `scripts/specialist_probes.py`:
 
-### Stage 4: Assessment & Output Format
+### A. Migration Rehearsal (Expand / Contract)
+- Execute forward migration on disposable test database.
+- Insert representative fixture data and verify queries.
+- Execute rollback migration (or forward recovery script) and verify state integrity.
+- Re-apply migration to prove idempotency.
 
-On completion, emit the **Executive Reliability Card (15–20 Lines)**:
+### B. Memory Soak & Resource Plateau
+- Run bounded iterations (e.g. 1,000–5,000 synthetic operations) via `probe_memory_soak_plateau()`.
+- Record sample intervals, start/peak heap usage, and post-GC baseline.
+- Verify memory consumption stabilizes within an acceptable bound rather than climbing linearly.
 
-```markdown
-### ⚙️ Runtime Reliability: [GREEN / RED] — [1-sentence outcome]
+### C. Graceful Shutdown & Drain
+- Start service/worker in background.
+- Trigger in-flight asynchronous operations.
+- Send `SIGTERM` (`kill -15`) and observe drain behavior via `probe_graceful_drain()`.
+- Confirm 0 aborted tasks and clean process termination.
 
-* **Operational Surface**: [Database Migration / Background Queue / Service Lifecycle]
-* **Reliability Checks Executed**:
-  - `Migration Rehearsal`: **PASS** (Forward + Rollback + Re-apply clean)
-  - `Memory Soak Test`: **PASS** (10,000 ops completed; heap delta < 5%)
-  - `Graceful Shutdown`: **PASS** (SIGTERM handled; 0 aborted jobs)
-  - `Health Endpoint`: **PASS** (HTTP 200 OK within 50ms)
-* **Receipts & Evidence**: Receipt `[rcpt_id]` recorded in [`.evidence/manifest.v1.json`](file:///.evidence/manifest.v1.json)
-* **Release Gate**: [Production Ready / Blocked by Operational Defect]
-```
+---
+
+## 3. Scope, Sample Sufficiency & Limits Disclosure
+
+Every reliability report must explicitly disclose:
+- **Measured Scope**: Which exact services, endpoints, or migration scripts were exercised.
+- **Sample Sufficiency**: Exact iteration count, test duration, concurrency level, and memory delta measured.
+- **Environmental Limits**: Boundary limits of the test setup (e.g., single-node local environment, simulated network latency, synthetic database volume vs production scale).
+
+---
+
+## 4. Output Policy & Reporting
+
+Follow [`references/output-policy.md`](../references/output-policy.md):
+
+1. **Routine Summary (4–8 lines target in chat)**:
+   - **Outcome**: Status (🟢 GREEN / 🟡 AMBER / 🔴 RED) and operational findings.
+   - **Measured Scope**: Modules tested (e.g. background job queue, schema migration).
+   - **Sample Sufficiency**: Iteration count, test duration, and measured resource metrics.
+   - **Limits & Unverified Conditions**: Disclosed boundaries (e.g. single-process local test, not multi-node cluster).
+   - **Evidence**: Receipt ID and log location in `.evidence/manifest.v1.json`.
+2. **Intermediate Milestone**:
+   `✓ [runtime-reliability]: Soak & lifecycle check PASS (N samples, rcpt_id)`

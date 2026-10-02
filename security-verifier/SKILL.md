@@ -5,63 +5,60 @@ description: API security, tenant isolation, and boundary threat verifier. Exerc
 
 # Security Verifier
 
-Deterministic security boundary inspection and vulnerability verification. Closes the gap between superficial static secret scanning and real-world runtime exploitability by executing concrete adversarial probes against APIs, authorization boundaries, and data pipelines.
-
-## The Core Invariants
-
-1. **Synthetic Isolation**: Always use synthetic, isolated test accounts and test data. Never probe third-party or production systems autonomously.
-2. **Deterministic Evidence**: Never claim an endpoint is "secure" without executing a discriminating boundary probe through `scripts/exec-proxy.sh`.
-3. **No Self-Waivers**: Cannot waive detected critical or high vulnerabilities.
-4. **Tri-Surface Output**: High-density 15–20 line Executive Security Card in chat, raw probe logs in `.evidence/logs/`, structured receipt in `.evidence/manifest.v1.json`.
+Deterministic security boundary inspection and vulnerability verification. Closes the gap between superficial static secret scanning and runtime exploitability by executing concrete adversarial probes against APIs, authorization boundaries, and data pipelines.
 
 ---
 
-## 4-Stage Security Verification Protocol
+## 1. Core Invariants
+
+1. **Synthetic Isolation**: Always use synthetic, isolated test accounts and test data. Never probe third-party or production systems autonomously.
+2. **Deterministic Evidence**: Never claim an endpoint is "secure" without executing a discriminating boundary probe through `scripts/exec-proxy.sh`.
+3. **Payload & Side-Effect Validation**: Do not rely solely on HTTP status codes. An endpoint returning `200 OK` that leaks another tenant's records, exposes password hashes, or leaks internal tokens is a critical failure. Always inspect response bodies, data fields, and persistent side-effects.
+4. **Explicit Boundary Disclosure**: Explicitly list which trust boundaries were probed and which were out of scope. Never generalize a single passing check into blanket system-wide security.
+
+---
+
+## 2. 4-Stage Security Verification Protocol
 
 ```
 [1. Threat Model & Scope] ──> [2. Synthesize Probes] ──> [3. Execute via Proxy] ──> [4. Gate & Assessment]
 ```
 
-### Stage 1: Threat Modeling & Surface Mapping
-Inspect the changed files to determine relevant risk vectors:
+### Stage 1: Threat Modeling & Scope Definition
+Inspect modified files to define the attack surface and boundary targets:
 - **Authentication & Sessions**: Token issuance, expiry, session invalidation, password hashing.
-- **Authorization Boundaries (BOLA / IDOR)**: Can User A access or mutate User B's resources by changing the object ID in params/body?
-- **Injection Vectors**: Are user inputs concatenated into SQL queries, shell commands, or HTML templates without sanitization?
-- **Network / SSRF Boundaries**: Does the endpoint fetch external URLs or webhooks without validating against private IP ranges (`127.0.0.1`, `10.0.0.0/8`, `169.254.169.254`)?
-- **Dependency Audit**: Review dependency deltas for known CVEs (`npm audit`, `pip-audit`, `cargo audit`).
+- **Authorization Boundaries (BOLA / IDOR)**: Can Tenant A read or mutate Tenant B's data?
+- **Injection Vectors**: Are user inputs concatenated into SQL queries, shell commands, or HTML templates?
+- **Network / SSRF Boundaries**: Does the service fetch user-supplied URLs without blocking loopback and private subnets (`127.0.0.1`, `10.0.0.0/8`, `169.254.169.254`)?
+- **Data Leakage & Response Sanitization**: Does the response payload include sensitive fields (PII, credentials, internal IDs)?
 
 ### Stage 2: Adversarial Probe Generation
-Write targeted, reproducible test probes using the project's test framework or `scripts/specialist_probes.py`:
-- **Dual-Tenant Isolation Probe**: Verify tenant separation deterministically:
-  ```python
-  from specialist_probes import probe_tenant_isolation
-  res = probe_tenant_isolation(access_fn, tenant_a_auth, tenant_b_auth, tenant_b_resource_id)
-  assert res["passed"], "IDOR vulnerability detected: Tenant A accessed Tenant B resource"
-  ```
-- Exercise cross-tenant authorization (attempt `GET /api/documents/:user1_doc` with User 2's token -> must return `403 Forbidden` or `404 Not Found`).
-- Pass malicious payloads to search/filter inputs (`' OR 1=1 --`, `{{7*7}}`, `../etc/passwd`).
-- Pass private IP addresses to URL ingestion handlers (`http://169.254.169.254/latest/meta-data`).
+Write targeted, reproducible probes using test runners or `scripts/specialist_probes.py`:
+- **Cross-Tenant Isolation Probe**:
+  - Test request with Tenant A's credentials against Tenant B's resource ID.
+  - Assert that access is denied (`403`/`404`) **AND** verify response body contains zero Tenant B records.
+- **Data Leakage Probe**:
+  - Inspect response JSON schemas to confirm omitted password hashes, sensitive tokens, or private user data.
+- **Injection Probes**:
+  - Submit crafted payloads (`' OR 1=1 --`, `{{7*7}}`, `../etc/passwd`) and assert inputs are safely parameterized or sanitized.
+- **SSRF Probes**:
+  - Submit private IP addresses (`http://169.254.169.254/latest/meta-data`) and assert egress is blocked.
 
 ### Stage 3: Execution via Trusted Proxy
 Run the security test suite through the capture proxy:
 ```bash
 bash scripts/exec-proxy.sh --label security_audit <test-command>
 ```
-Verify that the test suite genuinely catches vulnerabilities when seeded, and passes cleanly on the hardened code.
+Verify that tests genuinely fail when vulnerabilities are present and pass cleanly once hardened.
 
 ### Stage 4: Assessment & Output Format
+Follow [`references/output-policy.md`](../references/output-policy.md):
 
-On completion, emit the **Executive Security Card (15–20 Lines)**:
-
-```markdown
-### 🛡️ Security Verifier: [GREEN / RED] — [1-sentence outcome]
-
-* **Threat Surface**: [Auth / BOLA / Injection / SSRF / Dependencies]
-* **Boundary Probes Executed**:
-  - `BOLA Cross-Tenant Check`: **PASS** (403 Forbidden on foreign tenant object)
-  - `Input Sanitization Probe`: **PASS** (Zero SQL/command injection paths)
-  - `SSRF Private IP Filter`: **PASS** (Private subnet egress rejected)
-  - `Dependency Vulnerability Delta`: **PASS** (0 critical/high CVEs)
-* **Receipts & Evidence**: Receipt `[rcpt_id]` recorded in [`.evidence/manifest.v1.json`](file:///.evidence/manifest.v1.json)
-* **Release Gate**: [Approved / Blocked by Open Vulnerabilities]
-```
+1. **Routine Summary (4–8 lines target in chat)**:
+   - **Outcome**: Status (🟢 GREEN / 🔴 RED) and 1-sentence verdict.
+   - **Tested Boundaries**: Explicit list of probed boundaries (e.g. Tenant isolation, SQL injection).
+   - **Payload & Effect Results**: Confirmation that response bodies and side-effects were verified.
+   - **Untested Boundaries**: Explicit note of any out-of-scope surfaces.
+   - **Evidence**: Receipt ID and manifest path in `.evidence/manifest.v1.json`.
+2. **Intermediate Milestone**:
+   `✓ [security-verifier]: Security audit PASS (<N> boundaries verified, rcpt_id)`

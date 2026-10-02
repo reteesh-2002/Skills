@@ -1,131 +1,58 @@
 ---
 name: prompt-architect
-description: Master prompt composer and skill orchestrator. Translates raw user ideas into optimal, battle-tested execution prompts and assigns the minimal 2–4 skills needed. Delivers instantaneous prompt architecture with a strict ban on disk crawling.
+description: Produces complete 24-section master engineering specifications from raw user ideas. Activate when the user asks for a specification, master prompt, or architecture document for a new system or feature. Manual for all other requests. Do not activate automatically before plan-master or implementation.
 ---
 
-# Prompt Architect (Master Prompt Composer & Skill Router)
+# Prompt Architect
 
-Transform raw, ambiguous, or multi-faceted software ideas into crisp, high-impact **execution prompts** and assign the minimal, surgical **skill team (2–4 skills max)** to execute them.
+Translate a raw idea into a **complete 24-section master engineering specification** — a precise, self-contained description of what to build, expected behavior, constraints, and acceptance criteria.
 
-Unlike general planners that generate multi-page task documents or explore file trees, `prompt-architect` is **purely cognitive, architectural, and instantaneous**. It acts as a Senior Staff Systems Architect and Prompt Compiler: spotting missing engineering pillars, selecting zero-friction APIs, delegating frontend craft directly to `/frontend-artisan`, and compiling ready-to-run prompts.
-
----
-
-## 🛑 Hard Gates & Zero-Delay Laws
-
-1. **🚫 STRICT ZERO-DISK-CRAWLING LAW**:
-   - You are **FORBIDDEN** from running `find /`, recursive directory searches, or hunting across the user's hard drive for mentioned files, URLs, or components.
-   - If the user refers to external files, repositories, or scripts (e.g. `task_ledger.py`), accept the reference as domain context or infer its interface directly from the prompt.
-   - Do NOT run background tasks, launch subagents, or explore unrelated project folders.
-2. **⚡ INSTANT TURNAROUND**:
-   - Output must be delivered immediately in the current chat turn.
-   - Never generate code files, modify project code, or install packages during prompt architecture.
+This skill produces specifications only. It does not produce execution plans, task lists, implementation code, or select skill teams. Use `plan-master` to turn a specification into an actionable plan.
 
 ---
 
-## 🔍 The 4-Pillar Pre-Flight Blindspot Scanner
+## Activation and boundaries
 
-Before compiling any prompt, automatically scan the user's idea for missing engineering fundamentals and inject solutions:
+**Activate when the user explicitly asks for:**
+- A specification, master prompt, architecture document, or product brief
+- Direct invocation: `$prompt-architect`, `@prompt-architect`
 
-| Pillar | What Users Often Forget | Automatic Architectural Injection |
-| :--- | :--- | :--- |
-| **1. Data Sources & APIs** | Raw idea mentions weather, stocks, crypto, or maps without specifying where the data comes from. | **Inject Zero-Auth Public Providers**: Recommend free, keyless APIs (e.g. **Open-Meteo** for weather, **CoinGecko public** for crypto, **OpenStreetMap/Leaflet** for maps, **JSONPlaceholder** for mock CRUD). Never leave data sources undefined. |
-| **2. Performance & Runtime** | Descriptions of particle effects, animated rain, live charts, or timelines that could cause DOM lag. | **Inject Rendering Constraints**: Enforce hardware-accelerated HTML5 `<canvas>` / WebGL for particle systems, and virtualized lists for large feeds. Strictly ban spawning hundreds of animated DOM `<div>`s. |
-| **3. Rate Limits & Caching** | User actions (scrubbing, filtering, searching) that repeatedly hammer upstream endpoints. | **Inject Caching & Throttling**: Mandate 15-minute in-memory LRU caching, request debouncing (300ms), or stale-while-revalidate headers in the backend contract. |
-| **4. Security & Validation** | User input forms, search queries, or database persistence without validation. | **Inject Boundary Defense**: Mandate parameter binding, strict input sanitization, and graceful network failure states. |
+**Do not activate automatically for:**
+- Bug fixes, small edits, or routine implementation tasks → route directly or use `deep-debugger`
+- Execution planning → use `plan-master`
+- Any request where a valid specification already exists — skip directly to planning or implementation
 
----
-
-## 🎨 Master Frontend Delegation (`/frontend-artisan`)
-
-Whenever ANY user interface, component, dashboard, or website is involved:
-1. **Always assign and tag `/frontend-artisan`** as the primary frontend executor.
-2. **Instruct `/frontend-artisan` to activate its core suite**:
-   - **`design-md`**: Force a concrete design system token preset (**Linear**, **Vercel**, or **Stripe**).
-   - **`image-to-code`**: Mandate Image-First art direction for heroes and atmospheric layouts.
-   - **`web-interface-guidelines`**: Enforce Vercel touch targets ($\ge 44\text{px}$), `:focus-visible` keyboard navigation, and optimistic UI.
-   - **`playwright-cli`**: Enforce multi-viewport layout audits (375px/768px/1440px) and WCAG AA contrast verification.
-3. **Inject Negative Anti-Slop Guardrails**: Explicitly ban 4-card metric rows on utility tools, muddy navy/neon glow palettes, cards-inside-cards nesting, and colored pill badge pollution.
+**Action boundaries:**
+- Read user-specified repositories, files, and APIs to ground the specification. Do not crawl unrelated directories.
+- Do not start implementation workers, run commands, or produce a second execution plan as part of specification generation.
+- Do not infer existing interfaces as though verified — mark unconfirmed discoveries as assumptions or open questions.
+- Preserve an established stack and design system unless the user explicitly requests changes.
 
 ---
 
-## 🎯 Surgical Skill Routing Matrix
+## Grounding rules
 
-Select the optimal **2 to 4 skills** based on domain classification:
-
-| Domain | Assigned Skill Team | Rationale |
-| :--- | :--- | :--- |
-| **🎨 Frontend / UI Sprint** | `$frontend-artisan`<br>`$qa-sentinel` | Delegates complete UI art direction, zero-slop hard gates, design-md tokens, and viewport testing. |
-| **🚀 Full-Stack Feature** | `$frontend-artisan`<br>`$schema-craft`<br>`$qa-sentinel` | Combines zero-slop UI with relational data modeling, cached API endpoints, and anti-tautology verification. *(Add `$ship-it` for production release).* |
-| **🩹 Bugfix / Hotfix** | `$deep-debugger`<br>`$qa-sentinel` | Executes 6-stage root-cause repair with strict "3+5" probe limits. Omits all UI/architecture overhead. |
-| **🛡️ Security / Tenant Audit** | `$security-verifier`<br>`$qa-sentinel`<br>`$ship-it` | Probes OWASP API Top 10 vulnerabilities (BOLA, IDOR, SSRF) with synthetic tenant accounts. |
-| **⚙️ Ops & System Resilience** | `$runtime-reliability`<br>`$schema-craft`<br>`$ship-it` | Rehearses zero-downtime schema migrations, memory soak tests, and SIGTERM graceful shutdowns. |
-| **🏛️ High-Risk Technical Fork** | `$idea-council`<br>`$plan-master` | Conducts a 6-seat adversarial council before any code is committed. |
-| **📦 Multi-Module (>12 files)** | `$adaptive-worker-orchestrator-v2`<br>`$plan-master`<br>`$qa-sentinel` | Partitions separable tasks into isolated git worktrees with frozen interface contracts. |
+1. **Distinguish confirmed facts, assumptions, and open decisions.** Label each explicitly in the specification.
+2. **Ask about missing information only if it materially affects correctness or scope.** At most 2–3 targeted questions; do not block output for peripheral details.
+3. **Do not invent scope to fill sections.** If a section is genuinely not applicable (e.g. no AI model involved for §16, no database for §8), write "Not applicable — [reason]". Do not create a database or auth system merely to produce a populated section.
+4. **State each requirement once; cross-reference thereafter.** Use `MUST`, `SHOULD`, `MAY` only where they clarify priority.
+5. **Remove performance claims not tied to measurable budgets.** Avoid "production-ready", "battle-tested", "instantaneous", and blanket caching durations unless the task justifies them.
+6. **Keep generated testimonials, prices, and claims clearly marked as placeholder content** — they must not become factual content automatically.
 
 ---
 
-## ⚡ Execution Modes
+## Output format
 
-1. **Turbo Compilation Mode (Default)**:
-   - When the user's idea is clear or moderately detailed, compile the refined prompt immediately in the current turn.
-2. **Interactive Clarification Mode**:
-   - If the user's prompt is severely ambiguous (e.g. *"Build me an app for my store"*), use `ask_question` to ask **2 targeted architectural questions** (e.g., target stack, primary auth method) before compiling the final prompt.
+When activated, respond with:
 
----
+1. **Blindspot summary** (2–4 bullets): missing data sources, unresolved technical decisions, or scope ambiguities caught during review.
+2. **Assumptions list**: what was inferred vs. confirmed.
+3. **Complete 24-section specification** following the template in [`references/specification-template.md`](references/specification-template.md).
 
-## 📐 The Master Engineering Specification Architecture
-
-Every compiled execution prompt must be a **production-ready master engineering specification** formatted for immediate, autonomous execution by an AI coding agent.
-
-### Style Requirements:
-- **High Information Density**: Comprehensive but concise. Every paragraph, section, requirement, and example must add distinct engineering value. Zero fluff or filler.
-- **Concrete & Actionable**: Prefer short sentences, compact explanations, structured headings, examples, schemas, state machines, and directory layouts.
-- **Zero Redundancy**: State each requirement once under its proper section. Avoid repeating requirements across sections.
-- **No Chat Fluff**: Avoid motivational cheerleading, generic advice, pleasantries, conversational introductions, and summary conclusions.
-- **Self-Directed Architectural Closure**: Convert vague ideas into explicit technical requirements. Fill in missing technical/product details with production defaults.
-- **Constraint Hierarchy**: Explicitly distinguish `MUST`, `SHOULD`, `MAY`, and `DO NOT` requirements.
-- **Code Block Formatting**: Always use code blocks for data schemas, state definitions, directory layouts, and API contracts.
-- **Mandatory Production Depth (Anti-Condensation Law)**: Never output a shallow summary, condensed outline, or high-level overview. Always generate the full-scale, exhaustive specification with complete SQL/TypeScript DDL schemas, concrete directory layout trees, exact state machine diagrams, curl examples, and comprehensive edge cases.
+The specification must include all 24 section headings. Use "Not applicable — [reason]" for irrelevant sections. Never truncate the specification in chat; if the host limits response length, produce it as an artifact.
 
 ---
 
-## 🏛️ Modular Specification Structure
+## Recommending next steps
 
-Adapt the specification structure to the task's shape and domain. Merge closely related items where sensible, considering these 23 architectural sections:
-
-```markdown
-1. Role                      # e.g., Senior Systems Engineer & Product Architect
-2. Objective                 # Single-paragraph technical mission statement
-3. Product Vision            # Target user, core value proposition, aesthetic bar
-4. Core Concepts             # Domain entities, nouns, lifecycle states
-5. User Experience           # Information hierarchy, visual density, responsive layout
-6. Functional Requirements   # Detailed capability breakdown (MUST / SHOULD / MAY)
-7. Important Interactions    # Keyboard shortcuts, optimistic UI, state transitions
-8. Data Model & Schemas      # Concrete types, TypeScript interfaces, SQL DDL (in code blocks)
-9. Architecture & Layout     # Clean directory layout, modular partitioning (in code blocks)
-10. Technology Choices       # Selected libraries with sensible defaults & trade-off rationale
-11. Performance Requirements # Latency budgets, memoization, virtualization, bundle bounds
-12. Local / Offline Behavior # Persistence strategy, localStorage/IndexedDB, graceful disconnect
-13. Security & Validation    # Input sanitization, auth boundaries, private subnet egress
-14. Error Handling           # Error boundaries, fallback states, user-facing error copy
-15. Edge Cases               # Boundary conditions, empty feeds, rate limits, clock skews
-16. AI Behavior (if applicable) # Context limits, streaming fallback, structured JSON extraction
-17. Things NOT to Build      # Explicit anti-scope, anti-slop clichés banned from this build
-18. MVP Scope                # Minimal shippable slice achievable in Turn 1
-19. Future Phases            # Explicitly postponed capabilities to prevent scope creep
-20. Implementation Order     # Dependency-aware phased execution sequence (Phase 1 -> 2 -> 3)
-21. Testing Requirements     # TDD Red-Green requirements, anti-tautology side-effect assertions
-22. Success Criteria         # Concrete, verifiable conditions for completion
-23. Final Delivery Checklist # Commits, clean working tree, verification receipts required
-```
-
----
-
-## 📋 Standard Output Format
-
-When invoked, respond with:
-
-1. **Architectural Analysis & Blindspots Caught**: (Brief 2–4 bullet points highlighting missing data sources, caching needs, or performance hazards).
-2. **Domain Classification & Assigned Skills**: (e.g., *Full-Stack Immersive Application* $\rightarrow$ `/frontend-artisan`, `/schema-craft`, `/qa-sentinel`).
-3. **Production Master Engineering Specification**: The complete, copy-pasteable execution prompt enclosed in a Markdown code block, starting with the assigned slash commands, fully formatted according to the 23-section standard.
+After the specification, you may recommend which skills are relevant for implementation (e.g. `schema-craft` if there is a non-trivial data model, `security-verifier` if there are auth boundaries). Do not activate them. Do not embed unconditional release commands.

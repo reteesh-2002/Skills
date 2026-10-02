@@ -10,6 +10,17 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 GATE_HOOK_MODE=0
 
+fail_gate() {
+  local reason="$1"
+  if [[ "${GATE_HOOK_MODE}" -eq 1 ]]; then
+    echo "❌ [RELEASE GATE BLOCKED]: ${reason}" >&2
+    python3 -c "import sys, json; print(json.dumps({'decision': 'deny', 'reason': sys.argv[1]}))" "${reason}"
+  else
+    echo "❌ [RELEASE GATE BLOCKED]: ${reason}" >&2
+  fi
+  exit 1
+}
+
 if [[ "$#" -gt 0 && "$1" == "--pre-tool" ]]; then
   GATE_HOOK_MODE=1
   export GATE_HOOK_MODE
@@ -33,7 +44,13 @@ except Exception:
 sys.path.insert(0, sys.argv[2])
 import runtime_evidence
 cmd = sys.argv[1]
-print('1' if runtime_evidence.is_release_command(cmd) else '0')
+res = runtime_evidence.is_release_command(cmd)
+if res == 'unsupported':
+    print('unsupported')
+elif res is True:
+    print('1')
+else:
+    print('0')
 " "${PRE_TOOL_CMD:-}" "${SCRIPT_DIR}" 2>/dev/null || echo "1")
 
   if [[ "${IS_RELEASE}" == "0" ]]; then
@@ -41,19 +58,10 @@ print('1' if runtime_evidence.is_release_command(cmd) else '0')
       echo '{"decision": "allow"}'
     fi
     exit 0
+  elif [[ "${IS_RELEASE}" == "unsupported" ]]; then
+    fail_gate "Command form is ambiguous or unsupported by static analyzer — fail-safe block: ${PRE_TOOL_CMD}"
   fi
 fi
-
-fail_gate() {
-  local reason="$1"
-  if [[ "${GATE_HOOK_MODE}" -eq 1 ]]; then
-    echo "❌ [RELEASE GATE BLOCKED]: ${reason}" >&2
-    python3 -c "import sys, json; print(json.dumps({'decision': 'deny', 'reason': sys.argv[1]}))" "${reason}"
-  else
-    echo "❌ [RELEASE GATE BLOCKED]: ${reason}" >&2
-  fi
-  exit 1
-}
 
 # 1. Enforce git repository presence and CWD alignment (F05, P09)
 if ! git -C "${REPO_ROOT}" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
@@ -195,25 +203,29 @@ try:
         if collected > 0 and passed != collected:
             fail_python_gate(f"False-green trap in '{label}'. Passed ({passed}) != Collected ({collected}).")
 
-        # F03: Any check whose command invokes a known test runner must collect > 0 tests
+        # F03 & T06: Any check whose command invokes a known test runner must collect > 0 tests
         # Also catches "test" keyword in label for backwards compatibility
-        TEST_RUNNER_BINS = ("pytest", "vitest", "jest", "mocha", "cargo test",
-                            "python -m pytest", "python3 -m pytest",
-                            "node --test", "npx jest", "npx vitest",
-                            "go test", "rspec")
+        is_unverified = c.get("unverified", False) or rcpt_data.get("unverified", False)
         cmd_lower = cmd.lower()
         is_test_check = (
             "test" in label.lower()
-            or any(runner in cmd_lower for runner in TEST_RUNNER_BINS)
+            or runtime_evidence.is_known_test_runner(cmd)
         )
         if is_test_check:
             has_test_checks = True
             total_collected_tests += collected
-            if collected == 0:
-                fail_python_gate(f"Test check '{label}' (cmd: '{cmd}') recorded 0 collected tests (Zero-inventory false green).")
+            if collected == 0 or is_unverified:
+                fail_python_gate(f"Test check '{label}' (cmd: '{cmd}') recorded 0 collected tests (Zero-inventory false green). Required test check is unverified.")
+        else:
+            if is_unverified or (collected == 0 and exit_code == 0):
+                if disposition == "GREEN":
+                    fail_python_gate(f"Check '{label}' is unverified (zero test inventory from non-test-runner). Policy disposition cannot be GREEN.")
 
     if has_test_checks and total_collected_tests == 0:
         fail_python_gate("Test checks were executed but total collected tests is 0.")
+
+    if not has_test_checks and disposition == "GREEN":
+        fail_python_gate("No test checks executed. Zero-inventory checks from non-test-runners cannot pass the release gate.")
 
     # 5. Policy disposition & Strict waiver objects (F11)
     disposition = manifest.get("policy_disposition", "RED")

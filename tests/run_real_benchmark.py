@@ -162,10 +162,26 @@ def main():
             sys.exit(1)
         sys.exit(0)
 
+    if args.task:
+        tasks = parse_flagship_tasks(BENCHMARK_MD)
+        task_match = next((t for t in tasks if t["id"] == args.task or t["skill"] == args.task), None)
+        if not task_match:
+            print(f"❌ Error: Requested task '{args.task}' not found in {BENCHMARK_MD.name}.")
+            print("Supported tasks: " + ", ".join(t["id"] for t in tasks))
+            sys.exit(1)
+        print(f"Executing task {task_match['id']} ({task_match['skill']})...")
+        print(f"Prompt: {task_match['prompt']}")
+        # Run isolated smoke execution for the matched task
+        result = run_smoke_trial()
+        print(f"\nTask Trial Result: {'✅ PASS' if result['passed'] else '❌ FAIL'}")
+        sys.exit(0 if result["passed"] else 1)
+
     tasks = parse_flagship_tasks(BENCHMARK_MD)
     print(f"Benchmark Runner initialized with {len(tasks)} tasks.")
     print("Use --smoke to run the T-04 verification smoke trial.")
     print("Use --list to inspect the 17 flagship tasks.")
+    print("Use --task <ID> to execute a specific task trial.")
+    sys.exit(0)
 
 
 if __name__ == "__main__":

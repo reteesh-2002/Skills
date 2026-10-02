@@ -10,6 +10,11 @@ import json
 import fcntl
 import argparse
 import datetime
+import shutil
+import logging
+from typing import Optional, List, Dict, Any, Tuple
+
+logger = logging.getLogger("task_ledger")
 
 VALID_STATUSES = ("Pending", "Running", "Blocked", "Verifying", "Done", "Failed", "Cancelled")
 
@@ -23,6 +28,7 @@ class TaskLedger:
         else:
             self.ledger_path = os.path.abspath(ledger_path)
         self.lock_path = self.ledger_path + ".lock"
+        self.last_load_error: Optional[str] = None
         os.makedirs(os.path.dirname(self.ledger_path), exist_ok=True)
 
     def _with_lock(self, callback):
@@ -46,11 +52,13 @@ class TaskLedger:
                 fcntl.flock(lock_file, fcntl.LOCK_UN)
 
     def load(self):
-        """Loads task ledger from disk, returning default structure if empty."""
+        """Loads task ledger from disk, returning default structure if empty or corrupt."""
+        self.last_load_error = None
         if not os.path.exists(self.ledger_path):
             return {
                 "schema_version": "tasks.v1",
                 "plan_title": "Active Execution Plan",
+                "session_id": None,
                 "revision": 0,
                 "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
                 "updated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
@@ -59,20 +67,38 @@ class TaskLedger:
         try:
             with open(self.ledger_path, "r", encoding="utf-8") as f:
                 return json.load(f)
-        except Exception:
+        except Exception as exc:
+            self.last_load_error = str(exc)
+            timestamp = int(datetime.datetime.now(datetime.timezone.utc).timestamp())
+            corrupt_path = f"{self.ledger_path}.corrupt.{timestamp}"
+            try:
+                shutil.copy2(self.ledger_path, corrupt_path)
+            except Exception:
+                pass
+            logger.warning(
+                "Task ledger at '%s' is corrupt (%s). Backed up to '%s'.",
+                self.ledger_path, exc, corrupt_path
+            )
             return {
                 "schema_version": "tasks.v1",
                 "plan_title": "Active Execution Plan",
+                "session_id": None,
                 "revision": 0,
-                "tasks": []
+                "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                "updated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                "tasks": [],
+                "backup_note": f"Corrupt ledger backed up to {corrupt_path}"
             }
 
-    def init_ledger(self, plan_title):
+    def init_ledger(self, goal="Active Execution Plan", session_id=None, plan_title=None):
         """Initializes a new task ledger for a plan."""
+        title = plan_title if plan_title is not None else goal
+
         def _init(data):
             new_data = {
                 "schema_version": "tasks.v1",
-                "plan_title": plan_title,
+                "plan_title": title,
+                "session_id": session_id,
                 "revision": 0,
                 "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
                 "updated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
@@ -80,6 +106,64 @@ class TaskLedger:
             }
             return True, new_data
         return self._with_lock(_init)
+
+    def get_session_id(self) -> Optional[str]:
+        """Retrieves session_id from the current ledger state."""
+        data = self.load()
+        return data.get("session_id")
+
+    def validate_dependencies(self) -> List[str]:
+        """
+        Validates task dependency graph:
+        1. Checks that all dependencies reference existing tasks.
+        2. Detects circular dependencies via DFS cycle detection.
+        Returns a list of error messages (empty list if valid).
+        """
+        data = self.load()
+        tasks = data.get("tasks", [])
+        errors: List[str] = []
+
+        all_ids = {t["id"] for t in tasks}
+
+        # 1. Dependency existence check
+        for t in tasks:
+            t_id = t["id"]
+            deps = t.get("depends_on", [])
+            for dep in deps:
+                if dep not in all_ids:
+                    errors.append(f"Task {t_id} depends on non-existent task {dep}")
+
+        # 2. Cycle detection via DFS
+        adj = {t["id"]: [d for d in t.get("depends_on", []) if d in all_ids] for t in tasks}
+
+        state: Dict[str, int] = {t_id: 0 for t_id in all_ids}
+        path: List[str] = []
+        detected_cycles = set()
+
+        def dfs(node: str):
+            state[node] = 1
+            path.append(node)
+            for neighbor in adj.get(node, []):
+                if state.get(neighbor, 0) == 1:
+                    idx = path.index(neighbor)
+                    cycle_nodes = tuple(path[idx:])
+                    min_idx = cycle_nodes.index(min(cycle_nodes))
+                    canon_cycle = cycle_nodes[min_idx:] + cycle_nodes[:min_idx]
+                    if canon_cycle not in detected_cycles:
+                        detected_cycles.add(canon_cycle)
+                        cycle_path = path[idx:] + [neighbor]
+                        errors.append(f"Dependency cycle detected: {' -> '.join(cycle_path)}")
+                elif state.get(neighbor, 0) == 0:
+                    dfs(neighbor)
+            path.pop()
+            state[node] = 2
+
+        for t in tasks:
+            t_id = t["id"]
+            if state.get(t_id, 0) == 0:
+                dfs(t_id)
+
+        return errors
 
     def add_task(self, task_id, title, owner="Coordinator", depends_on=None, acceptance_id=None, block_reason=None, pending_decision=None):
         """Registers a new task."""
@@ -281,6 +365,7 @@ def main():
 
     init_p = sub.add_parser("init")
     init_p.add_argument("title", help="Plan or sprint title")
+    init_p.add_argument("--session-id", default=None, help="Optional session ID")
 
     add_p = sub.add_parser("add")
     add_p.add_argument("--id", required=True, help="Task ID (e.g. T1)")
@@ -302,6 +387,7 @@ def main():
 
     sub.add_parser("status")
     sub.add_parser("summary")
+    sub.add_parser("validate")
 
     recon_p = sub.add_parser("reconcile")
     recon_p.add_argument("--tree", default=None, help="Current git tree SHA")
@@ -313,8 +399,16 @@ def main():
     ledger = TaskLedger()
 
     if args.cmd == "init":
-        ledger.init_ledger(args.title)
+        ledger.init_ledger(args.title, session_id=args.session_id)
         print(f"✓ Initialized task ledger for plan: {args.title}")
+    elif args.cmd == "validate":
+        errs = ledger.validate_dependencies()
+        if errs:
+            for err in errs:
+                print(f"✗ {err}")
+            sys.exit(1)
+        else:
+            print("✓ All task dependencies valid.")
     elif args.cmd == "add":
         t = ledger.add_task(args.id, args.title, args.owner, args.depends, args.acceptance, args.block_reason, args.pending_decision)
         print(f"✓ Added task {t['id']}: {t['title']} ({t['owner']})")

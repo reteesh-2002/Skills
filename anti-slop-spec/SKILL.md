@@ -6,12 +6,20 @@ description: Design sharpener and anti-slop spec generator (Forwarding alias to 
 # Anti-Slop Spec (Forwarding Alias)
 
 > [!NOTE]
-> **Consolidation Notice**: Anti-slop visual discipline, production design system lock, and contextual aesthetic constraints are natively integrated into [`plan-master`](../plan-master/SKILL.md) and [`frontend-artisan`](../frontend-artisan/SKILL.md).
+> **Forwarding Alias Notice**: High-craft visual discipline, anti-slop layout rules, and design system constraints are natively integrated into [`plan-master`](../plan-master/SKILL.md) and [`frontend-artisan`](../frontend-artisan/SKILL.md). This skill functions purely as a forwarding alias and does not perform a second planning pass.
 
-For interface planning, design system specification, and high-craft UI constraints, **invoke [`plan-master`](../plan-master/SKILL.md)** (for planning) or **[`frontend-artisan`](../frontend-artisan/SKILL.md)** (for design implementation).
+---
 
-### Quick Delegation
-When this skill is invoked:
-1. Ground the interface in its authentic domain or respect any existing project design system.
-2. Lock visual direction to an established design system or `frontend-artisan` production presets (Apple Atmospheric Glass, Linear Dark, Vercel Monochrome).
-3. Inject signature tactile physics and bespoke typography pairings into the generated plan or code.
+## Direct Delegation Routing
+
+When `anti-slop-spec` is invoked, route directly to the active specialist without duplicate checklists:
+
+1. **For Feature Planning & Architecture**:
+   - Forward directly to [`plan-master`](../plan-master/SKILL.md).
+   - Plan Master natively incorporates domain grounding, anti-slop layout constraints, and design tokens into the primary execution plan.
+
+2. **For Frontend Implementation & Styling**:
+   - Forward directly to [`frontend-artisan`](../frontend-artisan/SKILL.md).
+   - Frontend Artisan natively enforces tactile interactions, responsive viewports, contrast compliance, and anti-pattern avoidance ([`anti-patterns.md`](../frontend-artisan/references/anti-patterns.md)).
+
+No second planning pass, duplicate spec generation, or separate checklist is executed by this alias.

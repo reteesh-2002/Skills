@@ -81,6 +81,58 @@ def check_relative_links(skill_dir: Path, skill_file: Path, body: str) -> list[s
             
     return errors
 
+
+def check_contract_drift(repo_root: Path) -> list[str]:
+    """
+    Validates that skill contract.yaml files are consistent with suite-policy.json.
+    Catches activation drift: a skill listed as explicit_only in policy
+    must not have manual_only: false without a corresponding auto trigger.
+    """
+    import json
+    errors = []
+
+    policy_path = repo_root / "suite-policy.json"
+    if not policy_path.exists():
+        return ["suite-policy.json not found — cannot validate contract drift"]
+
+    try:
+        with open(policy_path, encoding="utf-8") as f:
+            policy = json.load(f)
+    except Exception as e:
+        return [f"suite-policy.json is not valid JSON: {e}"]
+
+    explicit_only = set(policy.get("activation_modes", {}).get("explicit_only", []))
+    auto_skills = {entry["skill"] for entry in policy.get("activation_modes", {}).get("auto", [])}
+
+    for skill_name in explicit_only:
+        contract_path = repo_root / skill_name / "contract.yaml"
+        if not contract_path.exists():
+            continue
+        content = contract_path.read_text(encoding="utf-8")
+        # Simple key check — full YAML parsing not needed
+        if "manual_only: false" in content and skill_name not in auto_skills:
+            # Check if activation field is set to something other than explicit
+            if "activation: auto" in content:
+                errors.append(
+                    f"[{skill_name}] contract.yaml has 'activation: auto' but "
+                    f"suite-policy.json lists it as explicit_only"
+                )
+
+    for entry in policy.get("activation_modes", {}).get("auto", []):
+        skill_name = entry["skill"]
+        contract_path = repo_root / skill_name / "contract.yaml"
+        if not contract_path.exists():
+            continue
+        content = contract_path.read_text(encoding="utf-8")
+        if "manual_only: true" in content:
+            errors.append(
+                f"[{skill_name}] contract.yaml has 'manual_only: true' but "
+                f"suite-policy.json lists it as auto-activated"
+            )
+
+    return errors
+
+
 def main():
     repo_root = Path(__file__).resolve().parent.parent
     errors = []
@@ -139,6 +191,14 @@ def main():
 
     print("-" * 65)
 
+    # Contract drift check (T03)
+    drift_errors = check_contract_drift(repo_root)
+    if drift_errors:
+        print("\n⚠️  Contract drift detected:")
+        for err in drift_errors:
+            print(f"  - {err}")
+        errors.extend(drift_errors)
+
     if errors:
         print(f"\n❌ Validation failed with {len(errors)} error(s):")
         for err in errors:
@@ -150,3 +210,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

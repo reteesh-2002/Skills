@@ -49,5 +49,46 @@ class TestBenchmarkHarness(unittest.TestCase):
         )
         self.assertFalse(res["success"])
 
+    def test_audit_trial_rejects_unknown_task(self):
+        """T12: audit_trial.py must exit with code 1 when given an unsupported task."""
+        import subprocess
+        audit_script = os.path.join(REPO_ROOT, "benchmarks", "audit_trial.py")
+        res = subprocess.run([sys.executable, audit_script, "--task", "UNKNOWN_TASK"],
+                             capture_output=True, text=True)
+        self.assertEqual(res.returncode, 1)
+        self.assertIn("Unsupported benchmark task", res.stdout)
+
+    def test_audit_trial_propagates_audit_failure_exit_code(self):
+        """T12: audit_trial.py must exit with code 1 when transcript audit fails."""
+        import subprocess
+        audit_script = os.path.join(REPO_ROOT, "benchmarks", "audit_trial.py")
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".jsonl") as f:
+            # Empty transcript fails audit
+            f.write("")
+            f.flush()
+            res = subprocess.run([sys.executable, audit_script, "--transcript", f.name, "--task", "FLAG-01"],
+                                 capture_output=True, text=True)
+            self.assertEqual(res.returncode, 1)
+            self.assertIn("FAIL", res.stdout)
+
+    def test_run_real_benchmark_rejects_unsupported_task(self):
+        """T12: run_real_benchmark.py must exit with code 1 when requested task does not exist."""
+        import subprocess
+        bench_script = os.path.join(REPO_ROOT, "tests", "run_real_benchmark.py")
+        res = subprocess.run([sys.executable, bench_script, "--task", "FLAG-999"],
+                             capture_output=True, text=True)
+        self.assertEqual(res.returncode, 1)
+        self.assertIn("not found", res.stdout)
+
+    def test_run_real_benchmark_list_succeeds(self):
+        """T12: run_real_benchmark.py --list must succeed with exit code 0."""
+        import subprocess
+        bench_script = os.path.join(REPO_ROOT, "tests", "run_real_benchmark.py")
+        res = subprocess.run([sys.executable, bench_script, "--list"],
+                             capture_output=True, text=True)
+        self.assertEqual(res.returncode, 0)
+        self.assertIn("FLAG-01", res.stdout)
+
+
 if __name__ == "__main__":
     unittest.main()

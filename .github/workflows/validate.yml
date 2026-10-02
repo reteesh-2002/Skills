@@ -8,7 +8,7 @@ on:
 
 jobs:
   validate:
-    name: Conformance & Skill Validation
+    name: Conformance, Probes & Suite Validation
     runs-on: ubuntu-latest
 
     steps:
@@ -20,10 +20,23 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Validate Skill Metadata & Links
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install pytest
+
+      - name: Validate Skill Metadata, Contracts & Policy Drift
         run: |
           python3 scripts/validate-skills.py
 
-      - name: Run Conformance & Adversarial Test Suite
+      - name: Run Environment & Skills Doctor
+        run: |
+          python3 scripts/skills-doctor.py
+
+      - name: Run Pytest Conformance & Specialist Probes Suite
+        run: |
+          pytest tests/ -v
+
+      - name: Run Runtime Conformance & Adversarial Shell Suite
         run: |
           bash tests/verify_runtime.sh

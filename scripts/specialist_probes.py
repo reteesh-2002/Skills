@@ -15,7 +15,7 @@ import sys
 import math
 import sqlite3
 import tempfile
-from typing import Dict, Any, List, Optional, Tuple, Callable
+from typing import Dict, Any, List, Optional, Tuple, Callable, Union
 
 
 # ──────────────────────────────────────────────
@@ -94,7 +94,8 @@ def check_html_viewport_overflow(html_content: str, viewports: Optional[List[int
                     "hazard": "fixed_pixel_overflow",
                     "width": w_val,
                     "target_viewport": vp,
-                    "detail": f"Fixed width {w_val}px exceeds viewport {vp}px"
+                    "detail": f"Fixed width {w_val}px exceeds viewport {vp}px",
+                    "heuristic": True
                 })
 
     # Pattern 2: w-[Npx] Tailwind arbitrary classes where N > 375 without responsive prefixes
@@ -106,7 +107,8 @@ def check_html_viewport_overflow(html_content: str, viewports: Optional[List[int
                 "hazard": "tailwind_fixed_overflow",
                 "width": tw_val,
                 "target_viewport": 375,
-                "detail": f"Tailwind arbitrary class w-[{tw_val}px] causes mobile horizontal scroll"
+                "detail": f"Tailwind arbitrary class w-[{tw_val}px] causes mobile horizontal scroll",
+                "heuristic": True
             })
 
     # Pattern 3: missing viewport meta tag
@@ -114,10 +116,12 @@ def check_html_viewport_overflow(html_content: str, viewports: Optional[List[int
     if "<html" in html_content and not has_viewport_meta:
         hazards.append({
             "hazard": "missing_viewport_meta",
-            "detail": "HTML document is missing standard viewport meta tag (content='width=device-width, initial-scale=1')"
+            "detail": "HTML document is missing standard viewport meta tag (content='width=device-width, initial-scale=1')",
+            "heuristic": True
         })
 
     return {
+        "heuristic": True,
         "viewports_checked": viewports,
         "hazards_found": len(hazards),
         "hazards": hazards,
@@ -311,32 +315,164 @@ def probe_graceful_drain(
     }
 
 
+def probe_graceful_drain_subprocess(
+    cmd: Optional[Union[List[str], str, int]] = None,
+    drain_timeout_ms: int = 1000,
+    startup_wait_s: float = 0.05
+) -> Dict[str, Any]:
+    """
+    Subprocess-based graceful shutdown drain probe using real OS signals:
+      1. Spawns child Python process (handles SIGTERM by default).
+      2. Sends SIGTERM via os.kill.
+      3. Waits for child to drain and exit within drain_timeout_ms deadline.
+      4. If child drops signal or hangs past deadline, terminates it and marks aborted=1, passed=False.
+    """
+    import subprocess
+    import time
+    import signal
+    import shlex
+
+    if isinstance(cmd, int):
+        drain_timeout_ms = cmd
+        cmd = None
+
+    if cmd is None:
+        cmd = [
+            sys.executable,
+            "-c",
+            "import time, signal, sys; signal.signal(signal.SIGTERM, lambda s, f: sys.exit(0)); time.sleep(10)"
+        ]
+    elif isinstance(cmd, str):
+        if cmd.strip().startswith(sys.executable) or cmd.strip().startswith("python"):
+            cmd = shlex.split(cmd)
+        else:
+            cmd = [sys.executable, "-c", cmd]
+
+    child = subprocess.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
+    )
+
+    try:
+        if startup_wait_s > 0:
+            time.sleep(startup_wait_s)
+
+        if child.poll() is not None:
+            return {
+                "completed": 0,
+                "aborted": 1,
+                "drain_timeout_ms": drain_timeout_ms,
+                "passed": False,
+                "verdict": f"DRAIN FAILURE (Process exited prematurely with code {child.returncode})"
+            }
+
+        try:
+            os.kill(child.pid, signal.SIGTERM)
+        except ProcessLookupError:
+            pass
+
+        deadline_s = drain_timeout_ms / 1000.0
+        try:
+            child.wait(timeout=deadline_s)
+            completed = 1
+            aborted = 0
+            passed = True
+            verdict = "GRACEFUL DRAIN SUBPROCESS VERIFIED (Process terminated cleanly within deadline)"
+        except subprocess.TimeoutExpired:
+            try:
+                child.kill()
+                child.wait(timeout=1.0)
+            except Exception:
+                pass
+            completed = 0
+            aborted = 1
+            passed = False
+            verdict = f"DRAIN FAILURE (Process hung past {drain_timeout_ms}ms deadline)"
+    except Exception as exc:
+        try:
+            child.kill()
+            child.wait(timeout=1.0)
+        except Exception:
+            pass
+        completed = 0
+        aborted = 1
+        passed = False
+        verdict = f"DRAIN FAILURE ({exc})"
+    finally:
+        try:
+            if child.stdout:
+                child.stdout.close()
+            if child.stderr:
+                child.stderr.close()
+        except Exception:
+            pass
+
+    return {
+        "completed": completed,
+        "aborted": aborted,
+        "drain_timeout_ms": drain_timeout_ms,
+        "passed": passed,
+        "verdict": verdict
+    }
+
+
 def probe_memory_soak_plateau(
     operation_fn: Callable[[], None],
     iterations: int = 2000,
-    sample_interval: int = 400
+    sample_interval: int = 400,
+    use_rss: bool = False
 ) -> Dict[str, Any]:
     """
     Executes a workload soak test and verifies memory growth rate plateaus.
-    Uses Python's active object allocation tracking as an empirical proxy.
+    Uses Python's active object allocation tracking or RSS (resource.RUSAGE_SELF) as an empirical proxy.
     """
+    if iterations <= 0:
+        return {
+            "passed": False,
+            "unverified": True,
+            "reason": "Zero iterations - result is unverified"
+        }
+
     import gc
     gc.collect()
 
     samples = []
+    effective_interval = max(1, sample_interval)
     for i in range(1, iterations + 1):
         operation_fn()
-        if i % sample_interval == 0:
+        if i % effective_interval == 0:
             gc.collect()
+            if use_rss:
+                import resource
+                val = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+                samples.append({"iteration": i, "rss_kb": val, "object_count": val})
+            else:
+                count = len(gc.get_objects())
+                samples.append({"iteration": i, "object_count": count})
+
+    if not samples:
+        gc.collect()
+        if use_rss:
+            import resource
+            val = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+            samples.append({"iteration": iterations, "rss_kb": val, "object_count": val})
+        else:
             count = len(gc.get_objects())
-            samples.append({"iteration": i, "object_count": count})
+            samples.append({"iteration": iterations, "object_count": count})
 
     # Verify that growth between second half of samples is non-monotonic or bounded (< 15%)
+    key = "rss_kb" if use_rss else "object_count"
     if len(samples) >= 3:
-        initial = samples[0]["object_count"]
-        mid = samples[len(samples) // 2]["object_count"]
-        final = samples[-1]["object_count"]
+        initial = samples[0][key]
+        mid = samples[len(samples) // 2][key]
+        final = samples[-1][key]
         second_half_growth = (final - mid) / max(mid, 1)
+        plateau = second_half_growth < 0.15
+    elif len(samples) >= 2:
+        initial = samples[0][key]
+        final = samples[-1][key]
+        second_half_growth = (final - initial) / max(initial, 1)
         plateau = second_half_growth < 0.15
     else:
         plateau = True
@@ -350,3 +486,4 @@ def probe_memory_soak_plateau(
         "passed": plateau,
         "verdict": "SOAK TEST PASSED (Resource telemetry plateaus)" if plateau else "MEMORY LEAK DETECTED (Monotonic resource expansion)"
     }
+

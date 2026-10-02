@@ -244,24 +244,36 @@ collected = 0
 passed = 0
 failed = 0
 skipped = 0
+xfail = 0
+framework_detected = "unknown"
 has_deprecation_warning = False
 
 # Heuristic parser for test frameworks
-if re.search(r'\d+\s+(?:passed|failed|error(?:ed)?|skipped)\b', log_content) and re.search(r'in \d+\.?\d*s', log_content):
-    # Pytest: "1 passed in 0.05s", "1 passed, 1 skipped in 0.01s", "2 failed in 0.3s"
+if (re.search(r'\d+\s+(?:passed|failed|error(?:ed)?|skipped|xfailed)\b', log_content) and re.search(r'in \d+\.?\d*s', log_content)) or ("pytest" in command_str.lower() and (re.search(r'collected \d+ items', log_content) or re.search(r'no tests ran in', log_content))):
+    # Pytest: "1 passed in 0.05s", "1 passed, 1 skipped in 0.01s", "2 failed in 0.3s", "1 passed, 2 xfailed in 0.02s"
+    framework_detected = "pytest"
     m_pass = re.search(r'(\d+)\s+passed', log_content)
-    m_fail = re.search(r'(\d+)\s+(?:failed|error(?:ed)?)', log_content)
+    m_fail = re.search(r'(\d+)\s+failed', log_content)
+    m_err  = re.search(r'(\d+)\s+error(?:ed)?', log_content)
     m_skip = re.search(r'(\d+)\s+skipped', log_content)
+    m_xfail = re.search(r'(\d+)\s+xfailed', log_content)
+
     if m_pass and m_pass.group(1): passed = int(m_pass.group(1))
-    if m_fail and m_fail.group(1): failed = int(m_fail.group(1))
+    fail_count = int(m_fail.group(1)) if (m_fail and m_fail.group(1)) else 0
+    err_count = int(m_err.group(1)) if (m_err and m_err.group(1)) else 0
+    failed = fail_count + err_count
     if m_skip and m_skip.group(1): skipped = int(m_skip.group(1))
+    if m_xfail and m_xfail.group(1):
+        xfail = int(m_xfail.group(1))
+        skipped += xfail  # Count xfail as skipped (not failed) since xfails are expected
     collected = passed + failed + skipped
-elif "# tests" in log_content or "ℹ tests" in log_content or "✔" in log_content or "ℹ pass" in log_content:
+elif "# tests" in log_content or "ℹ tests" in log_content or "✔" in log_content or "ℹ pass" in log_content or "node --test" in command_str.lower():
     # Node.js TAP: "# tests 1", "# pass 1", "# fail 0", or modern spec reporter "ℹ tests 1"
+    framework_detected = "node-tap"
     m_tests = re.search(r'(?:#|ℹ)\s+tests\s+(\d+)', log_content)
     m_pass = re.search(r'(?:#|ℹ)\s+pass(?:ed)?\s+(\d+)', log_content)
     m_fail = re.search(r'(?:#|ℹ)\s+fail(?:ed)?\s+(\d+)', log_content)
-    m_skip = re.search(r'(?:#|ℹ)\s+(?:cancelled|skipped)\s+(\d+)', log_content)
+    m_skip = re.search(r'(?:#|ℹ)\s+(?:cancelled|skipped|todo)\s+(\d+)', log_content)
 
     if m_tests and m_tests.group(1): collected = int(m_tests.group(1))
     if m_pass and m_pass.group(1): passed = int(m_pass.group(1))
@@ -276,23 +288,51 @@ elif "# tests" in log_content or "ℹ tests" in log_content or "✔" in log_cont
             passed = pass_matches
             failed = fail_matches
             collected = passed + failed
-elif "Tests:" in log_content:
-    # Jest/Vitest: "Tests:       1 passed, 1 total"
-    m_jest = re.search(r'Tests:\s+(\d+)\s+passed,\s+(\d+)\s+total', log_content)
-    if m_jest:
-        passed = int(m_jest.group(1))
-        collected = int(m_jest.group(2))
-        failed = collected - passed
-elif "test result:" in log_content:
+    if collected > 0 and passed == 0 and failed == 0 and skipped == 0:
+        passed = collected
+elif "Tests:" in log_content or "jest" in command_str.lower() or "vitest" in command_str.lower():
+    # Jest/Vitest: "Tests:       1 passed, 1 total", "Tests:  1 failed, 2 passed, 3 total"
+    if "vitest" in command_str.lower():
+        framework_detected = "vitest"
+    else:
+        framework_detected = "jest"
+    m_tests_line = re.search(r'Tests:?\s+([^\n\r]+)', log_content)
+    if m_tests_line:
+        t_line = m_tests_line.group(1)
+        m_pass = re.search(r'(\d+)\s+passed', t_line)
+        m_fail = re.search(r'(\d+)\s+failed', t_line)
+        m_skip = re.search(r'(\d+)\s+(?:skipped|todo)', t_line)
+        m_tot = re.search(r'(\d+)\s+total', t_line) or re.search(r'\((\d+)\)', t_line)
+
+        if m_pass: passed = int(m_pass.group(1))
+        if m_fail: failed = int(m_fail.group(1))
+        if m_skip: skipped = int(m_skip.group(1))
+        if m_tot:
+            collected = int(m_tot.group(1))
+        else:
+            collected = passed + failed + skipped
+        if collected > 0 and passed == 0 and failed == 0 and skipped == 0:
+            passed = collected
+    else:
+        m_pass = re.search(r'(\d+)\s+passed', log_content)
+        m_fail = re.search(r'(\d+)\s+failed', log_content)
+        m_skip = re.search(r'(\d+)\s+skipped', log_content)
+        if m_pass: passed = int(m_pass.group(1))
+        if m_fail: failed = int(m_fail.group(1))
+        if m_skip: skipped = int(m_skip.group(1))
+        collected = passed + failed + skipped
+elif "test result:" in log_content or "cargo test" in command_str.lower():
     # Cargo test: "test result: ok. 5 passed; 0 failed; 0 ignored;"
+    framework_detected = "cargo"
     m_cargo = re.search(r'test result:\s+\w+\.\s+(\d+)\s+passed;\s+(\d+)\s+failed;\s+(\d+)\s+ignored', log_content)
     if m_cargo:
         passed = int(m_cargo.group(1))
         failed = int(m_cargo.group(2))
         skipped = int(m_cargo.group(3))
         collected = passed + failed + skipped
-elif "Ran " in log_content and (" tests in " in log_content or " test in " in log_content):
+elif ("Ran " in log_content and (" tests in " in log_content or " test in " in log_content)) or "python -m unittest" in command_str.lower() or "python3 -m unittest" in command_str.lower():
     # Python unittest: "Ran 16 tests in 0.004s" or "Ran 1 test in 0.001s"
+    framework_detected = "python-unittest"
     m_ran = re.search(r'Ran\s+(\d+)\s+tests?\s+in', log_content)
     m_fail = re.search(r'FAILED\s*\(.*?failures=(\d+)', log_content)
     m_err  = re.search(r'FAILED\s*\(.*?errors=(\d+)', log_content)
@@ -302,6 +342,10 @@ elif "Ran " in log_content and (" tests in " in log_content or " test in " in lo
         failed    = (int(m_fail.group(1)) if m_fail else 0) + (int(m_err.group(1)) if m_err else 0)
         skipped   = int(m_skip.group(1)) if m_skip else 0
         passed    = collected - failed - skipped
+
+# Determine unverified flag (T06)
+is_test_runner = runtime_evidence.is_known_test_runner(command_str)
+unverified = (collected == 0 and not is_test_runner and exit_code == 0)
 
 # Check for deprecation warnings (F08, P13)
 if "DeprecationWarning" in log_content or "ExperimentalWarning" in log_content:
@@ -318,6 +362,9 @@ receipt = {
     "working_tree_sha": working_tree_sha,
     "working_tree_dirty": (working_tree_dirty.lower() == "true"),
     "log_path": os.path.relpath(log_path, os.path.dirname(manifest_path)),
+    "framework_detected": framework_detected,
+    "unverified": unverified,
+    "xfail": xfail,
     "metrics": {
         "collected": collected,
         "passed": passed,

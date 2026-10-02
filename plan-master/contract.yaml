@@ -1,8 +1,25 @@
 id: plan-master
-contract_version: 1
-inputs: [task-scope.v1, decision-record.v1]
-outputs: [implementation-plan.v1, worktree-profile.v1]
-required_capabilities: [parse_dependencies, define_acceptance_gates]
-forbidden_capabilities: [modify_source, git_push]
-manual_only: true
-report_policy: standalone_card
+contract_version: 2
+activation: auto_for_multi_step_planning
+activation_triggers:
+  - user asks to plan, implement, architect, or build a multi-step feature or system
+  - explicit invocation via $plan-master or @plan-master
+inputs:
+  - user-requirements.v1
+  - engineering-specification.v24.optional  # from prompt-architect; do not regenerate
+  - decision-record.v1.optional             # from idea-council
+outputs:
+  - implementation-plan.v1
+  - handoff-prompt.v1.optional              # only on explicit handoff request
+required_capabilities:
+  - read_source_files
+  - parse_dependencies
+  - define_acceptance_gates
+forbidden_capabilities:
+  - modify_source
+  - git_push
+  - regenerate_specification      # do not reproduce or regenerate the 24-section spec
+  - start_implementation_workers  # orchestrator activation is explicit, not automatic
+manual_only: false
+auto_trigger_before_prompt_architect: false
+report_policy: plan_artifact_plus_concise_summary

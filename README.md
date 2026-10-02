@@ -1,6 +1,6 @@
 # 🛠️ Antigravity Engineering Skills Suite (v2.0)
 
-A battle-tested, high-craft software engineering operating system for **Google Antigravity**. Covers the full engineering lifecycle—from architectural intent extraction and visual image-first art direction to parallel worktree orchestration, adversarial diff review, empirical specialist verification, and cryptographic release gate enforcement.
+A high-craft software engineering operating system for **Google Antigravity**. Covers the full engineering lifecycle—from architectural intent extraction and visual art direction to parallel worktree orchestration, adversarial review, specialist verification, and release gate enforcement.
 
 ---
 
@@ -10,33 +10,32 @@ A battle-tested, high-craft software engineering operating system for **Google A
 - **Host**: Google Antigravity (IDE & `agy` CLI).
 - **Core Dependencies**:
   - `git` $\ge 2.30$
-  - `python3` $\ge 3.10$
+  - `python3` $\ge 3.9$
   - `bash` $\ge 4.0$
-  - `node` $\ge 18$ *(optional, required for `@playwright/cli`)*
+  - `node` $\ge 18$ *(optional, for Playwright headless browser testing)*
 
-### 2. Installation Options
+### 2. Installation & Environment Health
 
-#### Option A: Global Installation (Recommended)
-Make skills available across all your Antigravity workspaces:
+Use the suite installer to cleanly install the 17 skills and runtime helpers with manifest tracking:
+
+#### Option A: Workspace Installation (Single Project)
 ```bash
-# Clone the repository
-git clone https://github.com/reteesh-2002/Skills.git
-cd Skills
-
-# Install into Antigravity global configuration
-mkdir -p ~/.gemini/config/skills
-cp -r * ~/.gemini/config/skills/
+python3 scripts/install-skills.py --workspace
 ```
 
-#### Option B: Workspace-Local Installation
-Equip a single project workspace with the skills:
+#### Option B: Global Installation (All Antigravity Workspaces)
 ```bash
-mkdir -p .gemini/skills
-cp -r /path/to/Skills/<selected-skills> .gemini/skills/
+python3 scripts/install-skills.py --global
+```
+
+#### Option C: Health Check via Skills Doctor
+Run the diagnostic doctor to verify runtime helpers, hooks, and tool availability:
+```bash
+python3 scripts/skills-doctor.py
 ```
 
 ### 3. Release Gate Hook Setup
-To prevent unverified commits or unproven pull requests, configure the Antigravity PreToolUse hook in your repository at `.agents/hooks.json`:
+To prevent unverified commits or unproven pull requests, the installer automatically configures the Antigravity PreToolUse hook in `.agents/hooks.json` (or you can add it manually):
 ```json
 {
   "evidence-policy": {
@@ -57,21 +56,22 @@ To prevent unverified commits or unproven pull requests, configure the Antigravi
 }
 ```
 
-### 4. First-Run Health & Conformance Check
-Verify the skill metadata, relative documentation links, and runtime conformance test suite:
+### 4. Conformance & Test Suite Verification
+Verify skill metadata, contracts, policy drift, specialist probes, and runtime checks:
 ```bash
-# 1. Validate skill frontmatter, metadata, and token budgets (17 skills)
+# 1. Validate skill frontmatter, metadata, and policy consistency (17 skills)
 python3 scripts/validate-skills.py
 
-# 2. Run the 75-test unit & behavioral regression suite (Releases A -> D)
-python3 -m unittest tests/test_runtime_evidence.py tests/test_evidence_gate_regressions.py tests/test_task_ledger.py tests/test_release_b.py tests/test_release_c.py tests/test_release_d.py
+# 2. Run the environment health check
+python3 scripts/skills-doctor.py
 
-# 3. Run the 27-test runtime conformance and adversarial suite
+# 3. Run the full unit, probe, and regression suite (169 tests)
+pytest tests/ -v
+
+# 4. Run the 27-test runtime conformance and adversarial shell suite
 bash tests/verify_runtime.sh
-
-# 4. Run the isolated benchmark smoke trial
-python3 tests/run_real_benchmark.py --smoke
 ```
+
 
 ---
 

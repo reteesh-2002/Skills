@@ -1,8 +1,23 @@
 id: prompt-architect
-contract_version: 1
-inputs: [raw-user-intent.v1]
-outputs: [execution-blueprint.v1, skill-team-selection.v1]
-required_capabilities: [classify_domain, compose_prompt]
-forbidden_capabilities: [modify_code, execute_terminal]
+contract_version: 2
+activation: explicit_only
+activation_triggers:
+  - user asks for specification, master prompt, or architecture document
+  - direct invocation via $prompt-architect or @prompt-architect
+inputs:
+  - raw-user-intent.v1
+  - user-specified-repo-or-file.optional
+outputs:
+  - engineering-specification.v24  # 24-section specification document
+required_capabilities:
+  - read_user_files
+  - compose_specification
+forbidden_capabilities:
+  - modify_code
+  - execute_terminal
+  - start_implementation_workers
+  - produce_execution_plan
 manual_only: false
-report_policy: standalone_card
+auto_trigger_before_plan_master: false
+report_policy: full_specification_always
+output_size_cap: none  # never truncate; use artifact if chat length is constrained

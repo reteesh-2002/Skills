@@ -1,0 +1,106 @@
+{
+  "schema_version": "suite-policy.v1",
+  "description": "Authoritative routing, output, and effort policy for the Antigravity Skills Suite. AGENTS.md and GEMINI.md reference this file. Skills validate against it via scripts/validate-skills.py.",
+
+  "activation_modes": {
+    "auto": [
+      {
+        "skill": "deep-debugger",
+        "triggers": ["fix a bug", "error", "breakage", "failure", "debug", "fix this"]
+      },
+      {
+        "skill": "plan-master",
+        "triggers": ["plan", "implement", "architect", "build", "create a feature", "create a system"]
+      },
+      {
+        "skill": "qa-sentinel",
+        "triggers": ["verify", "test", "validate", "check these changes"]
+      }
+    ],
+    "explicit_only": [
+      "prompt-architect",
+      "frontend-artisan",
+      "schema-craft",
+      "adaptive-worker-orchestrator-v2",
+      "code-reviewer",
+      "security-verifier",
+      "runtime-reliability",
+      "idea-council",
+      "ship-it",
+      "anti-slop-spec",
+      "design-md",
+      "image-to-code",
+      "playwright-cli",
+      "web-interface-guidelines"
+    ]
+  },
+
+  "routing_rules": {
+    "prompt_architect_before_plan_master": false,
+    "plan_master_before_implementation": true,
+    "require_minimum_skill_count": false,
+    "minimum_skill_count": null,
+    "small_task_threshold_files": 3,
+    "small_task_behavior": "direct_implementation_with_proportionate_check"
+  },
+
+  "output_defaults": {
+    "routine_task": {
+      "format": "outcome + meaningful changes + verification + limitation",
+      "target_lines": "4-8"
+    },
+    "review": {
+      "format": "actionable findings first",
+      "mandatory_finding_quota": false
+    },
+    "failure": {
+      "format": "cause_or_uncertainty + relevant_excerpt + next_action + full_log_path"
+    },
+    "intermediate_pipeline_stage": {
+      "format": "one milestone heartbeat only when useful"
+    },
+    "full_master_specification": {
+      "format": "all 24 sections; no routine-chat size cap",
+      "truncation_allowed": false
+    },
+    "execution_plan": {
+      "format": "plan artifact with concise chat summary where supported"
+    }
+  },
+
+  "pipeline_rules": {
+    "final_summary_writer": "coordinating_or_terminal_stage_only",
+    "dump_full_traces_to_chat": false,
+    "redact_secrets_in_logs": true
+  },
+
+  "effort_profiles": {
+    "quick": {
+      "description": "Smallest relevant workflow, targeted checks, no optional visual/council work",
+      "overrides_explicit_requests": false
+    },
+    "standard": {
+      "description": "Scoped planning, relevant verification, bounded optional exploration",
+      "overrides_explicit_requests": false
+    },
+    "thorough": {
+      "description": "Broader review and verification for high-risk work; explicit additional budgets",
+      "overrides_explicit_requests": false
+    }
+  },
+
+  "invariants": [
+    "An explicit 24-section spec request receives all 24 sections in any effort profile",
+    "Effort profiles do not override manual activation or host limitations",
+    "Do not claim token or cost limits are enforced unless telemetry and enforcement exist",
+    "Planning does not authorize publishing",
+    "A prior explicit implementation request does not require another approval when a skill changes stage",
+    "An explicitly requested specialist may load reference files but must not start a council, publish, or create workers"
+  ],
+
+  "token_targets": {
+    "note": "Review targets only — not reasons to delete safeguards or truncate the 24-section spec",
+    "ordinary_entrypoints_estimated_tokens": {"min": 500, "max": 1500},
+    "image_to_code_entrypoint_estimated_tokens": {"target": 1500}
+  }
+}

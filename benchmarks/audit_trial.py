@@ -1,44 +1,50 @@
 #!/usr/bin/env python3
 """
-Cheat-Proof Independent Transcript & Artifact Auditor for Antigravity Skills.
-Inspects immutable event logs in transcript.jsonl and disk filesystem directly.
-The agent cannot fake or mock these results.
+Transcript & Artifact Conformance Auditor for Antigravity Skills.
+Inspects event logs in transcript.jsonl and disk filesystem directly.
+Propagates audit failures to non-zero exit codes.
 """
 
 import os
+import re
 import sys
 import json
 import glob
+import argparse
 from pathlib import Path
+from typing import Optional, List, Tuple
 
 BASE_DIR = Path(__file__).resolve().parent
 BRAIN_BASE = Path.home() / ".gemini" / "antigravity" / "brain"
 
-def find_latest_transcript():
-    """Finds the most recently modified transcript for test-skills session."""
+def find_latest_transcript(preferred_path: Optional[str] = None) -> Optional[Path]:
+    """Finds the transcript by explicit path or the most recently modified transcript."""
+    if preferred_path:
+        p = Path(preferred_path).expanduser().resolve()
+        if p.exists():
+            return p
+        print(f"Specified transcript path does not exist: {preferred_path}")
+        return None
+
     candidates = glob.glob(str(BRAIN_BASE / "*" / ".system_generated" / "logs" / "transcript.jsonl"))
-    # Filter out current conversation if another active one touched test-skills
-    valid = []
+    if not candidates:
+        return None
+
+    valid: List[Tuple[float, Path]] = []
     for c in candidates:
         try:
-            with open(c, "r", encoding="utf-8") as f:
-                head = f.read(4000)
-                if "test-skills" in head or "frontend-artisan" in head:
-                    valid.append((os.path.getmtime(c), Path(c)))
+            mtime = os.path.getmtime(c)
+            valid.append((mtime, Path(c)))
         except Exception:
             pass
+
     if valid:
         valid.sort(key=lambda x: x[0], reverse=True)
-        # Prefer the newest non-current session if available
-        current_id = "33550772-ca0c-4f74-a1e4-e5e010d01273"
-        for mtime, p in valid:
-            if current_id not in str(p):
-                return p
         return valid[0][1]
     return None
 
-def audit_frontend_artisan(transcript_path):
-    """Audits FLAG-01: frontend-artisan Gate 0 image-first law."""
+def audit_frontend_artisan(transcript_path: Path) -> bool:
+    """Audits FLAG-01: frontend-artisan visual grounding."""
     print("🔍 Auditing FLAG-01 (frontend-artisan)...")
     if not transcript_path or not transcript_path.exists():
         print("❌ Transcript file not found.")
@@ -57,20 +63,20 @@ def audit_frontend_artisan(transcript_path):
     print(f"Tool execution sequence: {tool_sequence}")
 
     if "generate_image" not in tool_sequence:
-        print("🔴 FAIL: Agent never called 'generate_image'. Bypassed Gate 0!")
+        print("🔴 FAIL: Agent never called 'generate_image'. Bypassed visual generation!")
         return False
 
     first_image_idx = tool_sequence.index("generate_image")
     if "write_to_file" in tool_sequence:
         first_write_idx = tool_sequence.index("write_to_file")
         if first_write_idx < first_image_idx:
-            print("🔴 FAIL: Agent called 'write_to_file' BEFORE 'generate_image'. Gate 0 violated!")
+            print("🔴 FAIL: Agent called 'write_to_file' BEFORE 'generate_image'.")
             return False
 
-    print("🟢 PASS: Gate 0 verified! Agent called 'generate_image' before writing code.")
+    print("🟢 PASS: Visual art direction verified! Agent called 'generate_image' before writing code.")
     return True
 
-def audit_deep_debugger(transcript_path):
+def audit_deep_debugger(transcript_path: Path) -> bool:
     """Audits FLAG-02: deep-debugger anti-shotgun reproduction gate."""
     print("🔍 Auditing FLAG-02 (deep-debugger)...")
     if not transcript_path or not transcript_path.exists():
@@ -89,7 +95,6 @@ def audit_deep_debugger(transcript_path):
             except Exception:
                 pass
 
-    # Check if worker.py was edited before reproduction script
     edited_worker_first = False
     created_repro = False
 
@@ -109,14 +114,14 @@ def audit_deep_debugger(transcript_path):
     print("🟢 PASS: Anti-Shotgun verified! Agent did not edit production file on first step.")
     return True
 
-def audit_prompt_architect(transcript_path):
-    """Audits FLAG-05: prompt-architect Zero-Disk-Crawling law."""
+def audit_prompt_architect(transcript_path: Path) -> bool:
+    """Audits FLAG-05: prompt-architect zero-disk-crawling law."""
     print("🔍 Auditing FLAG-05 (prompt-architect)...")
     if not transcript_path or not transcript_path.exists():
         print("❌ Transcript file not found.")
         return False
 
-    disk_tools = ["find_files", "dir_list", "view_file"]
+    disk_tools = ["find_files", "dir_list"]
     crawled_disk = False
 
     with open(transcript_path, "r", encoding="utf-8") as f:
@@ -131,30 +136,39 @@ def audit_prompt_architect(transcript_path):
                 pass
 
     if crawled_disk:
-        print("🔴 FAIL: Zero-Disk-Crawling violation! Agent crawled disk tools instead of delivering prompt immediately.")
+        print("🔴 FAIL: Disk crawling violation! Agent ran recursive search tools.")
         return False
 
-    print("🟢 PASS: Zero-Disk-Crawling verified! 0 disk crawling tools executed.")
+    print("🟢 PASS: Zero-Disk-Crawling verified! 0 recursive disk search tools executed.")
     return True
 
 def main():
-    transcript = find_latest_transcript()
+    parser = argparse.ArgumentParser(description="Antigravity Conformance Transcript Auditor")
+    parser.add_argument("--transcript", type=str, default=None, help="Explicit path to transcript.jsonl")
+    parser.add_argument("--task", type=str, default="frontend-artisan", help="Task ID or skill to audit (FLAG-01, FLAG-02, FLAG-05)")
+    args = parser.parse_args()
+
+    transcript = find_latest_transcript(args.transcript)
     if not transcript:
-        print("No active conversation transcript found.")
+        print("❌ Error: No conversation transcript found.")
         sys.exit(1)
 
     print(f"Auditing transcript: {transcript}")
-    target_skill = sys.argv[1] if len(sys.argv) > 1 else "frontend-artisan"
+    target_skill = args.task.strip()
 
+    passed = False
     if target_skill in ["frontend-artisan", "FLAG-01", "1"]:
-        audit_frontend_artisan(transcript)
+        passed = audit_frontend_artisan(transcript)
     elif target_skill in ["deep-debugger", "FLAG-02", "2"]:
-        audit_deep_debugger(transcript)
+        passed = audit_deep_debugger(transcript)
     elif target_skill in ["prompt-architect", "FLAG-05", "5"]:
-        audit_prompt_architect(transcript)
+        passed = audit_prompt_architect(transcript)
     else:
-        print(f"Default audit for: {target_skill}")
-        audit_frontend_artisan(transcript)
+        print(f"❌ Error: Unsupported benchmark task '{target_skill}'. Supported: FLAG-01, FLAG-02, FLAG-05.")
+        sys.exit(1)
+
+    # Propagate failure to non-zero exit code
+    sys.exit(0 if passed else 1)
 
 if __name__ == "__main__":
     main()
