@@ -77,7 +77,11 @@ GIT_TREE_SHA=$(git -C "${REPO_ROOT}" write-tree 2>/dev/null || echo "unknown")
 
 # Write initial receipt and preliminary RUNNING check to manifest under lock safely with json.dump
 python3 - "${MANIFEST_PATH}" "${LOCK_PATH}" "${LABEL}" "${GIT_TREE_SHA}" "${RUN_ID}" "${COMMAND_STR}" "${WORKING_TREE_SHA}" "${WORKING_TREE_DIRTY}" "${RECEIPT_PATH}" "${TIMESTAMP}" << 'PYEOF'
-import sys, os, json, fcntl
+import sys, os, json
+try:
+    import fcntl
+except ImportError:
+    fcntl = None
 
 manifest_path, lock_path, label, git_tree_sha, run_id, command_str, working_tree_sha, working_tree_dirty, receipt_path, timestamp = sys.argv[1:11]
 
@@ -106,7 +110,8 @@ with open(receipt_path, "w", encoding="utf-8") as rf:
 os.chmod(receipt_path, 0o644)
 
 with open(lock_path, "w") as lf:
-    fcntl.flock(lf, fcntl.LOCK_EX)
+    if fcntl:
+        fcntl.flock(lf, fcntl.LOCK_EX)
     try:
         manifest = {
             "schema_version": "manifest.v1",
@@ -150,16 +155,22 @@ with open(lock_path, "w") as lf:
             os.fsync(f.fileno())
         os.replace(tmp_path, manifest_path)
     finally:
-        fcntl.flock(lf, fcntl.LOCK_UN)
+        if fcntl:
+            fcntl.flock(lf, fcntl.LOCK_UN)
 PYEOF
 
 cleanup_trap() {
   echo "⚠️ [exec-proxy]: Process interrupted. Updating manifest to CANCELLED..." >&2
   python3 - "${MANIFEST_PATH}" "${LOCK_PATH}" "${LABEL}" << 'PYEOF'
-import sys, os, json, fcntl
+import sys, os, json
+try:
+    import fcntl
+except ImportError:
+    fcntl = None
 manifest_path, lock_path, label = sys.argv[1:4]
 with open(lock_path, "w") as lf:
-    fcntl.flock(lf, fcntl.LOCK_EX)
+    if fcntl:
+        fcntl.flock(lf, fcntl.LOCK_EX)
     try:
         if os.path.exists(manifest_path):
             with open(manifest_path, "r", encoding="utf-8") as f:
@@ -176,7 +187,8 @@ with open(lock_path, "w") as lf:
                 os.fsync(f.fileno())
             os.replace(tmp_path, manifest_path)
     finally:
-        fcntl.flock(lf, fcntl.LOCK_UN)
+        if fcntl:
+            fcntl.flock(lf, fcntl.LOCK_UN)
 PYEOF
   exit 130
 }
@@ -225,7 +237,11 @@ trap - INT TERM
 
 # Parse framework counts, update manifest, and invoke runtime_evidence engine (F07, F08, F09, P16, P18)
 METRICS_JSON=$(python3 - "${COMMAND_STR}" "${EXIT_CODE}" "${DURATION_MS}" "${GIT_TREE_SHA}" "${LOG_PATH}" "${RECEIPT_PATH}" "${MANIFEST_PATH}" "${LOCK_PATH}" "${RUN_ID}" "${LABEL}" "${WORKING_TREE_SHA}" "${WORKING_TREE_DIRTY}" "${SCRIPT_DIR}" << 'PYEOF'
-import sys, os, re, json, fcntl
+import sys, os, re, json
+try:
+    import fcntl
+except ImportError:
+    fcntl = None
 
 command_str, exit_code_s, duration_ms_s, git_tree_sha, log_path, receipt_path, manifest_path, lock_path, run_id, label, working_tree_sha, working_tree_dirty, script_dir = sys.argv[1:14]
 exit_code = int(exit_code_s)
@@ -385,7 +401,8 @@ os.chmod(receipt_path, 0o644)
 
 # Update manifest under exclusive lock (F08, F09, P12, P18)
 with open(lock_path, "w") as lf:
-    fcntl.flock(lf, fcntl.LOCK_EX)
+    if fcntl:
+        fcntl.flock(lf, fcntl.LOCK_EX)
     try:
         manifest = {
             "schema_version": "manifest.v1",
@@ -433,7 +450,8 @@ with open(lock_path, "w") as lf:
             os.fsync(f.fileno())
         os.replace(tmp_manifest, manifest_path)
     finally:
-        fcntl.flock(lf, fcntl.LOCK_UN)
+        if fcntl:
+            fcntl.flock(lf, fcntl.LOCK_UN)
 
 # Emit parsed metrics for compact summary formatting
 print(json.dumps({"collected": collected, "passed": passed, "failed": failed, "skipped": skipped}))

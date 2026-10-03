@@ -63,33 +63,40 @@ def check_python() -> dict:
 
 
 def check_host_paths(project_dir: Path) -> dict:
-    """Verify host execution path integrity."""
+    """Verify host execution path integrity and platform."""
     exists = project_dir.exists() and project_dir.is_dir()
     path_env = os.environ.get("PATH", "")
     return {
         "project_dir": str(project_dir.resolve()),
         "project_dir_exists": exists,
         "has_path_env": bool(path_env),
+        "platform": sys.platform,
+        "is_windows": sys.platform == "win32",
         "status": "ok" if exists and path_env else "warning",
     }
 
 
 def find_helper(helper_name: str, project_dir: Path) -> Path | None:
-    """Find a runtime helper across standard project directories."""
-    candidates = [
-        project_dir / "scripts" / helper_name,
-        project_dir / helper_name,
-        project_dir / ".agents" / "scripts" / helper_name,
-    ]
+    """Find a runtime helper across standard project directories with cross-platform alternatives."""
+    names_to_try = [helper_name]
+    if helper_name == "exec-proxy.sh":
+        names_to_try.extend(["exec_proxy.py", "exec-proxy.cmd", "exec-proxy.py"])
+    elif helper_name == "verify-release-gate.sh":
+        names_to_try.extend(["verify_release_gate.py", "verify-release-gate.cmd", "verify-release-gate.py"])
 
-    # Script location fallback only if project_dir is the suite repo itself
     script_dir = Path(__file__).resolve().parent
-    if project_dir == script_dir.parent:
-        candidates.append(script_dir / helper_name)
+    for name in names_to_try:
+        candidates = [
+            project_dir / "scripts" / name,
+            project_dir / name,
+            project_dir / ".agents" / "scripts" / name,
+        ]
+        if project_dir == script_dir.parent:
+            candidates.append(script_dir / name)
 
-    for cand in candidates:
-        if cand.exists() and cand.is_file():
-            return cand
+        for cand in candidates:
+            if cand.exists() and cand.is_file():
+                return cand
     return None
 
 
@@ -314,11 +321,14 @@ def format_cli_report(diag: dict) -> str:
 
     # Host & Python
     py = diag["python"]
+    hp = diag["host_paths"]
     py_badge = "[✅ OK]" if py["status"] == "ok" else "[❌ FAIL]"
     lines.append("Host & Python:")
+    platform_name = "Windows" if hp.get("is_windows") else ("macOS" if sys.platform == "darwin" else "Linux/POSIX")
+    lines.append(f"  Operating System: {platform_name} ({sys.platform}) ".ljust(50, ".") + " [✅ OK]")
     lines.append(f"  Python Version: {py['version']} (>= 3.9) ".ljust(50, ".") + f" {py_badge}")
-    proj_badge = "[✅ OK]" if diag["host_paths"]["project_dir_exists"] else "[❌ FAIL]"
-    lines.append(f"  Project Directory: {diag['host_paths']['project_dir']} ".ljust(50, ".") + f" {proj_badge}")
+    proj_badge = "[✅ OK]" if hp["project_dir_exists"] else "[❌ FAIL]"
+    lines.append(f"  Project Directory: {hp['project_dir']} ".ljust(50, ".") + f" {proj_badge}")
     lines.append("")
 
     # Runtime Helpers

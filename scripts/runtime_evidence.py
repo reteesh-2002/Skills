@@ -10,6 +10,46 @@ import re
 import json
 import shlex
 import datetime
+import contextlib
+
+@contextlib.contextmanager
+def file_lock(lock_file):
+    """
+    Cross-platform exclusive file lock context manager.
+    Uses msvcrt on Windows, fcntl on POSIX.
+    """
+    if sys.platform == "win32":
+        try:
+            import msvcrt
+            lock_file.seek(0)
+            msvcrt.locking(lock_file.fileno(), msvcrt.LK_LOCK, 1)
+        except Exception:
+            pass
+        try:
+            yield
+        finally:
+            try:
+                lock_file.seek(0)
+                msvcrt.locking(lock_file.fileno(), msvcrt.LK_UNLCK, 1)
+            except Exception:
+                pass
+    else:
+        locked = False
+        try:
+            import fcntl
+            fcntl.flock(lock_file, fcntl.LOCK_EX)
+            locked = True
+        except Exception:
+            pass
+        try:
+            yield
+        finally:
+            if locked:
+                try:
+                    import fcntl
+                    fcntl.flock(lock_file, fcntl.LOCK_UN)
+                except Exception:
+                    pass
 
 # Canonical mandatory receipt fields
 MANDATORY_RECEIPT_FIELDS = ("receipt_id", "command", "exit_code", "git_tree_sha", "metrics")

@@ -8,10 +8,11 @@ A high-craft software engineering operating system for **Google Antigravity**. C
 
 ### 1. Supported Hosts & Prerequisites
 - **Host**: Google Antigravity (IDE & `agy` CLI).
+- **Operating Systems**: Linux, macOS, and **Windows** (PowerShell, CMD, Git Bash, WSL).
 - **Core Dependencies**:
   - `git` $\ge 2.30$
   - `python3` $\ge 3.9$
-  - `bash` $\ge 4.0$
+  - `bash` $\ge 4.0$ *(optional on Windows; native Python and `.cmd` wrappers provided)*
   - `node` $\ge 18$ *(optional, for Playwright headless browser testing)*
 
 ### 2. Installation & Environment Health
@@ -253,19 +254,20 @@ Implemented in [`prompt-architect`](prompt-architect/SKILL.md) with canonical te
 ### 2. Runtime Scripts (`scripts/`)
 | Script | Language | Purpose & Functionality |
 | :--- | :---: | :--- |
-| [`exec-proxy.sh`](scripts/exec-proxy.sh) | Bash/Python | **Execution Proxy & Log Sink**: Wraps command execution with `set -euo pipefail`. Streams verbose logs to `.evidence/logs/<run_id>.log` while returning a 3-line bounded summary. Parses test frameworks (pytest, Jest, Vitest, Node TAP, Cargo, Python unittest) to capture exact test counts and `xfail`. Generates physical cryptographic receipts in `.evidence/receipts/`. Labels non-test-runner zero-inventory commands as `unverified`. |
-| [`verify-release-gate.sh`](scripts/verify-release-gate.sh) | Bash/Python | **Deterministic Release Gate**: Intercepts `git push` via protojson PreToolUse hook. Validates that current `git write-tree` matches evidence receipts, working tree is clean, no zero-inventory false greens exist, and policy disposition is GREEN (or valid unexpired waiver). Fails safe on ambiguous command forms (`eval`, command substitution). |
-| [`runtime_evidence.py`](scripts/runtime_evidence.py) | Python 3 | **Shared Evidence & Policy Engine**: Validates receipt schema, parses ISO-8601 and date-only waiver expiry (normalizing to 23:59:59 UTC), tokenizes commands to detect `git -C` / `--git-dir` variants, reduces checks to GREEN / AMBER / RED, distinguishes TDD Red-Green progress from flaky retries, and detects ambiguous release commands. |
-| [`task_ledger.py`](scripts/task_ledger.py) | Python 3 | **Canonical Task State Ledger**: Multi-process `fcntl.flock`-protected ledger (`.evidence/tasks.json`). Tracks tasks with statuses (`Pending`, `Running`, `Blocked`, `Verifying`, `Done`, `Failed`, `Cancelled`). Enforces dependency existence and cycle validation via `validate_dependencies()`. Preserves corrupt ledger files to `.corrupt.<timestamp>` instead of resetting. Tracks `session_id` across agent turns. |
+| [`exec_proxy.py`](scripts/exec_proxy.py)<br>[`exec-proxy.sh`](scripts/exec-proxy.sh)<br>[`exec-proxy.cmd`](scripts/exec-proxy.cmd) | Python 3<br>Bash<br>Windows CMD | **Execution Proxy & Log Sink**: Cross-platform runner (Windows PowerShell/CMD, Linux, macOS). Captures child exit codes, streams verbose logs to `.evidence/logs/<run_id>.log` while returning a 3-line bounded summary. Parses test frameworks (pytest, Jest, Vitest, Node TAP, Cargo, Python unittest) to capture exact test counts and `xfail`. Generates physical cryptographic receipts in `.evidence/receipts/`. Labels non-test-runner zero-inventory commands as `unverified`. |
+| [`verify_release_gate.py`](scripts/verify_release_gate.py)<br>[`verify-release-gate.sh`](scripts/verify-release-gate.sh)<br>[`verify-release-gate.cmd`](scripts/verify-release-gate.cmd) | Python 3<br>Bash<br>Windows CMD | **Deterministic Release Gate**: Cross-platform release gate intercepting `git push` via protojson PreToolUse hook. Validates that current `git write-tree` matches evidence receipts, working tree is clean, no zero-inventory false greens exist, and policy disposition is GREEN (or valid unexpired waiver). Fails safe on ambiguous command forms (`eval`, command substitution). |
+| [`runtime_evidence.py`](scripts/runtime_evidence.py) | Python 3 | **Shared Evidence & Policy Engine**: Cross-platform file locking (`msvcrt` on Windows, `fcntl` on POSIX), receipt schema validation, ISO-8601 and date-only waiver expiry normalization (to 23:59:59 UTC), command tokenization for `git -C` / `--git-dir` variants, GREEN / AMBER / RED disposition reduction, TDD Red-Green progression vs flaky retry detection. |
+| [`task_ledger.py`](scripts/task_ledger.py) | Python 3 | **Canonical Task State Ledger**: Multi-process locked ledger (`.evidence/tasks.json`) with cross-platform file locking. Tracks tasks with statuses (`Pending`, `Running`, `Blocked`, `Verifying`, `Done`, `Failed`, `Cancelled`). Enforces dependency existence and cycle validation via `validate_dependencies()`. Preserves corrupt ledger files to `.corrupt.<timestamp>` instead of resetting. Tracks `session_id` across agent turns. |
 | [`task_shape_gating.py`](scripts/task_shape_gating.py) | Python 3 | **Phase 0 Gating Engine**: Evaluates file touch counts, blast radius, auth/data sensitivity, and coupling to deterministically return `solo`, `sequenced`, `multi(n)`, or `solo+review`. Generates minimal worker briefs excluding chat history (`build_worker_brief`) and defines the 6-step durable resume protocol. |
-| [`specialist_probes.py`](scripts/specialist_probes.py) | Python 3 | **Empirical Specialist Verification Engine**: Contains WCAG AA relative luminance contrast calculator, static HTML viewport overflow detector (explicitly labeled `heuristic: True`), disposable SQLite migration rehearsal engine, synthetic dual-tenant BOLA/IDOR isolation probe, child process graceful drain probe (`SIGTERM`), and memory soak plateau verifier with RSS measurement (`use_rss`). |
+| [`specialist_probes.py`](scripts/specialist_probes.py) | Python 3 | **Empirical Specialist Verification Engine**: Cross-platform probes: WCAG AA relative luminance contrast calculator, static HTML viewport overflow detector (`heuristic: True`), disposable SQLite migration rehearsal engine, synthetic dual-tenant BOLA/IDOR isolation probe, child process graceful drain probe (`SIGTERM`), and memory soak plateau verifier with cross-platform RSS measurement (`ctypes/psapi` on Windows, `resource` on POSIX). |
 | [`validate-skills.py`](scripts/validate-skills.py) | Python 3 | **Skill Metadata & Syntax Linter**: Ingests all 17 skills in the suite, validates YAML frontmatter, measures token budgets, verifies relative documentation links, and prevents policy drift against `suite-policy.json`. |
-| [`install-skills.py`](scripts/install-skills.py) | Python 3 | **Suite Installer & Manifest Manager**: Installs skills and runtime helpers to workspace or global configuration (`~/.gemini/config/skills/`). Performs safe configuration merges and tracks installations in `.skills-install-manifest.json` with `--uninstall` support. |
-| [`skills-doctor.py`](scripts/skills-doctor.py) | Python 3 | **Environment Health Diagnostic**: Inspects Python version, runtime helper availability, hook configuration, and optional tool capabilities (`pytest`, `playwright`, `git`, `node`). Reports missing optional tools gracefully without failing core health. |
+| [`install-skills.py`](scripts/install-skills.py) | Python 3 | **Suite Installer & Manifest Manager**: Installs skills and runtime helpers to workspace or global configuration (`~/.gemini/config/skills/`). Performs safe configuration merges, cross-platform hook generation, and tracks installations in `.skills-install-manifest.json` with `--uninstall` support. |
+| [`skills-doctor.py`](scripts/skills-doctor.py) | Python 3 | **Environment Health Diagnostic**: Inspects host OS platform (Windows, macOS, Linux), Python version, runtime helper availability, hook configuration, and optional tool capabilities (`pytest`, `playwright`, `git`, `node`). Reports missing optional tools gracefully without failing core health. |
 
 ### 3. Test Suites (`tests/`)
 | Test File | Type | Focus & Scenarios |
 | :--- | :---: | :--- |
+| [`test_windows_compat.py`](tests/test_windows_compat.py) | Unit/Integration | Windows native compatibility: cross-platform file locking (`msvcrt` mock / POSIX), Windows RSS memory probe (`ctypes` mock / POSIX), pure Python `exec_proxy.py`, pure Python `verify_release_gate.py`, and Windows batch wrappers. |
 | [`test_runtime_evidence.py`](tests/test_runtime_evidence.py) | Unit | Waiver parsing, `git -C` command matcher, policy disposition, and snapshot isolation. |
 | [`test_evidence_gate_regressions.py`](tests/test_evidence_gate_regressions.py) | Behavioral | Hermetic regression suite: push detection, tree SHA mismatch, corrupt receipts, date-only expiry, TDD progress, flaky retries, zero-inventory false greens, rescue commit failures. |
 | [`test_t06_t07_evidence.py`](tests/test_t06_t07_evidence.py) | Unit/Integration | Framework detection, pytest `xfail` parsing, `unverified` check flag, `eval` / command substitution ambiguity detection, and release gate blocking. |
@@ -339,7 +341,7 @@ Below is a side-by-side comparison based on empirical trial data across standard
 The repository includes a comprehensive testing framework ensuring absolute reliability:
 
 ```bash
-# 1. Full Unit, Behavioral & Property Regression Suite (173 tests)
+# 1. Full Unit, Behavioral & Property Regression Suite (184 tests)
 pytest tests/ -v
 
 # 2. Conformance & Adversarial Runtime Suite (27 bash tests)
@@ -349,7 +351,7 @@ bash tests/verify_runtime.sh
 python3 scripts/skills-doctor.py
 ```
 
-- **Unit & Behavioral Tests**: **173 passed, 56 subtests passed** in ~4.1s.
+- **Unit & Behavioral Tests**: **184 passed, 56 subtests passed** in ~4.3s.
 - **Runtime Conformance Tests**: **27/27 passed** in ~3.5s.
 - **Fraud Prevention**: Zero simulated sleep loops, zero hard-coded scores, and independent transcript auditing via `benchmarks/audit_trial.py`.
 

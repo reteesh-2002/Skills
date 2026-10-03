@@ -7,12 +7,53 @@ Atomic versioned task tracking and progress renderer across coordinator and work
 import os
 import sys
 import json
-import fcntl
 import argparse
 import datetime
 import shutil
 import logging
 from typing import Optional, List, Dict, Any, Tuple
+
+try:
+    from scripts.runtime_evidence import file_lock
+except ImportError:
+    try:
+        from runtime_evidence import file_lock
+    except ImportError:
+        import contextlib
+        @contextlib.contextmanager
+        def file_lock(lock_file):
+            if sys.platform == "win32":
+                try:
+                    import msvcrt
+                    lock_file.seek(0)
+                    msvcrt.locking(lock_file.fileno(), msvcrt.LK_LOCK, 1)
+                except Exception:
+                    pass
+                try:
+                    yield
+                finally:
+                    try:
+                        lock_file.seek(0)
+                        msvcrt.locking(lock_file.fileno(), msvcrt.LK_UNLCK, 1)
+                    except Exception:
+                        pass
+            else:
+                locked = False
+                try:
+                    import fcntl
+                    fcntl.flock(lock_file, fcntl.LOCK_EX)
+                    locked = True
+                except Exception:
+                    pass
+                try:
+                    yield
+                finally:
+                    if locked:
+                        try:
+                            import fcntl
+                            fcntl.flock(lock_file, fcntl.LOCK_UN)
+                        except Exception:
+                            pass
 
 logger = logging.getLogger("task_ledger")
 
@@ -34,8 +75,7 @@ class TaskLedger:
     def _with_lock(self, callback):
         """Executes callback under exclusive file lock with atomic temp file swap."""
         with open(self.lock_path, "w") as lock_file:
-            fcntl.flock(lock_file, fcntl.LOCK_EX)
-            try:
+            with file_lock(lock_file):
                 data = self.load()
                 result, updated_data = callback(data)
                 if updated_data is not None:
@@ -48,8 +88,6 @@ class TaskLedger:
                         os.fsync(f.fileno())
                     os.replace(tmp_file, self.ledger_path)
                 return result
-            finally:
-                fcntl.flock(lock_file, fcntl.LOCK_UN)
 
     def load(self):
         """Loads task ledger from disk, returning default structure if empty or corrupt."""

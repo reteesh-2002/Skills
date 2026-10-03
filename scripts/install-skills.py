@@ -40,7 +40,11 @@ SKILL_INVENTORY = [
 # Explicit runtime inventory scripts and policies
 RUNTIME_SCRIPTS = [
     "scripts/exec-proxy.sh",
+    "scripts/exec-proxy.cmd",
+    "scripts/exec_proxy.py",
     "scripts/verify-release-gate.sh",
+    "scripts/verify-release-gate.cmd",
+    "scripts/verify_release_gate.py",
     "scripts/runtime_evidence.py",
     "scripts/task_ledger.py",
     "scripts/task_shape_gating.py",
@@ -62,23 +66,31 @@ RULE_FILES = [
     "GEMINI.md",
 ]
 
-HOOK_TEMPLATE = {
-    "evidence-policy": {
-        "PreToolUse": [
-            {
-                "matcher": "run_command",
-                "description": "Intercept git push and evaluate deterministic release gate",
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "bash scripts/verify-release-gate.sh --pre-tool",
-                        "timeout": 5,
-                    }
-                ],
-            }
-        ]
+def get_default_hook_template():
+    cmd = (
+        "python scripts/verify_release_gate.py --pre-tool"
+        if sys.platform == "win32"
+        else "bash scripts/verify-release-gate.sh --pre-tool"
+    )
+    return {
+        "evidence-policy": {
+            "PreToolUse": [
+                {
+                    "matcher": "run_command",
+                    "description": "Intercept git push and evaluate deterministic release gate",
+                    "hooks": [
+                        {
+                            "type": "command",
+                            "command": cmd,
+                            "timeout": 5,
+                        }
+                    ],
+                }
+            ]
+        }
     }
-}
+
+HOOK_TEMPLATE = get_default_hook_template()
 
 MANIFEST_FILENAME = ".skills-install-manifest.json"
 RULES_MARKER_START = "<!-- BEGIN ANTIGRAVITY SKILLS SUITE RULES -->"

@@ -1,0 +1,275 @@
+#!/usr/bin/env python3
+"""
+Antigravity Cross-Platform Deterministic Release Gate
+Evaluates evidence manifests against current git tree to block unverified releases.
+Supports CLI execution and Antigravity protojson PreToolUse hook interception.
+Runs natively on Windows (PowerShell, CMD, Git Bash), Linux, and macOS.
+"""
+
+import os
+import sys
+import json
+import datetime
+import subprocess
+from pathlib import Path
+
+# Add script directory to sys.path to allow importing runtime_evidence
+SCRIPT_DIR = Path(__file__).resolve().parent
+REPO_ROOT = SCRIPT_DIR.parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+try:
+    import runtime_evidence
+except ImportError:
+    from scripts import runtime_evidence
+
+
+def fail_gate(reason: str, hook_mode: bool = False):
+    print(f"❌ [RELEASE GATE BLOCKED]: {reason}", file=sys.stderr)
+    if hook_mode:
+        print(json.dumps({"decision": "deny", "reason": reason}))
+    sys.exit(1)
+
+
+def pass_gate(message: str, hook_mode: bool = False):
+    if hook_mode:
+        print(json.dumps({"decision": "allow"}))
+    else:
+        print(f"✅ [RELEASE GATE PASS]: {message}")
+    sys.exit(0)
+
+
+def extract_hook_command():
+    # If passed as command-line argument: python verify_release_gate.py --pre-tool <cmd>
+    if len(sys.argv) > 2:
+        return sys.argv[2]
+
+    # Else read from stdin if not a tty
+    if not sys.stdin.isatty():
+        try:
+            stdin_data = sys.stdin.read().strip()
+            if not stdin_data:
+                return ""
+            data = json.loads(stdin_data)
+            tool_call = data.get("toolCall", {})
+            args = tool_call.get("args", {})
+            return (
+                args.get("CommandLine")
+                or data.get("tool_input", {}).get("CommandLine")
+                or data.get("command")
+                or ""
+            )
+        except Exception:
+            return ""
+    return ""
+
+
+def main():
+    hook_mode = False
+    if len(sys.argv) > 1 and sys.argv[1] == "--pre-tool":
+        hook_mode = True
+        cmd = extract_hook_command()
+        res = runtime_evidence.is_release_command(cmd)
+        if res == "unsupported":
+            fail_gate(f"Command form is ambiguous or unsupported by static analyzer — fail-safe block: {cmd}", hook_mode=True)
+        elif res is False:
+            pass_gate("Non-release command allowed.", hook_mode=True)
+        # If res is True, continue to release gate verification
+
+    # 1. Enforce git repository presence and CWD alignment
+    try:
+        toplevel = subprocess.check_output(
+            ["git", "-C", str(REPO_ROOT), "rev-parse", "--show-toplevel"],
+            stderr=subprocess.PIPE,
+            text=True
+        ).strip()
+    except Exception as e:
+        fail_gate(f"Target directory {REPO_ROOT} is not inside a git repository: {e}", hook_mode=hook_mode)
+
+    try:
+        cwd_top = subprocess.check_output(
+            ["git", "rev-parse", "--show-toplevel"],
+            stderr=subprocess.PIPE,
+            text=True
+        ).strip()
+    except Exception as e:
+        fail_gate(f"Current working directory {os.getcwd()} is not inside a git repository: {e}", hook_mode=hook_mode)
+
+    # Normalize paths for comparison (especially on Windows with case/drive letters)
+    if Path(cwd_top).resolve() != Path(toplevel).resolve():
+        fail_gate(f"Working directory mismatch: CWD is '{cwd_top}' but script repository is '{toplevel}'.", hook_mode=hook_mode)
+
+    evidence_dir = REPO_ROOT / ".evidence"
+    manifest_path = evidence_dir / "manifest.v1.json"
+
+    # 2. Check uncommitted or untracked changes in working directory
+    try:
+        porcelain = subprocess.check_output(
+            ["git", "-C", str(REPO_ROOT), "status", "--porcelain"],
+            stderr=subprocess.PIPE,
+            text=True
+        ).strip()
+        if porcelain:
+            fail_gate(f"Working directory is dirty (uncommitted or untracked changes present). Stash, commit, or clean working tree before release. Changes:\n{porcelain}", hook_mode=hook_mode)
+    except Exception as e:
+        fail_gate(f"Failed to check git status: {e}", hook_mode=hook_mode)
+
+    if not manifest_path.exists():
+        fail_gate(f"Evidence manifest not found at {manifest_path}. Run verification via scripts/exec_proxy.py first.", hook_mode=hook_mode)
+
+    # 3. Read manifest
+    try:
+        with open(manifest_path, "r", encoding="utf-8") as f:
+            manifest = json.load(f)
+    except Exception as e:
+        fail_gate(f"Invalid JSON in manifest: {e}", hook_mode=hook_mode)
+
+    if manifest.get("schema_version") != "manifest.v1":
+        fail_gate("Unsupported schema_version in manifest", hook_mode=hook_mode)
+
+    disposition = manifest.get("policy_disposition", "RED")
+    if disposition not in ("GREEN", "AMBER"):
+        fail_gate(f"Invalid policy disposition '{disposition}'. Must be GREEN or AMBER.", hook_mode=hook_mode)
+
+    # 4. Git Tree Freshness & Unknown Tree Rejection
+    try:
+        current_tree = subprocess.check_output(
+            ["git", "-C", str(REPO_ROOT), "write-tree"],
+            stderr=subprocess.DEVNULL,
+            text=True
+        ).strip()
+    except Exception:
+        current_tree = "unknown"
+
+    manifest_tree = manifest.get("git_tree_sha", "")
+    if not current_tree or current_tree in ("unknown", "uninitialized"):
+        fail_gate("Current git tree cannot be determined.", hook_mode=hook_mode)
+
+    if not manifest_tree or manifest_tree in ("unknown", "uninitialized"):
+        fail_gate(f"Manifest contains invalid or uninitialized git_tree_sha: '{manifest_tree}'", hook_mode=hook_mode)
+
+    if current_tree != manifest_tree:
+        fail_gate(f"Stale evidence. Working tree changed since tests ran. Tested: {manifest_tree[:8]}, Current: {current_tree[:8]}. Re-run verification suite via scripts/exec_proxy.py before releasing.", hook_mode=hook_mode)
+
+    # 5. Check inventory
+    checks = manifest.get("checks", [])
+    if not checks:
+        fail_gate("Manifest contains 0 verification checks.", hook_mode=hook_mode)
+
+    # 6. Check results and physical evidence
+    total_collected_tests = 0
+    has_test_checks = False
+
+    for c in checks:
+        label = c.get("label", "unknown")
+        cmd = c.get("command", "unknown")
+        exit_code = c.get("exit_code", -1)
+        metrics = c.get("metrics", {})
+        collected = metrics.get("collected", 0)
+        passed = metrics.get("passed", 0)
+        failed = metrics.get("failed", 0)
+        check_tree = c.get("git_tree_sha", "")
+        receipt_id = c.get("receipt_id")
+        log_rel = c.get("log_path")
+
+        if not receipt_id:
+            fail_gate(f"Check '{label}' missing receipt_id.", hook_mode=hook_mode)
+        receipt_file = evidence_dir / "receipts" / f"{receipt_id}.json"
+        if not receipt_file.exists():
+            fail_gate(f"Physical receipt file not found: {receipt_file}", hook_mode=hook_mode)
+
+        try:
+            with open(receipt_file, "r", encoding="utf-8") as rf:
+                rcpt_data = json.load(rf)
+        except Exception as e:
+            fail_gate(f"Receipt '{receipt_id}' is corrupt or unreadable: {e}", hook_mode=hook_mode)
+
+        try:
+            runtime_evidence.validate_receipt_structure(rcpt_data, receipt_id)
+            runtime_evidence.cross_validate_manifest_and_receipt(c, rcpt_data, current_tree)
+        except ValueError as ve:
+            fail_gate(str(ve), hook_mode=hook_mode)
+
+        if log_rel:
+            log_file = (evidence_dir / log_rel).resolve()
+            if not log_file.exists():
+                fail_gate(f"Execution log file not found: {log_file}", hook_mode=hook_mode)
+
+        if not check_tree or check_tree in ("unknown", "uninitialized"):
+            fail_gate(f"Check '{label}' has invalid git_tree_sha '{check_tree}'.", hook_mode=hook_mode)
+        if check_tree != current_tree:
+            fail_gate(f"Mixed snapshot detected. Check '{label}' was tested against tree {check_tree[:8]}, but current tree is {current_tree[:8]}.", hook_mode=hook_mode)
+
+        if exit_code != 0:
+            fail_gate(f"Check '{label}' ('{cmd}') failed with exit code {exit_code}.", hook_mode=hook_mode)
+
+        if failed > 0:
+            fail_gate(f"Check '{label}' reported {failed} failed tests.", hook_mode=hook_mode)
+
+        if collected > 0 and passed != collected:
+            fail_gate(f"False-green trap in '{label}'. Passed ({passed}) != Collected ({collected}).", hook_mode=hook_mode)
+
+        is_unverified = c.get("unverified", False) or rcpt_data.get("unverified", False)
+        cmd_lower = cmd.lower()
+        is_test_check = (
+            runtime_evidence.is_known_test_runner(cmd)
+            or any(kw in label.lower() for kw in ("test", "unit", "spec", "pytest", "jest", "e2e"))
+        )
+
+        if is_unverified and is_test_check:
+            fail_gate(f"Check '{label}' is unverified (0 tests detected from a non-test-runner command). Use a test runner or add explicit verification.", hook_mode=hook_mode)
+
+        if is_test_check:
+            has_test_checks = True
+            total_collected_tests += collected
+            if collected == 0 and not is_unverified:
+                fail_gate(f"Zero-test false-green check detected in '{label}'. A test-labeled check must collect and execute at least 1 test.", hook_mode=hook_mode)
+
+    if has_test_checks and total_collected_tests == 0:
+        fail_gate("Zero tests executed across all test checks. At least 1 passing test required for release.", hook_mode=hook_mode)
+
+    # 7. Check waivers if policy is AMBER
+    if disposition == "AMBER":
+        open_waivers = manifest.get("open_waivers", [])
+        if not open_waivers:
+            fail_gate("Manifest policy is AMBER but no authorized waiver is registered.", hook_mode=hook_mode)
+
+        now_utc = datetime.datetime.now(datetime.timezone.utc)
+        valid_waiver = False
+        waiver_errors = []
+
+        for w in open_waivers:
+            if not isinstance(w, dict):
+                waiver_errors.append("Waiver entry must be a JSON object.")
+                continue
+
+            reason = w.get("reason")
+            authorizer = w.get("authorizer")
+            expires_at = w.get("expires_at")
+
+            if not reason or not authorizer or not expires_at:
+                waiver_errors.append("Waiver missing mandatory fields (reason, authorizer, expires_at).")
+                continue
+
+            exp = runtime_evidence.parse_waiver_expiry(expires_at)
+            if not exp:
+                waiver_errors.append(f"Invalid waiver expires_at timestamp: '{expires_at}'. Must be ISO-8601 or YYYY-MM-DD.")
+                continue
+
+            if exp < now_utc:
+                waiver_errors.append(f"Waiver expired at {exp.isoformat()}.")
+                continue
+
+            valid_waiver = True
+            break
+
+        if not valid_waiver:
+            err_msg = "; ".join(waiver_errors) if waiver_errors else "No valid unexpired waiver found."
+            fail_gate(f"Manifest policy is AMBER but waiver validation failed: {err_msg}", hook_mode=hook_mode)
+
+    pass_gate(f"{len(checks)} check(s) verified against tree {current_tree[:8]}. Status: {disposition}", hook_mode=hook_mode)
+
+
+if __name__ == "__main__":
+    main()

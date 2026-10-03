@@ -417,6 +417,44 @@ def probe_graceful_drain_subprocess(
     }
 
 
+def get_current_rss_kb() -> int:
+    """
+    Returns current process resident set size (RSS) in kilobytes.
+    Uses ctypes/psapi on Windows, and resource.RUSAGE_SELF on POSIX.
+    """
+    if sys.platform == "win32":
+        try:
+            import ctypes
+            from ctypes import wintypes
+            class PROCESS_MEMORY_COUNTERS(ctypes.Structure):
+                _fields_ = [
+                    ("cb", wintypes.DWORD),
+                    ("PageFaultCount", wintypes.DWORD),
+                    ("PeakWorkingSetSize", ctypes.c_size_t),
+                    ("WorkingSetSize", ctypes.c_size_t),
+                    ("QuotaPeakPagedPoolUsage", ctypes.c_size_t),
+                    ("QuotaPagedPoolUsage", ctypes.c_size_t),
+                    ("QuotaPeakNonPagedPoolUsage", ctypes.c_size_t),
+                    ("QuotaNonPagedPoolUsage", ctypes.c_size_t),
+                    ("PagefileUsage", ctypes.c_size_t),
+                    ("PeakPagefileUsage", ctypes.c_size_t),
+                ]
+            counters = PROCESS_MEMORY_COUNTERS()
+            counters.cb = ctypes.sizeof(PROCESS_MEMORY_COUNTERS)
+            handle = ctypes.windll.kernel32.GetCurrentProcess()
+            if ctypes.windll.psapi.GetProcessMemoryInfo(handle, ctypes.byref(counters), counters.cb):
+                return int(counters.WorkingSetSize // 1024)
+        except Exception:
+            pass
+        return 0
+    else:
+        try:
+            import resource
+            return int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
+        except Exception:
+            return 0
+
+
 def probe_memory_soak_plateau(
     operation_fn: Callable[[], None],
     iterations: int = 2000,
@@ -444,8 +482,7 @@ def probe_memory_soak_plateau(
         if i % effective_interval == 0:
             gc.collect()
             if use_rss:
-                import resource
-                val = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+                val = get_current_rss_kb()
                 samples.append({"iteration": i, "rss_kb": val, "object_count": val})
             else:
                 count = len(gc.get_objects())
@@ -454,8 +491,7 @@ def probe_memory_soak_plateau(
     if not samples:
         gc.collect()
         if use_rss:
-            import resource
-            val = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+            val = get_current_rss_kb()
             samples.append({"iteration": iterations, "rss_kb": val, "object_count": val})
         else:
             count = len(gc.get_objects())
