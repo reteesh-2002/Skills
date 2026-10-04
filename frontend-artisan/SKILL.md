@@ -9,10 +9,11 @@ Deliver frontend work with intentional craft: correct layout, accessible interac
 
 ---
 
-## 1. Always Ask for Design Selection (Step 0)
+## 1. Always Ask for Design & Interactive Effects (Step 0)
 
-Before generating images or writing code, **ALWAYS ask the user which design aesthetic/preset to use** (unless the user explicitly pre-selected one in their prompt). Present the choices from [`references/design-presets.md`](references/design-presets.md):
+Before generating images or writing code, **ALWAYS ask the user for both their visual aesthetic preset AND interactive motion/effects preferences** (unless explicitly specified in their prompt).
 
+### A. Visual Aesthetic Preset (from [`references/design-presets.md`](references/design-presets.md))
 1. **Linear Dark Minimalist** — `#08090a` canvas, `#5e6ad2` blurple, `tabular-nums`, high-density devtools
 2. **Apple Atmospheric Glass** — Frosted glass `backdrop-blur-xl`, dynamic lighting, SF Pro/Inter, consumer/media
 3. **Vercel Modern Monochrome** — Pure `#000000` & `#ffffff`, Geist Sans/Mono, zero badge clutter, cloud/admin
@@ -26,7 +27,15 @@ Before generating images or writing code, **ALWAYS ask the user which design aes
 11. **Cyberpunk Neon Synthwave** — Deep `#0a0a14`, neon cyan `#00f0ff` & magenta `#ff0055`, gaming/creative
 12. **Existing Project Tokens** — Ingest and extend existing `DESIGN.md` in the workspace root
 
-Use the interactive `ask_question` tool or prompt the user directly to confirm their choice before proceeding.
+### B. Interactive Motion & Effects Menu (from [`references/motion-effects.md`](references/motion-effects.md))
+- **Multi-Layer Parallax**: Differential depth scrolling between background atmosphere and foreground hero
+- **Sticky Stacking Cards**: Cards that lock to top and stack with subtle scale-down on scroll
+- **3D Tilt & Cursor Spotlight**: Interactive card perspective tilt with mouse-following radial glow border
+- **Magnetic Buttons & Micro-Springs**: Subtle cursor attraction on hover with spring physics
+- **Infinite Marquee / Ticker**: Smooth GPU-accelerated horizontal ticker (pauses on hover)
+- **Clean Minimal / Static**: Zero motion distraction, instant layout stability, no parallax
+
+Use the interactive `ask_question` tool or prompt the user directly with these choices before proceeding.
 
 ---
 
@@ -122,6 +131,7 @@ Follow [`references/output-policy.md`](../references/output-policy.md). Every fr
 
 - [`references/anti-patterns.md`](references/anti-patterns.md) — consolidated anti-pattern reference
 - [`references/design-presets.md`](references/design-presets.md) — Linear, Apple, Vercel, Stripe brand presets
+- [`references/motion-effects.md`](references/motion-effects.md) — Parallax scrolling, sticky stacking, 3D tilt, springs
 - [`references/interface-guidelines.md`](references/interface-guidelines.md) — keyboard, touch, loading, CLS standards
 - [`references/tokens-tailwind.md`](references/tokens-tailwind.md) — Tailwind token reference
 - [`references/tokens-vanilla-css.md`](references/tokens-vanilla-css.md) — vanilla CSS token reference
