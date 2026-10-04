@@ -6,7 +6,7 @@ activation_triggers:
   - explicit invocation via $plan-master or @plan-master
 inputs:
   - user-requirements.v1
-  - engineering-specification.v24.optional  # from prompt-architect; do not regenerate
+  - engineering-blueprint.v5.optional          # from create-architect; do not regenerate
   - decision-record.v1.optional             # from idea-council
 outputs:
   - implementation-plan.v1
@@ -18,8 +18,8 @@ required_capabilities:
 forbidden_capabilities:
   - modify_source
   - git_push
-  - regenerate_specification      # do not reproduce or regenerate the 24-section spec
+  - regenerate_blueprint          # do not reproduce or regenerate the engineering blueprint
   - start_implementation_workers  # orchestrator activation is explicit, not automatic
 manual_only: false
-auto_trigger_before_prompt_architect: false
+auto_trigger_before_create_architect: false
 report_policy: plan_artifact_plus_concise_summary

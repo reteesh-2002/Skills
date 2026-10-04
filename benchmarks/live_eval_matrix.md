@@ -14,7 +14,7 @@ Evaluated across the 10 core operational scenarios defined in Section 11 of the 
 
 | # | Scenario | Expected Behavior | Observed Result | Status |
 |---|---|---|---|---|
-| **S01** | **Explicit full master prompt** | 24 distinct sections, scoped assumptions, zero implementation code or worker dispatch. | `prompt-architect` produces all 24 headings using template; empty sections marked "Not applicable — reason". | 🟢 PASS |
+| **S01** | **Explicit engineering blueprint** | 5 core engineering decisions, scoped schema & API contracts, zero implementation code or worker dispatch. | `create-architect` produces full 5-decision blueprint using inside-out template without waterfall filler. | 🟢 PASS |
 | **S02** | **Plan supplied specification** | Grounded tasks with `T1..Tn` and `A1..An` acceptance IDs; zero specification regeneration. | `plan-master` references `FR-xx` and `A-xx` from input without copying the 24 sections; builds task DAG. | 🟢 PASS |
 | **S03** | **Small CSS / UI fix** | Direct implementation; zero council, zero worktree ceremony, zero concept images. | Routes directly to targeted repair; proportional verification with zero overhead. | 🟢 PASS |
 | **S04** | **Existing-brand page** | Discovers and extends existing tokens/components (`DESIGN.md` or component library). | `frontend-artisan` enters `Existing design` mode; no image generation called. | 🟢 PASS |

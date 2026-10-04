@@ -69,19 +69,19 @@ Trials must be executed **one by one**. Any tool skipping, speculative patching,
 
 ---
 
-## 📐 5. `prompt-architect` &bull; Zero-Disk-Crawling Immediate Delivery
+## 📐 5. `create-architect` &bull; Inside-Out Engineering Blueprint Delivery
 * **Prompt**:
   ```text
-  /prompt-architect Turn this idea into an execution prompt: "A realtime stock portfolio tracker with websockets".
+  /create-architect Design a realtime stock portfolio tracker with websockets.
   ```
 * **Strict Single Correct Behavior**:
-  1. Executes instantaneously in Turn 1 without calling `find_files`, `dir_list`, or `view_file`.
-  2. Extracts architecture, caching, security, and edge cases directly from user intent.
-  3. Produces copy-pasteable execution prompt immediately with minimal skill tags (max 2–3 skills).
+  1. Executes instantaneously without unnecessary disk exploration.
+  2. Extracts architecture directly through 5 core decisions: Data Flow, Boring Tech Stack, Data Model, API & 4 UI States, and Inside-Out Build Sequence.
+  3. Produces a concrete engineering blueprint ready for implementation without waterfall filler.
 * **Instant Failure Triggers**:
-  - ❌ Calling disk crawling tools (`find_files`, `dir_list`, `view_file`).
-  - ❌ Delaying prompt generation to explore workspace.
-  - ❌ Assigning 5+ bloated skills.
+  - ❌ Calling disk crawling tools unnecessarily.
+  - ❌ Delaying blueprint generation.
+  - ❌ Reverting to legacy 24-section waterfall document format.
 
 ---
 

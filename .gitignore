@@ -14,10 +14,16 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Temporary files
+# Temporary files & caches
 *.tmp
 *.swp
 __pycache__/
 *.py[cod]
-# Playwright CLI output (may contain credentials)
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Playwright
+.playwright/
 .playwright-cli/
+

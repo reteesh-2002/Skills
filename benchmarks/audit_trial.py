@@ -114,9 +114,9 @@ def audit_deep_debugger(transcript_path: Path) -> bool:
     print("🟢 PASS: Anti-Shotgun verified! Agent did not edit production file on first step.")
     return True
 
-def audit_prompt_architect(transcript_path: Path) -> bool:
-    """Audits FLAG-05: prompt-architect zero-disk-crawling law."""
-    print("🔍 Auditing FLAG-05 (prompt-architect)...")
+def audit_create_architect(transcript_path: Path) -> bool:
+    """Audits FLAG-05: create-architect inside-out delivery law."""
+    print("🔍 Auditing FLAG-05 (create-architect)...")
     if not transcript_path or not transcript_path.exists():
         print("❌ Transcript file not found.")
         return False
@@ -161,8 +161,8 @@ def main():
         passed = audit_frontend_artisan(transcript)
     elif target_skill in ["deep-debugger", "FLAG-02", "2"]:
         passed = audit_deep_debugger(transcript)
-    elif target_skill in ["prompt-architect", "FLAG-05", "5"]:
-        passed = audit_prompt_architect(transcript)
+    elif target_skill in ["create-architect", "prompt-architect", "FLAG-05", "5"]:
+        passed = audit_create_architect(transcript)
     else:
         print(f"❌ Error: Unsupported benchmark task '{target_skill}'. Supported: FLAG-01, FLAG-02, FLAG-05.")
         sys.exit(1)
