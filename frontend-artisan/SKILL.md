@@ -120,6 +120,8 @@ Follow [`references/output-policy.md`](../references/output-policy.md). Every fr
 ## Reference files
 
 - [`references/anti-patterns.md`](references/anti-patterns.md) — consolidated anti-pattern reference
+- [`references/design-presets.md`](references/design-presets.md) — Linear, Apple, Vercel, Stripe brand presets
+- [`references/interface-guidelines.md`](references/interface-guidelines.md) — keyboard, touch, loading, CLS standards
 - [`references/tokens-tailwind.md`](references/tokens-tailwind.md) — Tailwind token reference
 - [`references/tokens-vanilla-css.md`](references/tokens-vanilla-css.md) — vanilla CSS token reference
 - [`references/framework-adapters.md`](references/framework-adapters.md) — React, Vue, Svelte adapters

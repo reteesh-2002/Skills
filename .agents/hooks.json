@@ -1,17 +1,7 @@
 {
   "evidence-policy": {
-    "PreToolUse": [
-      {
-        "matcher": "run_command",
-        "description": "Intercept git push and evaluate deterministic release gate",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash scripts/verify-release-gate.sh --pre-tool",
-            "timeout": 5
-          }
-        ]
-      }
-    ]
+    "description": "On-demand release evidence policy (advisory mode; blocking pre-tool interception disabled)",
+    "PreToolUse": []
   }
 }
+

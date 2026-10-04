@@ -1,10 +1,13 @@
 ---
 name: adaptive-worker-orchestrator-v2
 description: |
-  Use when a coding task spans multiple independent modules or workstreams (separable backend/frontend/tests/infra/batch chunks) and parallel worker subagents on cheaper models might pay off. Do NOT use for small, tightly coupled refactors or single-file fixes; do those directly in solo mode. Phase 0 decides solo vs multi(n) on every invocation based on task shape and conflict risk.
+  Multi-worker parallel orchestrator. Strictly explicit-only: use ONLY when the user explicitly requests parallel worker subagents for independent modular chunks. Default to solo sequential execution for all other tasks.
 ---
 
 # Adaptive Worker Orchestrator v2 (Boss & Workers)
+
+> [!IMPORTANT]
+> **Explicit-Only Activation**: This skill is strictly explicit-only. It must NEVER auto-activate or auto-promote tasks to parallel workers unless the user explicitly requests multi-worker parallel execution. All standard tasks default to solo sequential execution.
 
 Parallel dispatch must justify itself on each run. The Boss (primary model) gates, partitions, freezes contracts, integrates, and reviews. Workers (targeted subagents) implement against a frozen contract in isolated worktrees.
 

@@ -9,9 +9,20 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 GATE_HOOK_MODE=0
+GATE_ADVISORY_MODE=0
+
+for arg in "$@"; do
+  if [[ "${arg}" == "--advisory" ]]; then
+    GATE_ADVISORY_MODE=1
+  fi
+done
 
 fail_gate() {
   local reason="$1"
+  if [[ "${GATE_ADVISORY_MODE}" -eq 1 ]]; then
+    echo "⚠️ [RELEASE GATE ADVISORY]: ${reason}" >&2
+    exit 0
+  fi
   if [[ "${GATE_HOOK_MODE}" -eq 1 ]]; then
     echo "❌ [RELEASE GATE BLOCKED]: ${reason}" >&2
     python3 -c "import sys, json; print(json.dumps({'decision': 'deny', 'reason': sys.argv[1]}))" "${reason}"

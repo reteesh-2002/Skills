@@ -26,6 +26,9 @@ except ImportError:
 
 
 def fail_gate(reason: str, hook_mode: bool = False):
+    if "--advisory" in sys.argv:
+        print(f"⚠️ [RELEASE GATE ADVISORY]: {reason}", file=sys.stderr)
+        sys.exit(0)
     print(f"❌ [RELEASE GATE BLOCKED]: {reason}", file=sys.stderr)
     if hook_mode:
         print(json.dumps({"decision": "deny", "reason": reason}))

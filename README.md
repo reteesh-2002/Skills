@@ -36,27 +36,16 @@ python3 scripts/skills-doctor.py
 ```
 *(Supports `--json` for automated environment auditing.)*
 
-### 3. Release Gate Hook Setup
-To prevent unverified commits or unproven pull requests, the installer automatically configures the Antigravity PreToolUse hook in `.agents/hooks.json` (or you can add it manually):
-```json
-{
-  "evidence-policy": {
-    "PreToolUse": [
-      {
-        "matcher": "run_command",
-        "description": "Intercept git push and evaluate deterministic release gate",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash scripts/verify-release-gate.sh --pre-tool",
-            "timeout": 5
-          }
-        ]
-      }
-    ]
-  }
-}
+### 3. Release Gate Verification
+The deterministic release gate verifies that the current git tree matches validated test evidence before release. It can be executed on-demand via CLI or integrated into CI pipelines:
+```bash
+# Evaluate release gate against current git tree
+bash scripts/verify-release-gate.sh
+
+# Or run in non-blocking advisory mode during development
+bash scripts/verify-release-gate.sh --advisory
 ```
+Hook configuration in `.agents/hooks.json` operates in advisory mode, ensuring developers are never hijacked or blocked during routine local git operations.
 
 ### 4. Conformance & Test Suite Verification
 Verify skill metadata, contracts, policy drift, specialist probes, and runtime checks:
@@ -249,7 +238,7 @@ Implemented in [`prompt-architect`](prompt-architect/SKILL.md) with canonical te
 | [`REQUIREMENTS.md`](REQUIREMENTS.md) | Formal engineering requirements and specifications for the skills operating system. |
 | [`CHANGELOG.md`](CHANGELOG.md) | Detailed version history, breaking changes, and migration notes. |
 | [`README.md`](README.md) | Master documentation, quick start, architecture topology, file directory, and verification proofs. |
-| [`.agents/hooks.json`](.agents/hooks.json) | PreToolUse hook configuration intercepting `run_command` on `git push` to trigger the release gate. |
+| [`.agents/hooks.json`](.agents/hooks.json) | On-demand advisory hook configuration (blocking pre-tool interception disabled). |
 
 ### 2. Runtime Scripts (`scripts/`)
 | Script | Language | Purpose & Functionality |
