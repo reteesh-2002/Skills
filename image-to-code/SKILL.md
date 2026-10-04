@@ -14,6 +14,6 @@ description: Website image-to-code workflow engine (Forwarding alias to frontend
 
 When `image-to-code` is invoked:
 - Forward directly to [`frontend-artisan`](../frontend-artisan/SKILL.md).
-- Classify mode (Supplied reference vs. New concept vs. Existing design vs. Functional edit).
-- If reference image is provided, inspect with `view_file` (crop/zoom allowed); if greenfield concept, generate at most 1 overview and 1 detail image via `generate_image`.
-- Implement and verify without duplicate planning passes.
+- **Ask user for design preset**: Always ask the user which design aesthetic/preset to use (unless already specified).
+- **Inspect or generate reference**: If reference image is provided, inspect with `view_file` (crop/zoom allowed); if greenfield concept, generate at most 1 overview and 1 detail image via `generate_image`.
+- **Implement and verify**: Extract tokens, build components, and verify without duplicate planning passes.

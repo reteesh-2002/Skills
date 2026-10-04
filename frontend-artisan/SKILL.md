@@ -9,44 +9,45 @@ Deliver frontend work with intentional craft: correct layout, accessible interac
 
 ---
 
-## 1. Choose your mode
+## 1. Always Ask for Design Selection (Step 0)
 
-Classify the request before doing any work:
+Before generating images or writing code, **ALWAYS ask the user which design aesthetic/preset to use** (unless the user explicitly pre-selected one in their prompt). Present the choices from [`references/design-presets.md`](references/design-presets.md):
 
-| Mode | When | Default image behavior |
-|---|---|---|
-| **Existing design** | Extending or modifying an existing page, component, or design system | No image generation — use existing tokens and components |
-| **Supplied reference** | User provided a screenshot, mockup, or URL | Inspect and implement from the reference; crop or zoom to focus on details |
-| **New concept** | Greenfield page or layout without an existing design | Generate at most one overview and one detail image; then implement |
-| **Functional edit** | Bug fix, accessibility repair, or behavior change | Preserve appearance; no concept image unless the visual is broken |
+1. **Linear Dark Minimalist** — `#08090a` canvas, `#5e6ad2` blurple, `tabular-nums`, high-density devtools
+2. **Apple Atmospheric Glass** — Frosted glass `backdrop-blur-xl`, dynamic lighting, SF Pro/Inter, consumer/media
+3. **Vercel Modern Monochrome** — Pure `#000000` & `#ffffff`, Geist Sans/Mono, zero badge clutter, cloud/admin
+4. **Stripe Vibrant Multi-Layer** — Radiant mesh gradients, `#635bff` accent, opulent card spacing, fintech/SaaS
+5. **Raycast High-Contrast Fast** — Deep `#111111`, coral red `#ff6363`, keyboard hints, command palettes
+6. **Supabase Emerald Matrix** — Obsidian `#121212`, emerald `#3ecf8e`, SQL editors, developer dashboards
+7. **Tailwind Catalyst Modern Clean** — Crisp white/slate `#0f172a`, subtle borders, polished modern SaaS
+8. **Resend Exquisite Typography** — Pure black, micro-spaced editorial text, subtle radial dot grid
+9. **GitHub High-Density Dev** — Dark `#0d1117`, green `#238636`, octicon components, code reviews
+10. **Notion Calm Editorial** — Warm paper `#f7f6f3` or obsidian, serif headers (Charter/Lora), calm docs
+11. **Cyberpunk Neon Synthwave** — Deep `#0a0a14`, neon cyan `#00f0ff` & magenta `#ff0055`, gaming/creative
+12. **Existing Project Tokens** — Ingest and extend existing `DESIGN.md` in the workspace root
 
-If you are in **Existing design** or **Functional edit** mode, skip image generation entirely.
-
-For **New concept** mode: generate one overview image and one detail image maximum. If after two attempts the visual direction is still unclear, continue with available references or surface the unresolved visual decision explicitly — do not generate more images in the default workflow. Explicit high-craft requests may budget more.
+Use the interactive `ask_question` tool or prompt the user directly to confirm their choice before proceeding.
 
 ---
 
-## 2. Design system
+## 2. Image-to-Code Workflow
 
-**Check for an existing design system first:**
-- Look for `DESIGN.md`, `design-md/`, or a component library at the project root
-- If found: extend it. Do not override established tokens, colors, or component styles
-- If not found and mode is **New concept**: pick one preset below or ask the user
+Once the design preset is confirmed, execute the 5-step image-to-code pipeline:
 
-**Apple Atmospheric Glass** (weather, media, consumer apps):
-- Canvas: fullscreen edge-to-edge atmospheric gradient
-- Surfaces: `backdrop-blur-xl bg-black/25 border border-white/10 text-white shadow-2xl rounded-2xl`
-- Typography: Hero `text-7xl font-extralight tracking-tighter`, Headlines `text-2xl font-light tracking-tight`, Labels `text-[11px] font-semibold uppercase tracking-wider text-white/60`
+```
+[1. Confirm Design] ──> [2. Inspect / Generate] ──> [3. Extract Decisions] ──> [4. Implement] ──> [5. Verify]
+```
 
-**Linear Dark Minimalist** (devtools, dashboards, tables):
-- Canvas: `#08090a` · Surface: `#121316` · Borders: `#222326` · Accent: `#5e6ad2`
-- Typography: Inter/Geist, `tabular-nums`, high data density
-
-**Vercel Modern Monochrome** (cloud, settings, admin):
-- Canvas: `#000000` · Text: `#ffffff` · Borders: `#1f1f1f` · Cards: `#0a0a0a`
-- Accent: high-contrast white on black
-
-Presets are contextual guidance — apply them when relevant, not unconditionally.
+1. **Inspect or Generate Reference**:
+   - **Supplied Reference Mode**: If the user provided a screenshot or mockup, inspect it directly using `view_file` (crop/zoom allowed to examine subtle borders, spacing, and typography).
+   - **New Concept Mode**: Call `generate_image` to establish a visual baseline matching the chosen design preset (use `AspectRatio: '16:9'` for desktop/hero or `'3:2'`). Generate at most 1 overview and 1 detail image maximum.
+   - **Existing Design / Bugfix**: Skip image generation; adhere strictly to existing tokens.
+2. **Extract Design Decisions**:
+   - Identify exact canvas color, surface elevations, hairline borders (`1px border-white/10` or `border-slate-200`), font hierarchy, accent color, and interactive states.
+3. **Implement**:
+   - Translate extracted decisions into production code following [`references/interface-guidelines.md`](references/interface-guidelines.md).
+4. **Verify**:
+   - Verify layout stability, keyboard navigation, touch targets, and WCAG AA contrast.
 
 ---
 
