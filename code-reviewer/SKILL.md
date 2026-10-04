@@ -40,7 +40,7 @@ The reviewer evaluates a focused, self-contained context package without reading
 
 ---
 
-## 4. The 4-Dimension Review Rubric
+## 4. The 5-Dimension Review Rubric
 
 1. **Correctness & Edge Cases**:
    - Off-by-one errors, null/undefined dereferences, unhandled async promise rejections.
@@ -54,6 +54,10 @@ The reviewer evaluates a focused, self-contained context package without reading
 4. **Security & Data Isolation**:
    - Injection vectors, improper sanitization, unescaped shell inputs.
    - Tenant leaks: cross-account data exposure or broken authorization checks.
+5. **Vertical Slice Boundary Violations** (for vertical slice architecture projects):
+   - Direct imports of a peer module's internal files are a `[CRITICAL]` finding.
+   - A single diff touching more than one module slice without an `[ARCH-REFACTOR]` label is a `[CRITICAL]` finding.
+   - Any `service.ts` or `routes.ts` file exceeding 300 lines is a `[WARNING]` finding (signals the slice needs subdivision).
 
 ---
 

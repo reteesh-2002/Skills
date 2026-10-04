@@ -96,3 +96,44 @@ Sequence the implementation from the foundation up:
   - Implement all 4 screen states (Empty, Loading, Success, Error).
 - **Phase 4: Mechanical Verification**
   - Run `qa-sentinel` via `exec_proxy`: verify `exit 0`, `collected > 0`, and `passed == collected`.
+
+---
+
+## 6. Module Directory Scaffold (Vertical Slice Layout)
+List all planned modules and their root files. No flat `controllers/` or `models/` directories.
+
+```
+src/
+├── core/                    # Shared frozen primitives
+│   ├── db.ts
+│   ├── auth.ts
+│   └── logger.ts
+└── modules/
+    ├── [slice-a]/
+    │   ├── contract.ts      # < 50 lines — public Zod/TypeScript interface only
+    │   ├── routes.ts        # HTTP handlers
+    │   ├── service.ts       # Domain logic < 200 lines
+    │   └── [slice-a].test.ts
+    └── [slice-b]/
+        ├── contract.ts
+        ├── routes.ts
+        ├── service.ts
+        └── [slice-b].test.ts
+```
+
+**Cross-Slice Import Rule**: Slices communicate only via `contract.ts` or the event bus. Never import a peer slice's `service.ts` or internal files.
+
+---
+
+## 7. Missing 70% Checklist
+Mark each layer as **Required**, **Not Required**, or **Deferred** for this project. Leaving all unchecked means the project will cap at ~3,000 lines.
+
+| Defensive Layer | Status | Implementation Note |
+|---|---|---|
+| **Tenant Scoping & RLS** | [ ] Required / [ ] Not Required | Every query filtered by `tenant_id`; Row-Level Security policies |
+| **Explicit State Machines** | [ ] Required / [ ] Not Required | Enumerated transitions + guard validation |
+| **Background Jobs & Retry Queue** | [ ] Required / [ ] Deferred | Outbox pattern; dead-letter handling |
+| **Immutable Audit Ledger** | [ ] Required / [ ] Not Required | Append-only table: actor, action, resource, timestamp |
+| **Input Sanitization Boundaries** | ✅ Always Required | Zod/Pydantic at every API boundary |
+| **RBAC / Permission Guards** | [ ] Required / [ ] Not Required | Deny-by-default middleware on every authenticated route |
+

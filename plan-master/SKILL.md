@@ -43,12 +43,13 @@ Each task must include:
 
 ```
 Task ID | Outcome | Requirement or acceptance IDs | Files or scope |
-Dependencies | Verification command | Risk or recovery action
+Context Scope | Dependencies | Verification command | Risk or recovery action
 ```
 
 - Use stable IDs: tasks `T1`, `T2`…; acceptance criteria `A1`, `A2`…
 - Propose new files as `[NEW] path/to/file`
 - Verification must be a runnable command, not a vague assertion
+- **`[CONTEXT SCOPE]`** — mandatory field listing the exact 2–4 files the agent is permitted to load for this task. Never list entire directories. When working with vertical slice modules, the scope is `contract.ts + service.ts + <slice>.test.ts` for that slice only. All other files remain invisible.
 
 ---
 
@@ -64,12 +65,19 @@ Select the smallest useful depth. See [`references/templates.md`](references/tem
 
 ---
 
-## 4. Sequencing and parallelism
+## 4. Sequencing, Parallelism & the Sub-600 LOC Context Rule
 
 - Provide a valid sequential order for every plan.
 - Sequential execution is the default. Recommend the orchestrator (`adaptive-worker-orchestrator-v2`) only when the user requests workers and the work is genuinely separable with non-overlapping file ownership.
 - Enforce strict 1-writer-per-file isolation for any concurrent tasks.
 - Dependency diagrams are optional; use them only when branching is clearer than an ordered list.
+
+**Sub-600 LOC Context Rule (enforced for vertical slice projects):**
+When a project uses vertical slice architecture (`src/modules/<slice>/`), each task must be scoped to a single slice. The agent context per task must stay below 600 lines by loading only the target slice files. Never plan a task that requires reading two different module slices simultaneously — break it into two separate tasks. See [`references/slice-dag-rules.md`](references/slice-dag-rules.md) for example DAGs.
+
+- **1-Slice-Per-Task invariant**: A single task targets exactly one module slice.
+- **Explicit Context Ceiling**: If the `[CONTEXT SCOPE]` would exceed ~600 lines, split the task.
+- **Cross-Slice Communication**: Tasks may reference another slice's `contract.ts` (its public interface) but never its `service.ts` or internal files.
 
 ---
 
@@ -94,6 +102,7 @@ Before finalizing the plan:
 4. **Bounded unknowns** — genuine unknowns converted to discovery tasks with exit criteria
 5. **Runnable verification** — every task has a concrete check command
 6. **Stop triggers** — defined failure conditions that pause execution
+7. **Slice isolation** (vertical slice projects) — no task writes to more than one module slice; no task's `[CONTEXT SCOPE]` contains internal files from a sibling slice; cross-slice interaction is limited to reading the sibling's `contract.ts` only
 
 Fix discrepancies before presenting the plan.
 
@@ -106,3 +115,10 @@ In artifact-supporting hosts, write the plan as `plan.md`. In chat, use the inve
 A planning-only request ends with the plan. A "plan and execute" request continues into implementation after the plan is validated, without requiring another approval.
 
 Generate an execution handoff prompt only when explicitly requested, for another executor, or for a separate session.
+
+---
+
+## Reference files
+
+- [`references/templates.md`](references/templates.md) — Plan format templates (compact, standard, detailed, spike, remediation)
+- [`references/slice-dag-rules.md`](references/slice-dag-rules.md) — Vertical slice DAG rules with sample 10-task plan and context scope annotations
