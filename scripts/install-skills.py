@@ -411,6 +411,29 @@ def run_install(
             verbose=verbose,
         )
 
+    # 5b. Prune obsolete files from previous manifest that are no longer part of suite
+    for old_rel, old_info in existing_manifest_files.items():
+        if old_rel not in manifest_files and old_info.get("action") == "created":
+            old_file = dest_root / old_rel
+            if old_file.exists():
+                try:
+                    old_file.unlink()
+                    if verbose:
+                        print(f"🗑️  Pruned obsolete file: {old_file}")
+                except OSError:
+                    pass
+                # Clean up empty parent directories
+                parent = old_file.parent
+                while parent != dest_root and parent != dest_skills_dir and parent.exists():
+                    try:
+                        if not any(parent.iterdir()):
+                            parent.rmdir()
+                            parent = parent.parent
+                        else:
+                            break
+                    except OSError:
+                        break
+
     # 6. Build and write manifest
     manifest_data = {
         "manifest_version": "1.0",
