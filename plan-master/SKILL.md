@@ -1,11 +1,11 @@
 ---
 name: plan-master
-description: Turns user requirements or an existing specification into a grounded, actionable execution plan. Automatically activates for multi-step feature, system, or architecture requests. Do not activate before prompt-architect; do not regenerate the specification. Use plan-master to produce the plan after the specification exists.
+description: Turns user requirements or an existing blueprint into a grounded, actionable execution plan. Automatically activates for multi-step feature, system, or architecture requests. Do not activate before create-architect; do not regenerate the blueprint. Use plan-master to produce the plan after the blueprint exists.
 ---
 
 # Plan Master
 
-Translate user requirements or a supplied specification into a grounded, dependency-aware execution plan. Inspect relevant source, manifests, and tests before asserting that files or commands exist. Mark proposed new files explicitly as `[NEW]`.
+Translate user requirements or a supplied blueprint into a grounded, dependency-aware execution plan. Inspect relevant source, manifests, and tests before asserting that files or commands exist. Mark proposed new files explicitly as `[NEW]`.
 
 ---
 
@@ -14,8 +14,8 @@ Translate user requirements or a supplied specification into a grounded, depende
 Automatically activate when the user asks to plan, implement, architect, or build a multi-step feature or system.
 
 **Do not:**
-- Regenerate or copy the 24-section specification into the plan
-- Produce a specification — use `prompt-architect` for that
+- Regenerate or copy the architecture blueprint into the plan
+- Produce an architecture blueprint — use `create-architect` for that
 - Launch implementation workers, run migrations, or deploy solely because this skill was activated
 - Require a second approval before implementation when the user's request already authorizes it
 - Select a mandatory minimum number of skills for the execution prompt

@@ -12,19 +12,19 @@ Routing policy is defined in [`suite-policy.json`](suite-policy.json). This file
 
 ## All other skills: explicit only
 
-`prompt-architect`, `frontend-artisan`, `schema-craft`, `adaptive-worker-orchestrator-v2`, `code-reviewer`, `security-verifier`, `runtime-reliability`, `idea-council`, `ship-it`, `anti-slop-spec`, `design-md`, `image-to-code`, `playwright-cli`, `web-interface-guidelines`
+`create-architect`, `frontend-artisan`, `schema-craft`, `adaptive-worker-orchestrator-v2`, `code-reviewer`, `security-verifier`, `runtime-reliability`, `idea-council`, `ship-it`, `anti-slop-spec`, `design-md`, `image-to-code`, `playwright-cli`, `web-interface-guidelines`
 
 These activate only when the user explicitly requests them or invokes their slash commands.
 
 ## Key rules
 
-- `prompt-architect` does **not** auto-run before `plan-master`. Plan Master may plan directly from user requirements.
-- A valid existing specification skips specification generation.
-- Small tasks (< 3 files, obvious edit) go directly to implementation with a proportionate check — no specification, council, worktree, or image generation required.
+- `create-architect` does **not** auto-run before `plan-master`. Plan Master may plan directly from user requirements.
+- A valid existing blueprint or specification skips blueprint generation.
+- Small tasks (< 3 files, obvious edit) go directly to implementation with a proportionate check — no blueprint, council, worktree, or image generation required.
 - Explicitly requested specialists may load their reference files but must not start a council, publish, or create workers without explicit instruction.
 - Planning does not authorize publishing. A prior "implement" request does not require re-authorization when a skill changes stage.
 
 ## Output defaults
 
 See `suite-policy.json` → `output_defaults` for per-context defaults.
-A full 24-section master prompt request always receives all 24 sections regardless of effort profile.
+An explicit blueprint request receives all 5 core engineering decisions.

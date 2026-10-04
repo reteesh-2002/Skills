@@ -1,0 +1,22 @@
+id: create-architect
+contract_version: 2
+activation: explicit_only
+activation_triggers:
+  - user asks to architect, design, or structure a new project or major feature
+  - direct invocation via $create-architect or @create-architect
+inputs:
+  - raw-user-project-idea.v1
+  - user-specified-repo-or-file.optional
+outputs:
+  - inside-out-engineering-blueprint.v1
+required_capabilities:
+  - read_user_files
+  - compose_engineering_blueprint
+forbidden_capabilities:
+  - modify_code
+  - execute_terminal
+  - start_implementation_workers
+manual_only: false
+auto_trigger_before_plan_master: false
+report_policy: pragmatic_blueprint_always
+output_size_cap: none

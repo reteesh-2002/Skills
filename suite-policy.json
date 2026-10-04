@@ -18,7 +18,7 @@
       }
     ],
     "explicit_only": [
-      "prompt-architect",
+      "create-architect",
       "frontend-artisan",
       "schema-craft",
       "adaptive-worker-orchestrator-v2",
@@ -36,7 +36,7 @@
   },
 
   "routing_rules": {
-    "prompt_architect_before_plan_master": false,
+    "create_architect_before_plan_master": false,
     "plan_master_before_implementation": true,
     "require_minimum_skill_count": false,
     "minimum_skill_count": null,
@@ -59,8 +59,8 @@
     "intermediate_pipeline_stage": {
       "format": "one milestone heartbeat only when useful"
     },
-    "full_master_specification": {
-      "format": "all 24 sections; no routine-chat size cap",
+    "engineering_blueprint": {
+      "format": "data flow + tech stack + data model + API and 4 UI states",
       "truncation_allowed": false
     },
     "execution_plan": {
@@ -90,7 +90,7 @@
   },
 
   "invariants": [
-    "An explicit 24-section spec request receives all 24 sections in any effort profile",
+    "An explicit blueprint request receives all 5 core engineering decisions in any effort profile",
     "Effort profiles do not override manual activation or host limitations",
     "Do not claim token or cost limits are enforced unless telemetry and enforcement exist",
     "Planning does not authorize publishing",

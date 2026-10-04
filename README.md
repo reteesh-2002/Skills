@@ -77,8 +77,8 @@ graph TD
         QS["qa-sentinel<br>(Anti-Tautology Verifier)"]
     end
 
-    subgraph "Tier 1b: Upstream Specification (Explicit Only)"
-        PA["prompt-architect<br>(24-Section Master Spec)"]
+    subgraph "Tier 1b: Upstream Architecture (Explicit Only)"
+        CA["create-architect<br>(Inside-Out Blueprint)"]
     end
 
     subgraph "Tier 2: Frontend & Interface Superstructure"
@@ -149,10 +149,10 @@ graph TD
 ```
 
 ### Division of Responsibilities
-1. **Prompt Architect vs Plan Master Division**:
-   - [`prompt-architect`](prompt-architect/SKILL.md) owns the **complete 24-section master specification**: *what to build*, system architecture, domain models, constraints, and acceptance criteria.
+1. **Create Architect vs Plan Master Division**:
+   - [`create-architect`](create-architect/SKILL.md) owns the **Inside-Out Engineering Blueprint**: Data Flow, Tech Stack, Data Models, API & 4 UI states, and build sequencing.
    - [`plan-master`](plan-master/SKILL.md) owns **execution planning**: current-state inspection, task dependency DAG ($T_1 \dots T_n$), affected files, verification, and recovery.
-   - `prompt-architect` does **not** auto-run before `plan-master`. A valid specification skips regeneration.
+   - `create-architect` does **not** auto-run before `plan-master`. A valid blueprint skips regeneration.
 
 2. **Autonomous Triad Handoffs**:
    - **Feature Creation**: `plan-master` ingests requirements $\rightarrow$ evaluates `task_shape_gating.py` $\rightarrow$ if parallel, dispatches `adaptive-worker-orchestrator-v2` ($\le 4$ workers) $\rightarrow$ invokes specialist skills (`schema-craft`, `frontend-artisan`) when explicitly directed $\rightarrow$ delegates verification to `qa-sentinel` $\rightarrow$ calls `code-reviewer` $\rightarrow$ invokes `ship-it` for release staging.
@@ -183,7 +183,7 @@ Routing policy is defined authoritatively in [`suite-policy.json`](suite-policy.
 ### All Other Skills: Explicit Only
 
 The remaining 14 skills activate **only** when explicitly requested by name or slash command:
-`prompt-architect`, `frontend-artisan`, `schema-craft`, `adaptive-worker-orchestrator-v2`, `code-reviewer`, `security-verifier`, `runtime-reliability`, `idea-council`, `ship-it`, `anti-slop-spec`, `design-md`, `image-to-code`, `playwright-cli`, `web-interface-guidelines`.
+`create-architect`, `frontend-artisan`, `schema-craft`, `adaptive-worker-orchestrator-v2`, `code-reviewer`, `security-verifier`, `runtime-reliability`, `idea-council`, `ship-it`, `anti-slop-spec`, `design-md`, `image-to-code`, `playwright-cli`, `web-interface-guidelines`.
 
 ### Mandatory Host Behaviors
 1. **Always read `SKILL.md`** using `view_file` when activating skills.
@@ -194,36 +194,19 @@ The remaining 14 skills activate **only** when explicitly requested by name or s
 
 ---
 
-## 📐 24-Section Master Engineering Specification Standard
+## 📐 Inside-Out Engineering Blueprint Standard
 
-Implemented in [`prompt-architect`](prompt-architect/SKILL.md) with canonical template in [`references/specification-template.md`](prompt-architect/references/specification-template.md), this standard ensures full technical closure before code is written:
+Implemented in [`create-architect`](create-architect/SKILL.md) with canonical template in [`references/blueprint-template.md`](create-architect/references/blueprint-template.md), this standard ensures grounded technical clarity before code is written:
 
 ```markdown
-1. Role                      # Technical role, seniority, authority
-2. Objective                 # Single-paragraph technical mission statement
-3. Product Vision            # Target user, core value proposition, aesthetic bar
-4. Core Concepts             # Domain entities, nouns, lifecycle states
-5. User Experience           # Information hierarchy, visual density, responsive layout
-6. Functional Requirements   # Detailed capability breakdown (MUST / SHOULD / MAY)
-7. Important Interactions    # Keyboard shortcuts, optimistic UI, state transitions
-8. Data Model & Schemas      # Concrete types, TypeScript interfaces, SQL DDL (in code blocks)
-9. Architecture & Layout     # Clean directory layout, modular partitioning (in code blocks)
-10. Technology Choices       # Selected libraries with sensible defaults & trade-off rationale
-11. Performance Requirements # Latency budgets, memoization, bundle bounds
-12. Local / Offline Behavior # Persistence strategy, localStorage/IndexedDB, graceful disconnect
-13. Security & Validation    # Input sanitization, auth boundaries, private subnet egress
-14. Error Handling           # Error boundaries, fallback states, user-facing error copy
-15. Edge Cases               # Boundary conditions, empty feeds, rate limits, clock skews
-16. AI Behavior (if applicable) # Context limits, streaming fallback, structured JSON extraction
-17. Things NOT to Build      # Explicit anti-scope, anti-slop clichés banned from this build
-18. MVP Scope                # Minimal shippable slice achievable in Turn 1
-19. Future Phases            # Explicitly postponed capabilities to prevent scope creep
-20. Implementation Order     # Phased execution sequence (Phase 1 -> 2 -> 3)
-21. Testing Requirements     # TDD requirements, observable side-effect assertions
-22. Success Criteria         # Concrete, verifiable conditions for completion
-23. Verification Commands    # Exact test/build commands with expected exit codes
-24. Final Delivery Checklist # Commits, clean working tree, verification receipts required
+1. Executive Intent           # Goal and target user
+2. Data Flow Architecture     # Inflow -> Transformation -> Storage -> Outflow
+3. Pragmatic Tech Stack       # Backend, Database, Frontend, Design Preset & Motion Style
+4. Data Model & Schemas       # Relational schemas, constraints, foreign keys, mandatory seed data
+5. API & 4 UI States Contract # Endpoints + Empty, Loading, Success, Error states
+6. Inside-Out Build Sequence  # Phase 1: DB -> Phase 2: API -> Phase 3: UI -> Phase 4: Verify
 ```
+
 
 ---
 
@@ -278,7 +261,7 @@ Every skill in the suite is optimized for high information density with zero flu
 | Skill | Entry Point | Tokens | Tier & Role | Loading Policy |
 | :--- | :--- | :---: | :--- | :--- |
 | **`anti-slop-spec`** | [`anti-slop-spec/SKILL.md`](anti-slop-spec/SKILL.md) | ~230 | **Tier 2**: Forwarding alias to plan-master & frontend-artisan. | Explicit only |
-| **`prompt-architect`** | [`prompt-architect/SKILL.md`](prompt-architect/SKILL.md) | ~657 | **Tier 1b**: 24-section master engineering specification composer. | Explicit only |
+| **`create-architect`** | [`create-architect/SKILL.md`](create-architect/SKILL.md) | ~580 | **Tier 1b**: Inside-Out engineering blueprint architect. | Explicit only |
 | **`runtime-reliability`** | [`runtime-reliability/SKILL.md`](runtime-reliability/SKILL.md) | ~698 | **Tier 3**: Operational resilience, RSS memory soak, SIGTERM drain. | Explicit only |
 | **`design-md`** | [`design-md/SKILL.md`](design-md/SKILL.md) | ~754 | **Tier 2**: Design token manager with approved/proposed provenance. | Explicit only |
 | **`playwright-cli`** | [`playwright-cli/SKILL.md`](playwright-cli/SKILL.md) | ~760 | **Tier 2**: Headless browser automation with session ownership. | Explicit only |

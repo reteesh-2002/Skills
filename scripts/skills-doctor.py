@@ -37,7 +37,7 @@ SKILL_INVENTORY = [
     "image-to-code",
     "plan-master",
     "playwright-cli",
-    "prompt-architect",
+    "create-architect",
     "qa-sentinel",
     "runtime-reliability",
     "schema-craft",
