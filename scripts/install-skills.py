@@ -35,6 +35,7 @@ SKILL_INVENTORY = [
     "security-verifier",
     "ship-it",
     "web-interface-guidelines",
+    "infra-pilot",
 ]
 
 # Explicit runtime inventory scripts and policies
@@ -49,6 +50,7 @@ RUNTIME_SCRIPTS = [
     "scripts/task_ledger.py",
     "scripts/task_shape_gating.py",
     "scripts/specialist_probes.py",
+    "scripts/slice-guard.py",
     "scripts/validate-skills.py",
     "scripts/skills-doctor.py",
 ]

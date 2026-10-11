@@ -17,7 +17,7 @@ A high-craft software engineering operating system for **Google Antigravity**. C
 
 ### 2. Installation & Environment Health
 
-Use the suite installer to cleanly install the 17 skills and runtime helpers with manifest tracking:
+Use the suite installer to cleanly install the 18 skills and runtime helpers with manifest tracking:
 
 #### Option A: Workspace Installation (Single Project)
 ```bash
@@ -36,9 +36,12 @@ python3 scripts/skills-doctor.py
 ```
 *(Supports `--json` for automated environment auditing.)*
 
-### 3. Release Gate Verification
-The deterministic release gate verifies that the current git tree matches validated test evidence before release. It can be executed on-demand via CLI or integrated into CI pipelines:
+### 3. Release Gate & Boundary Verification
+The deterministic release gate verifies that the current git tree matches validated test evidence before release. Slices are mechanically verified via `slice-guard`:
 ```bash
+# Check vertical slice import isolation and 300 LOC limits
+python3 scripts/slice-guard.py
+
 # Evaluate release gate against current git tree
 bash scripts/verify-release-gate.sh
 
@@ -50,7 +53,7 @@ Hook configuration in `.agents/hooks.json` operates in advisory mode, ensuring d
 ### 4. Conformance & Test Suite Verification
 Verify skill metadata, contracts, policy drift, specialist probes, and runtime checks:
 ```bash
-# 1. Validate skill frontmatter, metadata, and token budgets (17 skills)
+# 1. Validate skill frontmatter, metadata, and token budgets (18 skills)
 python3 scripts/validate-skills.py
 
 # 2. Run the environment health check
@@ -182,8 +185,8 @@ Routing policy is defined authoritatively in [`suite-policy.json`](suite-policy.
 
 ### All Other Skills: Explicit Only
 
-The remaining 14 skills activate **only** when explicitly requested by name or slash command:
-`create-architect`, `frontend-artisan`, `schema-craft`, `adaptive-worker-orchestrator-v2`, `code-reviewer`, `security-verifier`, `runtime-reliability`, `idea-council`, `ship-it`, `anti-slop-spec`, `design-md`, `image-to-code`, `playwright-cli`, `web-interface-guidelines`.
+The remaining 15 skills activate **only** when explicitly requested by name or slash command:
+`create-architect`, `frontend-artisan`, `schema-craft`, `adaptive-worker-orchestrator-v2`, `code-reviewer`, `security-verifier`, `runtime-reliability`, `idea-council`, `ship-it`, `anti-slop-spec`, `design-md`, `image-to-code`, `playwright-cli`, `web-interface-guidelines`, `infra-pilot`.
 
 ### Mandatory Host Behaviors
 1. **Always read `SKILL.md`** using `view_file` when activating skills.
@@ -267,6 +270,7 @@ Every skill in the suite is optimized for high information density with zero flu
 | **`playwright-cli`** | [`playwright-cli/SKILL.md`](playwright-cli/SKILL.md) | ~760 | **Tier 2**: Headless browser automation with session ownership. | Explicit only |
 | **`code-reviewer`** | [`code-reviewer/SKILL.md`](code-reviewer/SKILL.md) | ~832 | **Tier 3**: Adversarial diff reviewer with reviewer mode disclosure. | Explicit only |
 | **`ship-it`** | [`ship-it/SKILL.md`](ship-it/SKILL.md) | ~834 | **Tier 5**: Staged candidate release scanner & Compact Readiness Receipt. | Explicit only |
+| **`infra-pilot`** | [`infra-pilot/SKILL.md`](infra-pilot/SKILL.md) | ~850 | **Tier 5**: Production Dockerfiles, docker-compose stacks, and CI/CD pipelines. | Explicit only |
 | **`security-verifier`** | [`security-verifier/SKILL.md`](security-verifier/SKILL.md) | ~867 | **Tier 3**: OWASP API, BOLA/IDOR, injection, and payload audit. | Explicit only |
 | **`plan-master`** | [`plan-master/SKILL.md`](plan-master/SKILL.md) | ~910 | **Tier 1**: Current-state inspection, dependency DAGs, execution planning. | **Auto-activated** |
 | **`schema-craft`** | [`schema-craft/SKILL.md`](schema-craft/SKILL.md) | ~990 | **Tier 3**: Migration Impact Checklist, ESR indexing, reversible DDL. | Explicit only |

@@ -50,7 +50,7 @@ Select verification tiers proportionately based on the nature and blast radius o
 
 | Tier | When to Apply | Checks Performed |
 |---|---|---|
-| **Tier 1: Static & Syntax** | All edits (including docs, typos, scripts) | Syntax validity (`node -c`, `py_compile`, `bash -n`), JSON parse, import resolution. |
+| **Tier 1: Static & Syntax** | All edits (including docs, typos, scripts) | Syntax validity (`node -c`, `py_compile`, `bash -n`), JSON parse, import resolution, and Vertical Slice Boundary verification (`python3 scripts/slice-guard.py`). |
 | **Tier 2: Process & Runtime** | Backend services, servers, CLI binaries | Service boot, health check probes (`curl -s -o /dev/null -w "%{http_code}"`), exit code 0, no unhandled rejections. |
 | **Tier 3: Visual & DOM** | Frontend components, web pages, CSS | Viewport responsiveness (375px / 768px / 1440px), no horizontal overflow, asset resolution, `:focus-visible` outlines. |
 | **Tier 4: Boundary & Edge** | Critical business logic, auth, data pipelines | Malformed payloads, boundary values (null, empty string, extreme numbers), error state degradation. |

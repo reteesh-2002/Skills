@@ -1,0 +1,8 @@
+id: infra-pilot
+contract_version: 1
+inputs: [application-code.v1, database-schema.v1, environment-spec.v1]
+outputs: [dockerfile.v1, docker-compose.v1, ci-workflow.v1]
+required_capabilities: [multi_stage_docker, healthcheck_configuration, non_root_security]
+forbidden_capabilities: [deploy_to_production, commit_secrets, git_push]
+manual_only: true
+report_policy: standalone_card

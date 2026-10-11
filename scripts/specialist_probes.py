@@ -523,3 +523,29 @@ def probe_memory_soak_plateau(
         "verdict": "SOAK TEST PASSED (Resource telemetry plateaus)" if plateau else "MEMORY LEAK DETECTED (Monotonic resource expansion)"
     }
 
+
+# ──────────────────────────────────────────────
+# 5. Architecture: Slice Boundary & LOC Probe
+# ──────────────────────────────────────────────
+
+def probe_slice_boundaries(project_root: Union[str, Path], max_loc: int = 300) -> Dict[str, Any]:
+    """
+    Scans project modules for illegal cross-slice internal imports
+    and checks implementation files against the max LOC ceiling.
+    """
+    root_path = Path(project_root).resolve()
+    scripts_dir = Path(__file__).resolve().parent
+    if str(scripts_dir) not in sys.path:
+        sys.path.insert(0, str(scripts_dir))
+    import slice_guard
+    findings = slice_guard.scan_slice_project(root_path, max_loc=max_loc)
+    is_pass = findings.get("status") == "pass"
+    return {
+        "status": findings.get("status", "pass"),
+        "passed": is_pass,
+        "modules_checked": findings.get("modules_checked", 0),
+        "files_checked": findings.get("files_checked", 0),
+        "violations": findings.get("violations", []),
+        "verdict": "BOUNDARY CHECK PASSED (Hermetic slice isolation verified)" if is_pass else f"BOUNDARY VIOLATIONS DETECTED ({len(findings.get('violations', []))} violations)",
+    }
+

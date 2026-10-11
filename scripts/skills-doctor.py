@@ -21,6 +21,7 @@ REQUIRED_RUNTIME_HELPERS = [
     "runtime_evidence.py",
     "task_ledger.py",
     "task_shape_gating.py",
+    "slice-guard.py",
 ]
 
 # Optional external tool binaries
@@ -44,6 +45,7 @@ SKILL_INVENTORY = [
     "security-verifier",
     "ship-it",
     "web-interface-guidelines",
+    "infra-pilot",
 ]
 
 
