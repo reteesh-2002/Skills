@@ -32,7 +32,8 @@
       "image-to-code",
       "playwright-cli",
       "web-interface-guidelines",
-      "infra-pilot"
+      "infra-pilot",
+      "docs-architect"
     ]
   },
 

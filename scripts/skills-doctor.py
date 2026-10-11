@@ -46,6 +46,7 @@ SKILL_INVENTORY = [
     "ship-it",
     "web-interface-guidelines",
     "infra-pilot",
+    "docs-architect",
 ]
 
 

@@ -1,0 +1,8 @@
+id: docs-architect
+contract_version: 1
+inputs: [application-code.v1, vertical-slice-contracts.v1, user-intent.v1]
+outputs: [readme.v1, openapi-spec.v1, adr-record.v1, quickstart-guide.v1]
+required_capabilities: [readme_generation, openapi_compilation, adr_formatting]
+forbidden_capabilities: [marketing_fluff_slop, deploy_to_production, git_push]
+manual_only: true
+report_policy: standalone_card

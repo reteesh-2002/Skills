@@ -36,6 +36,7 @@ SKILL_INVENTORY = [
     "ship-it",
     "web-interface-guidelines",
     "infra-pilot",
+    "docs-architect",
 ]
 
 # Explicit runtime inventory scripts and policies
