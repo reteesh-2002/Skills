@@ -60,6 +60,8 @@ RUNTIME_SCRIPTS = [
 
 RUNTIME_AGENT_SCRIPTS = [
     ".agents/scripts/verify-release-gate.sh",
+    ".agents/scripts/guard_read_before_write.py",
+    ".agents/scripts/guard_anti_retry.py",
 ]
 
 POLICY_FILES = [
@@ -115,24 +117,6 @@ def get_default_hook_template():
                         }
                     ],
                 },
-            ],
-            "PostToolUse": [
-                {
-                    "matcher": "*",
-                    "description": "Record tool executions, reads, and failure fingerprints",
-                    "hooks": [
-                        {
-                            "type": "command",
-                            "command": f"{python_cmd} scripts/guard_read_before_write.py",
-                            "timeout": 5,
-                        },
-                        {
-                            "type": "command",
-                            "command": f"{python_cmd} scripts/guard_anti_retry.py",
-                            "timeout": 5,
-                        },
-                    ],
-                }
             ],
         }
     }

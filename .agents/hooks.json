@@ -35,24 +35,6 @@
           }
         ]
       }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "*",
-        "description": "Record tool executions, reads, and failure fingerprints",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 scripts/guard_read_before_write.py",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "python3 scripts/guard_anti_retry.py",
-            "timeout": 5
-          }
-        ]
-      }
     ]
   }
 }

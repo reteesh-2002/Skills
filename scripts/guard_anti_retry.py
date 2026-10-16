@@ -44,23 +44,24 @@ def evaluate_retry(tool_name: str, args: dict, active_failures: set) -> tuple[bo
 def main():
     if len(sys.argv) > 1 and sys.argv[1] == "--test-harness":
         print("Anti-Exact-Retry Guard ready"); sys.exit(0)
+    payload = {}
     try: payload = json.load(sys.stdin)
-    except Exception: print(json.dumps({"decision": "allow"})); sys.exit(0)
+    except Exception: print("{}" if ("result" in payload or "output" in payload) else json.dumps({"decision": "allow"})); sys.exit(0)
     tc = payload.get("toolCall") or payload.get("tool_call") or {}
     name = tc.get("name") or payload.get("name") or ""
     args = tc.get("args") or payload.get("args") or payload.get("tool_input") or {}
     ff = get_failures_file(Path(payload.get("cwd") or os.getcwd()).resolve() / ".evidence")
     if name in ("replace_file_content", "write_to_file"):
-        clear_failures(ff); print(json.dumps({"decision": "allow"})); sys.exit(0)
+        clear_failures(ff); print("{}" if ("result" in payload or "output" in payload) else json.dumps({"decision": "allow"})); sys.exit(0)
     status = payload.get("status") or payload.get("result", {}).get("status")
     exit_code = payload.get("exit_code") or payload.get("result", {}).get("exit_code")
     is_post = "result" in payload or "output" in payload
     if is_post and (status == "error" or (exit_code is not None and exit_code != 0)):
         record_failure(ff, compute_action_fingerprint(name, args), name, str(payload.get("error") or ""))
-        print(json.dumps({"decision": "allow"})); sys.exit(0)
+        print("{}" if ("result" in payload or "output" in payload) else json.dumps({"decision": "allow"})); sys.exit(0)
     allowed, reason = evaluate_retry(name, args, load_failures(ff))
     if not allowed:
         print(json.dumps({"decision": "deny", "reason": reason})); sys.exit(0)
-    print(json.dumps({"decision": "allow"}))
+    print("{}" if ("result" in payload or "output" in payload) else json.dumps({"decision": "allow"}))
 
 if __name__ == "__main__": main()

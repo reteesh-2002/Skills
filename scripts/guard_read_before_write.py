@@ -34,8 +34,9 @@ def evaluate_mutation(target_file: str | None, reads: set) -> tuple[bool, str]:
 def main():
     if len(sys.argv) > 1 and sys.argv[1] == "--test-harness":
         print("Read-Before-Write Guard ready"); sys.exit(0)
+    payload = {}
     try: payload = json.load(sys.stdin)
-    except Exception: print(json.dumps({"decision": "allow"})); sys.exit(0)
+    except Exception: print("{}" if ("result" in payload or "output" in payload) else json.dumps({"decision": "allow"})); sys.exit(0)
     tc = payload.get("toolCall") or payload.get("tool_call") or {}
     name = tc.get("name") or payload.get("name") or ""
     args = tc.get("args") or payload.get("args") or payload.get("tool_input") or {}
@@ -47,6 +48,6 @@ def main():
         allowed, reason = evaluate_mutation(args.get("TargetFile"), load_reads(rf))
         if not allowed:
             print(json.dumps({"decision": "deny", "reason": reason})); sys.exit(0)
-    print(json.dumps({"decision": "allow"}))
+    print("{}" if ("result" in payload or "output" in payload) else json.dumps({"decision": "allow"}))
 
 if __name__ == "__main__": main()
