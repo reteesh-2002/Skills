@@ -1,7 +1,58 @@
 {
   "evidence-policy": {
-    "description": "On-demand release evidence policy (advisory mode; blocking pre-tool interception disabled)",
-    "PreToolUse": []
+    "description": "Deterministic release evidence and runtime safety policy (Selective Kernel Fusion)",
+    "PreToolUse": [
+      {
+        "matcher": "run_command",
+        "description": "Intercept git push and evaluate deterministic release gate",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash scripts/verify-release-gate.sh --pre-tool",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "*",
+        "description": "Enforce Read-Before-Write invariant to prevent blind mutations",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 scripts/guard_read_before_write.py",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "*",
+        "description": "Enforce Anti-Exact-Retry invariant to halt runaway failure loops",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 scripts/guard_anti_retry.py",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "description": "Record tool executions, reads, and failure fingerprints",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 scripts/guard_read_before_write.py",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "python3 scripts/guard_anti_retry.py",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
   }
 }
-

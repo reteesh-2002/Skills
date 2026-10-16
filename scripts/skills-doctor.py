@@ -22,6 +22,8 @@ REQUIRED_RUNTIME_HELPERS = [
     "task_ledger.py",
     "task_shape_gating.py",
     "slice-guard.py",
+    "guard_read_before_write.py",
+    "guard_anti_retry.py",
 ]
 
 # Optional external tool binaries

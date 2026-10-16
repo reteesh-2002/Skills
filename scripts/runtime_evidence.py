@@ -58,7 +58,8 @@ MANDATORY_RECEIPT_FIELDS = ("receipt_id", "command", "exit_code", "git_tree_sha"
 OPTIONAL_RECEIPT_FIELDS = (
     "label", "duration_ms", "working_tree_sha", "working_tree_dirty",
     "log_path", "has_warnings", "flaky_retry", "prior_failures_count",
-    "unverified", "framework_detected", "xfail"
+    "unverified", "framework_detected", "xfail",
+    "timestamp", "executed_at", "timestamp_utc"
 )
 
 # Known test runner binaries

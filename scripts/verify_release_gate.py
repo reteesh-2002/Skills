@@ -106,18 +106,6 @@ def main():
     evidence_dir = REPO_ROOT / ".evidence"
     manifest_path = evidence_dir / "manifest.v1.json"
 
-    # 2. Check uncommitted or untracked changes in working directory
-    try:
-        porcelain = subprocess.check_output(
-            ["git", "-C", str(REPO_ROOT), "status", "--porcelain"],
-            stderr=subprocess.PIPE,
-            text=True
-        ).strip()
-        if porcelain:
-            fail_gate(f"Working directory is dirty (uncommitted or untracked changes present). Stash, commit, or clean working tree before release. Changes:\n{porcelain}", hook_mode=hook_mode)
-    except Exception as e:
-        fail_gate(f"Failed to check git status: {e}", hook_mode=hook_mode)
-
     if not manifest_path.exists():
         fail_gate(f"Evidence manifest not found at {manifest_path}. Run verification via scripts/exec_proxy.py first.", hook_mode=hook_mode)
 
@@ -203,6 +191,48 @@ def main():
             fail_gate(f"Check '{label}' has invalid git_tree_sha '{check_tree}'.", hook_mode=hook_mode)
         if check_tree != current_tree:
             fail_gate(f"Mixed snapshot detected. Check '{label}' was tested against tree {check_tree[:8]}, but current tree is {current_tree[:8]}.", hook_mode=hook_mode)
+
+        # Gravitas Invariant 3: Timestamp freshness check (test_mtime > file_mtime)
+        rcpt_ts = rcpt_data.get("timestamp") or rcpt_data.get("executed_at") or rcpt_data.get("timestamp_utc")
+        if rcpt_ts:
+            try:
+                if isinstance(rcpt_ts, (int, float)):
+                    receipt_time = float(rcpt_ts)
+                else:
+                    receipt_time = datetime.datetime.fromisoformat(str(rcpt_ts).replace("Z", "+00:00")).timestamp()
+            except Exception:
+                receipt_time = os.path.getmtime(receipt_file)
+        else:
+            receipt_time = os.path.getmtime(receipt_file)
+
+        try:
+            status_out = subprocess.check_output(
+                ["git", "-C", str(REPO_ROOT), "status", "--porcelain"],
+                stderr=subprocess.DEVNULL
+            ).decode("utf-8", errors="replace")
+            for s_line in status_out.splitlines():
+                if len(s_line) > 3:
+                    rel_path = s_line[3:].strip()
+                    if " -> " in rel_path:
+                        rel_path = rel_path.split(" -> ")[-1].strip()
+                    if rel_path.startswith(".evidence/") or rel_path.startswith(".git/"):
+                        continue
+                    full_p = Path(REPO_ROOT) / rel_path
+                    if full_p.is_file():
+                        file_mtime = full_p.stat().st_mtime
+                        if file_mtime > receipt_time:
+                            fail_gate(f"Stale evidence: working tree file '{rel_path}' modified after verification check was executed. Working directory is dirty (uncommitted or untracked changes present).", hook_mode=hook_mode)
+
+            dirty_entries = [
+                s for s in status_out.splitlines()
+                if len(s) > 3 and not s[3:].strip().startswith(".evidence/") and not s[3:].strip().startswith(".git/")
+            ]
+            if dirty_entries:
+                fail_gate("Working directory is dirty (uncommitted or untracked changes present). Stash, commit, or clean working tree before release. Changes:\n" + "\n".join(dirty_entries), hook_mode=hook_mode)
+        except SystemExit:
+            raise
+        except Exception:
+            pass
 
         if exit_code != 0:
             fail_gate(f"Check '{label}' ('{cmd}') failed with exit code {exit_code}.", hook_mode=hook_mode)

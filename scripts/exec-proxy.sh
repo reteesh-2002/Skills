@@ -237,7 +237,7 @@ trap - INT TERM
 
 # Parse framework counts, update manifest, and invoke runtime_evidence engine (F07, F08, F09, P16, P18)
 METRICS_JSON=$(python3 - "${COMMAND_STR}" "${EXIT_CODE}" "${DURATION_MS}" "${GIT_TREE_SHA}" "${LOG_PATH}" "${RECEIPT_PATH}" "${MANIFEST_PATH}" "${LOCK_PATH}" "${RUN_ID}" "${LABEL}" "${WORKING_TREE_SHA}" "${WORKING_TREE_DIRTY}" "${SCRIPT_DIR}" << 'PYEOF'
-import sys, os, re, json
+import sys, os, re, json, datetime
 try:
     import fcntl
 except ImportError:
@@ -368,8 +368,11 @@ if "DeprecationWarning" in log_content or "ExperimentalWarning" in log_content:
     has_deprecation_warning = True
 
 # Build receipt
+now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
 receipt = {
     "receipt_id": run_id,
+    "timestamp": now_iso,
+    "executed_at": now_iso,
     "label": label,
     "command": command_str,
     "exit_code": exit_code,

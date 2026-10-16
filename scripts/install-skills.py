@@ -52,6 +52,8 @@ RUNTIME_SCRIPTS = [
     "scripts/task_shape_gating.py",
     "scripts/specialist_probes.py",
     "scripts/slice-guard.py",
+    "scripts/guard_read_before_write.py",
+    "scripts/guard_anti_retry.py",
     "scripts/validate-skills.py",
     "scripts/skills-doctor.py",
 ]
@@ -70,13 +72,15 @@ RULE_FILES = [
 ]
 
 def get_default_hook_template():
-    cmd = (
+    gate_cmd = (
         "python scripts/verify_release_gate.py --pre-tool"
         if sys.platform == "win32"
         else "bash scripts/verify-release-gate.sh --pre-tool"
     )
+    python_cmd = "python" if sys.platform == "win32" else "python3"
     return {
         "evidence-policy": {
+            "description": "Deterministic release evidence and runtime safety policy (Selective Kernel Fusion)",
             "PreToolUse": [
                 {
                     "matcher": "run_command",
@@ -84,12 +88,52 @@ def get_default_hook_template():
                     "hooks": [
                         {
                             "type": "command",
-                            "command": cmd,
+                            "command": gate_cmd,
                             "timeout": 5,
                         }
                     ],
+                },
+                {
+                    "matcher": "*",
+                    "description": "Enforce Read-Before-Write invariant to prevent blind mutations",
+                    "hooks": [
+                        {
+                            "type": "command",
+                            "command": f"{python_cmd} scripts/guard_read_before_write.py",
+                            "timeout": 5,
+                        }
+                    ],
+                },
+                {
+                    "matcher": "*",
+                    "description": "Enforce Anti-Exact-Retry invariant to halt runaway failure loops",
+                    "hooks": [
+                        {
+                            "type": "command",
+                            "command": f"{python_cmd} scripts/guard_anti_retry.py",
+                            "timeout": 5,
+                        }
+                    ],
+                },
+            ],
+            "PostToolUse": [
+                {
+                    "matcher": "*",
+                    "description": "Record tool executions, reads, and failure fingerprints",
+                    "hooks": [
+                        {
+                            "type": "command",
+                            "command": f"{python_cmd} scripts/guard_read_before_write.py",
+                            "timeout": 5,
+                        },
+                        {
+                            "type": "command",
+                            "command": f"{python_cmd} scripts/guard_anti_retry.py",
+                            "timeout": 5,
+                        },
+                    ],
                 }
-            ]
+            ],
         }
     }
 

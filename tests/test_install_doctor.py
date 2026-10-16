@@ -61,6 +61,9 @@ class TestInstallSkills(unittest.TestCase):
                 "runtime_evidence.py",
                 "task_ledger.py",
                 "task_shape_gating.py",
+                "slice-guard.py",
+                "guard_read_before_write.py",
+                "guard_anti_retry.py",
             ]:
                 helper_file = target_path / "scripts" / helper
                 self.assertTrue(
@@ -377,6 +380,9 @@ class TestSkillsDoctor(unittest.TestCase):
                 "runtime_evidence.py",
                 "task_ledger.py",
                 "task_shape_gating.py",
+                "slice-guard.py",
+                "guard_read_before_write.py",
+                "guard_anti_retry.py",
             ]:
                 (target_path / "scripts" / helper).write_text("#!/bin/bash\n", encoding="utf-8")
 
