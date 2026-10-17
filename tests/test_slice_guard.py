@@ -236,5 +236,94 @@ class TestSliceGuard(unittest.TestCase):
             self.assertEqual(data["status"], "pass")
 
 
+    def test_mechanical_helper_file_detected(self):
+        """Mechanical helper files (*_helpers, *_utils) in slice directories trigger warning."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            modules = root / "src" / "modules"
+            billing = modules / "billing"
+            billing.mkdir(parents=True)
+
+            (billing / "contract.ts").write_text("export const x = 1;\n")
+            (billing / "service.ts").write_text("export const y = 2;\n")
+            (billing / "billing_helpers.ts").write_text("export function formatCurrency() { return '$'; }\n")
+
+            cmd = [sys.executable, str(SLICE_GUARD_SCRIPT), str(root), "--json"]
+            res = subprocess.run(cmd, capture_output=True, text=True)
+            self.assertEqual(res.returncode, 0)
+            data = json.loads(res.stdout)
+            violations = [v for v in data["violations"] if v["type"] == "mechanical_helper_detected"]
+            self.assertEqual(len(violations), 1)
+            self.assertIn("billing_helpers.ts", violations[0]["message"])
+
+    def test_high_cyclomatic_complexity_detected(self):
+        """Functions with cyclomatic complexity > 15 are flagged."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            modules = root / "src" / "modules"
+            billing = modules / "billing"
+            billing.mkdir(parents=True)
+
+            # Generate function with 18 branches
+            branches = "\n".join([f"    if (x === {i}) return {i};" for i in range(18)])
+            func_code = f"export function complexBranching(x: number): number {{\n{branches}\n    return -1;\n}}\n"
+            (billing / "service.ts").write_text(func_code)
+
+            cmd = [sys.executable, str(SLICE_GUARD_SCRIPT), str(root), "--max-cyclomatic", "15", "--json"]
+            res = subprocess.run(cmd, capture_output=True, text=True)
+            self.assertEqual(res.returncode, 0)
+            data = json.loads(res.stdout)
+            comp_violations = [v for v in data["violations"] if v["type"] == "high_cyclomatic_complexity"]
+            self.assertEqual(len(comp_violations), 1)
+            self.assertEqual(comp_violations[0]["function"], "complexBranching")
+            self.assertGreater(comp_violations[0]["complexity"], 15)
+
+    def test_high_fan_out_detected(self):
+        """Modules importing from > 7 external packages/slices are flagged for high fan-out."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            modules = root / "src" / "modules"
+            billing = modules / "billing"
+            billing.mkdir(parents=True)
+
+            # 9 distinct external imports
+            imports = "\n".join([f"import pkg_{i} from 'external-pkg-{i}';" for i in range(9)])
+            (billing / "service.ts").write_text(imports + "\nexport const x = 1;\n")
+
+            cmd = [sys.executable, str(SLICE_GUARD_SCRIPT), str(root), "--max-fan-out", "7", "--json"]
+            res = subprocess.run(cmd, capture_output=True, text=True)
+            self.assertEqual(res.returncode, 0)
+            data = json.loads(res.stdout)
+            fan_violations = [v for v in data["violations"] if v["type"] == "high_fan_out"]
+            self.assertEqual(len(fan_violations), 1)
+            self.assertEqual(fan_violations[0]["fan_out"], 9)
+
+    def test_cohesive_module_large_loc_approved_under_semantic_enclosure(self):
+        """Cohesive modules (≤15 complexity, ≤7 fan-out) between 600 and 1500 LOC are marked cohesive."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            modules = root / "src" / "modules"
+            billing = modules / "billing"
+            billing.mkdir(parents=True)
+
+            # 800 lines of cohesive, simple state machine logic
+            lines = ["export function stateTransition(state: string) {"]
+            for i in range(800):
+                lines.append(f"  const step_{i} = {i};")
+            lines.append("  return state;")
+            lines.append("}")
+
+            (billing / "service.ts").write_text("\n".join(lines) + "\n")
+
+            cmd = [sys.executable, str(SLICE_GUARD_SCRIPT), str(root), "--max-loc", "600", "--max-cohesive-loc", "1500", "--json"]
+            res = subprocess.run(cmd, capture_output=True, text=True)
+            self.assertEqual(res.returncode, 0)
+            data = json.loads(res.stdout)
+            loc_violations = [v for v in data["violations"] if v["type"] == "loc_exceeded"]
+            self.assertEqual(len(loc_violations), 1)
+            self.assertTrue(loc_violations[0].get("cohesive", False))
+            self.assertIn("Permitted under Semantic Enclosure", loc_violations[0]["message"])
+
+
 if __name__ == "__main__":
     unittest.main()
