@@ -131,7 +131,7 @@ class TestPurePythonExecProxy(unittest.TestCase):
     def test_exec_proxy_runs_command_and_writes_receipt(self):
         import exec_proxy
 
-        label = "test_echo_win"
+        label = "cmd_echo_win"
         cmd = [sys.executable, "-c", "print('win_compat_output')"]
         test_args = ["exec_proxy.py", "--label", label] + cmd
 
