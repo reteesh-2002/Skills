@@ -151,16 +151,36 @@ CREATE INDEX idx_outbox_pending ON outbox_events(status, next_retry_at) WHERE st
 
 ---
 
-## Sub-600 LOC Context Ceiling
+## Sub-600 LOC Context Per Task & Module Cohesion Discipline
 
-When an agent implements or modifies a slice, it must load only:
+### 1. Agent Task Context Boundedness
+When an agent implements or modifies a vertical slice, it loads only the files relevant to that specific task:
 
 | File | Approximate Lines |
 |---|---|
 | `modules/<slice>/contract.ts` | ~50 lines |
-| `modules/<slice>/service.ts` | ~150–200 lines |
-| `modules/<slice>/routes.ts` | ~100–150 lines |
-| `modules/<slice>/<slice>.test.ts` | ~150–200 lines |
-| **Total in context** | **~450–600 lines** |
+| `modules/<slice>/service.ts` | ~150–350 lines |
+| `modules/<slice>/routes.ts` | ~100–200 lines |
+| `modules/<slice>/<slice>.test.ts` | ~150–250 lines |
+| **Total in task context** | **~450–600 lines** |
 
-The remaining 29,400 lines of a 30,000-line codebase remain invisible. This is how an agent scales past the 3,000-line ceiling without context collapse or regression loops.
+The remaining thousands of lines in the project remain invisible to the prompt. This keeps working memory focused and prevents prompt degradation and multi-file regression loops.
+
+### 2. Module Cohesion vs. Dogmatic Line Counting (Idea Council Consensus)
+A rigid file-size ceiling creates Goodhart's Law: agents game linters by inventing shallow `*_helpers.ts` or `*_utils.ts`, resulting in lasagna architecture, Confused Deputy security holes, and multi-file shotgun surgery.
+
+Follow these concrete rules:
+
+- **Permitted to Exceed 600 LOC (Up to 1,200–1,500 LOC):**
+  1. **Atomic State Machines & Protocol Parsers**: Deterministic state transitions, AST analyzers, math engines, and serialization codecs that operate on unified state.
+  2. **Declarative Schemas & Data Models**: Prisma schemas, Drizzle tables, OpenAPI 3.1 specs, and migrations (exempt from LOC linters).
+  3. **Security & Auth Perimeters**: Flows where authentication, tenant validation, RBAC checks, and persistence must execute atomically in a single audit trail.
+  4. **Generated Code / SDKs**: Automated client stubs.
+
+- **When You MUST Split (Real Anti-Patterns, Not Line Counting):**
+  1. **High Cyclomatic Complexity**: Branching complexity $>15$ or deeply nested logic.
+  2. **High Fan-Out ($>7$ external modules imported)**: Indicates a God Object taking on unrelated responsibilities.
+  3. **Distinct Domain Sub-boundaries**: E.g., separating an HTTP transport adapter from domain calculation logic.
+
+- **Strictly Prohibited:**
+  Never mechanically sever an atomic transaction or security check into an external helper file just to stay under a line counter. Colocate domain logic by slice, not by artificial technical layers.

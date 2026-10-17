@@ -67,14 +67,15 @@ src/
     └── <slice-name>/        # One directory per domain
         ├── contract.ts      # Frozen public interface (Zod/TypeScript, < 50 lines)
         ├── routes.ts        # HTTP / RPC handlers
-        ├── service.ts       # Pure domain logic (< 200 lines)
+        ├── service.ts       # Domain logic & atomic transactions
         └── <slice>.test.ts  # Colocated integration tests
 ```
 
-**Cross-Slice Import Rule (mandatory invariant):**
+**Cross-Slice Import Rule & Context Boundedness (mandatory invariant):**
 - Modules communicate **only** through their own `contract.ts` or a shared event bus.
 - Direct imports of peer slice internals (e.g. `import { x } from '../billing/service'`) are strictly forbidden.
-- This invariant keeps the agent context below 600 lines per task and prevents cascading regressions as the codebase scales past 10,000 lines.
+- This invariant keeps the agent task context below 600 lines (reading only target slice contract, service, and tests) and prevents cascading regressions as codebases scale past 10,000 lines.
+- **Semantic Enclosure**: Atomic state machines, parsers, declarative schemas, and auth perimeters are permitted up to 1,200–1,500 LOC. Never mechanically fragment code into shallow `*_helpers` or `*_utils` to game line counts.
 
 See [`references/vertical-slice-template.md`](references/vertical-slice-template.md) for the full scaffold with contract stubs.
 

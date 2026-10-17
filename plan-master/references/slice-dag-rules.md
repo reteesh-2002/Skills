@@ -7,7 +7,7 @@ Reference for structuring execution plans for projects that adopt the Vertical S
 ## The 4 Golden Rules
 
 1. **1-Slice-Per-Task**: A single task targets exactly one module slice (`src/modules/<slice>/`). Never plan a task that writes to two slices simultaneously.
-2. **Sub-600 LOC Context**: The `[CONTEXT SCOPE]` for a slice task lists only: `contract.ts` + `service.ts` + `routes.ts` + `<slice>.test.ts`. Total ≈ 400–600 lines. If the scope would exceed 600 lines, split the task.
+2. **Sub-600 LOC Context**: The `[CONTEXT SCOPE]` for a slice task lists only: `contract.ts` + `service.ts` + `routes.ts` + `<slice>.test.ts`. Total ≈ 400–600 lines. If the scope would exceed 600 lines, split the task. (Note: Highly cohesive modules like state machines, parsers, or schemas may reach 1,200–1,500 LOC without issue; this rule limits the prompt's active context window, not mechanical file splitting).
 3. **Cross-Slice Interface Only**: A task may read a sibling slice's `contract.ts` (the public interface). It must never import from a sibling's `service.ts` or any internal file.
 4. **Sequential Foundation First**: Always build `core/` primitives before any slice. Always build slice contracts before slice implementations.
 

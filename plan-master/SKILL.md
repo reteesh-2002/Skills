@@ -78,6 +78,7 @@ When a project uses vertical slice architecture (`src/modules/<slice>/`), each t
 - **1-Slice-Per-Task invariant**: A single task targets exactly one module slice.
 - **Explicit Context Ceiling**: If the `[CONTEXT SCOPE]` would exceed ~600 lines, split the task.
 - **Cross-Slice Communication**: Tasks may reference another slice's `contract.ts` (its public interface) but never its `service.ts` or internal files.
+- **Cohesion Over File Chopping**: Individual cohesive files (state machines, parsers, schemas) may be larger (up to 1,200–1,500 LOC); do not fragment cohesive domain files into shallow helpers merely to satisfy line metrics.
 
 ---
 

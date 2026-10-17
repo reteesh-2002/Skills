@@ -147,8 +147,8 @@ class TestSliceGuard(unittest.TestCase):
             data = json.loads(res.stdout)
             self.assertEqual(data["status"], "pass")
 
-    def test_loc_ceiling_exceeded_fails(self):
-        """Files exceeding 300 non-empty lines trigger a size violation."""
+    def test_loc_ceiling_advisory_warning_default(self):
+        """Files exceeding max-loc emit advisory warnings but do not fail build by default."""
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             modules = root / "src" / "modules"
@@ -161,16 +161,61 @@ class TestSliceGuard(unittest.TestCase):
 
             cmd = [sys.executable, str(SLICE_GUARD_SCRIPT), str(root), "--max-loc", "300", "--json"]
             res = subprocess.run(cmd, capture_output=True, text=True)
+            self.assertEqual(res.returncode, 0)
+
+            data = json.loads(res.stdout)
+            self.assertEqual(data["status"], "pass")
+            loc_violations = [v for v in data["violations"] if v["type"] == "loc_exceeded"]
+            self.assertEqual(len(loc_violations), 1)
+            self.assertGreater(loc_violations[0]["loc"], 300)
+            self.assertEqual(loc_violations[0]["severity"], "WARNING")
+            self.assertIn("cyclomatic complexity", loc_violations[0]["message"])
+
+    def test_loc_ceiling_fails_with_fail_on_loc_flag(self):
+        """With --fail-on-loc, files exceeding max-loc fail with exit 1."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            modules = root / "src" / "modules"
+            billing = modules / "billing"
+            billing.mkdir(parents=True)
+
+            lines = [f"const val_{i} = {i};" for i in range(320)]
+            (billing / "service.ts").write_text("\n".join(lines) + "\n")
+
+            cmd = [sys.executable, str(SLICE_GUARD_SCRIPT), str(root), "--max-loc", "300", "--fail-on-loc", "--json"]
+            res = subprocess.run(cmd, capture_output=True, text=True)
             self.assertEqual(res.returncode, 1)
 
             data = json.loads(res.stdout)
             self.assertEqual(data["status"], "fail")
             loc_violations = [v for v in data["violations"] if v["type"] == "loc_exceeded"]
             self.assertEqual(len(loc_violations), 1)
-            self.assertGreater(loc_violations[0]["loc"], 300)
+
+    def test_schema_and_pragma_exemptions(self):
+        """Declarative schemas and files with pragma are exempt from LOC warnings."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            modules = root / "src" / "modules"
+            billing = modules / "billing"
+            billing.mkdir(parents=True)
+
+            # schema.ts with 400 lines (declarative schema exemption)
+            schema_lines = [f"export const field_{i} = '{i}';" for i in range(400)]
+            (billing / "schema.ts").write_text("\n".join(schema_lines) + "\n")
+
+            # state_machine.ts with pragma annotation
+            sm_lines = ["// @slice-guard-allow-loc (atomic state machine)"] + [f"const step_{i} = {i};" for i in range(400)]
+            (billing / "state_machine.ts").write_text("\n".join(sm_lines) + "\n")
+
+            cmd = [sys.executable, str(SLICE_GUARD_SCRIPT), str(root), "--max-loc", "300", "--fail-on-loc", "--json"]
+            res = subprocess.run(cmd, capture_output=True, text=True)
+            self.assertEqual(res.returncode, 0)
+            data = json.loads(res.stdout)
+            self.assertEqual(data["status"], "pass")
+            self.assertEqual(len(data["violations"]), 0)
 
     def test_test_files_exempt_from_loc_ceiling(self):
-        """Colocated test files are exempt from the 300 LOC limit."""
+        """Colocated test files are exempt from LOC limits."""
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             modules = root / "src" / "modules"
@@ -184,7 +229,7 @@ class TestSliceGuard(unittest.TestCase):
             test_lines = [f"test('case {i}', () => {{ expect(true).toBe(true); }});" for i in range(400)]
             (billing / "billing.test.ts").write_text("\n".join(test_lines) + "\n")
 
-            cmd = [sys.executable, str(SLICE_GUARD_SCRIPT), str(root), "--max-loc", "300", "--json"]
+            cmd = [sys.executable, str(SLICE_GUARD_SCRIPT), str(root), "--max-loc", "300", "--fail-on-loc", "--json"]
             res = subprocess.run(cmd, capture_output=True, text=True)
             self.assertEqual(res.returncode, 0)
             data = json.loads(res.stdout)

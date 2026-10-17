@@ -4,8 +4,11 @@ Slice Guard — Mechanical Architectural Boundary and LOC Scanner.
 Zero-dependency static analyzer enforcing Vertical Slice Architecture rules:
 1. Cross-Slice Isolation: Slices must communicate ONLY via contracts or event bus;
    direct imports of sibling slice internals (e.g. '../other/service') are forbidden.
-2. Sub-600 LOC Discipline: Implementation files (service, routes, handlers) must not
-   exceed 300 LOC to keep LLM context footprint bounded.
+2. Context Boundedness & Cohesion: Implementation files should target ≤ 600 LOC to keep
+   LLM context bounded. Highly cohesive modules (state machines, parsers, declarative
+   schemas, auth boundaries) up to 1,200–1,500 LOC emit advisory warnings rather than hard
+   failures unless --fail-on-loc is explicitly requested. Mechanical lasagna splitting
+   into shallow *_helpers or *_utils is strictly discouraged.
 """
 
 import argparse
@@ -27,6 +30,17 @@ TEST_PATTERNS = [
     re.compile(r".*_test\.py$"),
     re.compile(r"/__tests__/"),
 ]
+
+# Patterns for files exempt from LOC limits (tests, schemas, migrations, models)
+LOC_EXEMPT_PATTERNS = [
+    *TEST_PATTERNS,
+    re.compile(r"schema\.[a-zA-Z0-9]+$"),
+    re.compile(r"\.schema\.[a-zA-Z0-9]+$"),
+    re.compile(r"models?\.[a-zA-Z0-9]+$"),
+    re.compile(r"/migrations/"),
+]
+
+LOC_PRAGMA_RE = re.compile(r"""(?:@slice-guard-allow-loc|@allow-loc)""")
 
 # Permitted public contract targets
 ALLOWED_CONTRACT_NAMES = {"contract", "contract.ts", "contract.js", "contract.py", "types", "types.ts", "types.js"}
@@ -55,6 +69,28 @@ def is_test_file(path: Path) -> bool:
     for pat in TEST_PATTERNS:
         if pat.search(filename) or pat.search(path_str):
             return True
+    return False
+
+
+def is_loc_exempt(file_path: Path) -> bool:
+    """Check if file is exempt from LOC guidelines based on name or in-file pragma."""
+    path_str = str(file_path).replace("\\", "/")
+    filename = file_path.name
+    for pat in LOC_EXEMPT_PATTERNS:
+        if pat.search(filename) or pat.search(path_str):
+            return True
+
+    # Check first 15 lines for pragma
+    try:
+        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            for i, line in enumerate(f):
+                if i > 15:
+                    break
+                if LOC_PRAGMA_RE.search(line):
+                    return True
+    except Exception:
+        pass
+
     return False
 
 
@@ -195,8 +231,9 @@ def scan_file_imports(file_path: Path, current_module: str, all_modules: set) ->
 
 def scan_slice_project(
     target_dir: Path,
-    max_loc: int = 300,
+    max_loc: int = 600,
     enforce_loc: bool = True,
+    fail_on_loc: bool = False,
 ) -> Dict:
     """
     Main scanning routine. Returns a structured dictionary of findings.
@@ -238,8 +275,8 @@ def scan_slice_project(
                 files_count += 1
                 rel_file = str(file_path.relative_to(target_dir))
 
-                # 1. LOC check on non-test implementation files
-                if enforce_loc and not is_test_file(file_path):
+                # 1. LOC check on non-exempt implementation files
+                if enforce_loc and not is_loc_exempt(file_path):
                     loc = count_lines_of_code(file_path)
                     if loc > max_loc:
                         violations.append({
@@ -248,7 +285,11 @@ def scan_slice_project(
                             "file": rel_file,
                             "line": 0,
                             "module": mod_name,
-                            "message": f"File exceeds {max_loc} LOC ceiling ({loc} non-empty lines). Split logic into sub-handlers.",
+                            "message": (
+                                f"File exceeds {max_loc} LOC guideline ({loc} non-empty lines). "
+                                f"Verify cyclomatic complexity (≤15) and domain cohesion. "
+                                f"Avoid mechanical helper splitting (*_utils, *_helpers) that fragments atomic transactions."
+                            ),
                             "loc": loc,
                             "max_loc": max_loc,
                         })
@@ -268,9 +309,9 @@ def scan_slice_project(
     results["files_checked"] = files_count
     results["violations"] = violations
 
-    # Any CRITICAL violation causes failure
+    # Any CRITICAL violation causes failure; LOC warnings only fail if fail_on_loc is True
     has_critical = any(v.get("severity") == "CRITICAL" for v in violations)
-    has_loc_errors = any(v.get("type") == "loc_exceeded" for v in violations)
+    has_loc_errors = fail_on_loc and any(v.get("type") == "loc_exceeded" for v in violations)
 
     if has_critical or has_loc_errors:
         results["status"] = "fail"
@@ -293,8 +334,13 @@ def main():
     parser.add_argument(
         "--max-loc",
         type=int,
-        default=300,
-        help="Maximum lines of code allowed per implementation file (default: 300)",
+        default=600,
+        help="Maximum lines of code allowed per implementation file before advisory warning (default: 600)",
+    )
+    parser.add_argument(
+        "--fail-on-loc",
+        action="store_true",
+        help="Treat LOC ceiling exceedance as a hard build failure rather than an advisory warning",
     )
     parser.add_argument(
         "--no-loc-check",
@@ -326,6 +372,7 @@ def main():
         target_dir=target_path,
         max_loc=args.max_loc,
         enforce_loc=not args.no_loc_check,
+        fail_on_loc=args.fail_on_loc,
     )
 
     if args.json:
@@ -333,8 +380,10 @@ def main():
         sys.exit(0 if findings["status"] == "pass" else 1)
 
     # Human-readable output
-    violations = findings["violations"]
-    if not violations:
+    critical_violations = [v for v in findings["violations"] if v.get("severity") == "CRITICAL"]
+    loc_warnings = [v for v in findings["violations"] if v.get("type") == "loc_exceeded"]
+
+    if not findings["violations"]:
         if not args.quiet:
             mods = findings["modules_checked"]
             files = findings["files_checked"]
@@ -342,15 +391,28 @@ def main():
             print(f"   Checked {mods} vertical slices ({files} source files). Zero violations.")
         sys.exit(0)
 
-    print(f"\n🚨 [slice-guard] Detected {len(violations)} architectural boundary violation(s):\n")
-    for v in violations:
-        sev = v.get("severity", "ERROR")
-        loc_info = f":{v['line']}" if v['line'] > 0 else ""
-        print(f"  [{sev}] {v['file']}{loc_info}")
-        print(f"     └── {v['message']}")
+    if critical_violations:
+        print(f"\n🚨 [slice-guard] Detected {len(critical_violations)} architectural boundary violation(s):\n")
+        for v in critical_violations:
+            loc_info = f":{v['line']}" if v['line'] > 0 else ""
+            print(f"  [CRITICAL] {v['file']}{loc_info}")
+            print(f"     └── {v['message']}")
 
-    print(f"\n❌ Failure: Vertical slice boundary rules violated. Run failed with exit 1.\n")
-    sys.exit(1)
+    if loc_warnings:
+        prefix = "🚨" if args.fail_on_loc else "⚠️"
+        status_label = "ERROR" if args.fail_on_loc else "WARNING"
+        print(f"\n{prefix} [slice-guard] Detected {len(loc_warnings)} file(s) exceeding {args.max_loc} LOC guideline:\n")
+        for v in loc_warnings:
+            print(f"  [{status_label}] {v['file']}")
+            print(f"     └── {v['message']}")
+
+    if findings["status"] == "fail":
+        print(f"\n❌ Failure: Vertical slice rules violated. Run failed with exit 1.\n")
+        sys.exit(1)
+    else:
+        if not args.quiet:
+            print(f"\n✅ [slice-guard] Module boundaries clean. LOC advisories emitted without failure.\n")
+        sys.exit(0)
 
 
 if __name__ == "__main__":

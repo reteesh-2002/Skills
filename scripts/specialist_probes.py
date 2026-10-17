@@ -9,7 +9,9 @@ Deterministic empirical validation engines for specialist skills:
 """
 
 from __future__ import annotations
+import importlib.util
 import os
+from pathlib import Path
 import re
 import sys
 import math
@@ -528,17 +530,20 @@ def probe_memory_soak_plateau(
 # 5. Architecture: Slice Boundary & LOC Probe
 # ──────────────────────────────────────────────
 
-def probe_slice_boundaries(project_root: Union[str, Path], max_loc: int = 300) -> Dict[str, Any]:
+def probe_slice_boundaries(project_root: Union[str, Path], max_loc: int = 600, fail_on_loc: bool = False) -> Dict[str, Any]:
     """
     Scans project modules for illegal cross-slice internal imports
-    and checks implementation files against the max LOC ceiling.
+    and checks implementation files against the max LOC guideline.
     """
     root_path = Path(project_root).resolve()
     scripts_dir = Path(__file__).resolve().parent
-    if str(scripts_dir) not in sys.path:
-        sys.path.insert(0, str(scripts_dir))
-    import slice_guard
-    findings = slice_guard.scan_slice_project(root_path, max_loc=max_loc)
+    slice_guard_path = scripts_dir / "slice-guard.py"
+    spec = importlib.util.spec_from_file_location("slice_guard", slice_guard_path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Could not load slice-guard from {slice_guard_path}")
+    slice_guard = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(slice_guard)
+    findings = slice_guard.scan_slice_project(root_path, max_loc=max_loc, fail_on_loc=fail_on_loc)
     is_pass = findings.get("status") == "pass"
     return {
         "status": findings.get("status", "pass"),
