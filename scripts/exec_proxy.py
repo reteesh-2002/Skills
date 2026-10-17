@@ -286,14 +286,34 @@ def main():
     start_time = time.time()
     with open(log_path, "wb") as log_f:
         try:
-            # On Windows, shell=True runs via cmd.exe; on Unix via /bin/sh
+            # Determine execution form: if cmd_args is a list of tokens, execute without shell=True
+            # to prevent command injection and metacharacter expansion vulnerabilities.
+            use_shell = False
+            exec_target = cmd_args
+            if len(cmd_args) == 1 and any(c in cmd_args[0] for c in ("|", "&&", "||", ";", ">", "<")):
+                # Compound pipeline on POSIX or Windows fallback
+                use_shell = True
+                exec_target = command_str
+
             proc = subprocess.Popen(
-                command_str,
-                shell=True,
+                exec_target,
+                shell=use_shell,
                 cwd=str(REPO_ROOT),
-                stdout=log_f,
+                stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT
             )
+            
+            # Unbuffered real-time line streaming to log file and console
+            if proc.stdout:
+                for line in iter(proc.stdout.readline, b""):
+                    log_f.write(line)
+                    log_f.flush()
+                    try:
+                        sys.stdout.buffer.write(line)
+                        sys.stdout.buffer.flush()
+                    except Exception:
+                        pass
+                proc.stdout.close()
             exit_code = proc.wait()
         except Exception as exc:
             log_f.write(f"\nExecution error: {exc}\n".encode("utf-8"))

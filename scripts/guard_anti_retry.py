@@ -32,9 +32,20 @@ def clear_failures(failures_file: Path) -> None:
         try: failures_file.unlink()
         except OSError: pass
 
+EXPLORATORY_COMMAND_PREFIXES = (
+    "grep ", "fgrep ", "egrep ", "diff ", "test ", "find ", "curl -i", "curl -I", "which ", "type ", "git status", "git diff", "git log"
+)
+
+def is_exploratory_command(command_line: str) -> bool:
+    """Check if command is a read-only inspection/discovery tool where non-zero exits are routine."""
+    c = command_line.strip().lower()
+    return any(c == p.strip() or c.startswith(p) for p in EXPLORATORY_COMMAND_PREFIXES)
+
 def evaluate_retry(tool_name: str, args: dict, active_failures: set) -> tuple[bool, str]:
     if tool_name in ("view_file", "list_dir", "manage_task"):
         return True, "Read-only inspection permitted"
+    if tool_name == "run_command" and is_exploratory_command(args.get("CommandLine", "")):
+        return True, "Exploratory discovery command permitted"
     fp = compute_action_fingerprint(tool_name, args)
     if fp in active_failures:
         cmd = f": '{args.get('CommandLine')}'" if args.get("CommandLine") else ""

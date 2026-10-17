@@ -192,6 +192,15 @@ class TestAntiRetryGuard(unittest.TestCase):
         allowed, reason = gaer.evaluate_retry("view_file", {"AbsolutePath": "/file"}, active_fails)
         self.assertTrue(allowed)
 
+    def test_exploratory_commands_exempt(self):
+        # Exploratory commands (grep, diff, test -f) should not be blocked on retry
+        args = {"CommandLine": "grep -rn 'target' ."}
+        fp = gaer.compute_action_fingerprint("run_command", args)
+        active_fails = {fp}
+        allowed, reason = gaer.evaluate_retry("run_command", args, active_fails)
+        self.assertTrue(allowed)
+        self.assertIn("Exploratory discovery command permitted", reason)
+
     def test_mutation_clears_failures(self):
         args = {"CommandLine": "pytest"}
         fp = gaer.compute_action_fingerprint("run_command", args)

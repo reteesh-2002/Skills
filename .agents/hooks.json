@@ -14,7 +14,7 @@
         ]
       },
       {
-        "matcher": "*",
+        "matcher": "replace_file_content",
         "description": "Enforce Read-Before-Write invariant to prevent blind mutations",
         "hooks": [
           {
@@ -25,7 +25,18 @@
         ]
       },
       {
-        "matcher": "*",
+        "matcher": "write_to_file",
+        "description": "Enforce Read-Before-Write invariant to prevent blind mutations",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 scripts/guard_read_before_write.py",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "run_command",
         "description": "Enforce Anti-Exact-Retry invariant to halt runaway failure loops",
         "hooks": [
           {

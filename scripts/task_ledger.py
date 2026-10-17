@@ -73,15 +73,17 @@ class TaskLedger:
         os.makedirs(os.path.dirname(self.ledger_path), exist_ok=True)
 
     def _with_lock(self, callback):
-        """Executes callback under exclusive file lock with atomic temp file swap."""
-        with open(self.lock_path, "w") as lock_file:
+        """Executes callback under exclusive file lock with atomic PID-unique temp file swap."""
+        # Use append mode ("a") to prevent pre-lock truncation races
+        with open(self.lock_path, "a") as lock_file:
             with file_lock(lock_file):
                 data = self.load()
                 result, updated_data = callback(data)
                 if updated_data is not None:
                     updated_data["revision"] = updated_data.get("revision", 0) + 1
                     updated_data["updated_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
-                    tmp_file = self.ledger_path + ".tmp"
+                    # PID-isolated temp file to prevent concurrent clobbering
+                    tmp_file = f"{self.ledger_path}.tmp.{os.getpid()}"
                     with open(tmp_file, "w", encoding="utf-8") as f:
                         json.dump(updated_data, f, indent=2)
                         f.flush()
@@ -234,10 +236,16 @@ class TaskLedger:
         if status is not None and status not in VALID_STATUSES:
             raise ValueError(f"Invalid status '{status}'. Valid: {VALID_STATUSES}")
 
-        # T-03: A failed check prevents premature completion
+        # T-03: A failed check prevents premature completion; enforce path containment
         if status == "Done" and evidence_ref:
-            evidence_dir = os.path.dirname(self.ledger_path)
-            rcpt_path = os.path.join(evidence_dir, "receipts", f"{evidence_ref}.json")
+            evidence_dir = os.path.abspath(os.path.dirname(self.ledger_path))
+            receipts_dir = os.path.join(evidence_dir, "receipts")
+            rcpt_path = os.path.abspath(os.path.join(receipts_dir, f"{evidence_ref}.json"))
+            
+            # Directory containment check: prevent ../../ traversal out of receipts_dir
+            if not rcpt_path.startswith(receipts_dir) or (os.path.exists(rcpt_path) and os.path.commonpath([receipts_dir, rcpt_path]) != receipts_dir):
+                raise ValueError(f"Security error: Invalid evidence_ref '{evidence_ref}' (path traversal detected).")
+
             if not os.path.exists(rcpt_path):
                 raise ValueError(
                     f"Cannot mark task '{task_id}' Done: Physical receipt file not found at '{rcpt_path}'. "

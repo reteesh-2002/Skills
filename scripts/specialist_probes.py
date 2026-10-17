@@ -530,10 +530,10 @@ def probe_memory_soak_plateau(
 # 5. Architecture: Slice Boundary & LOC Probe
 # ──────────────────────────────────────────────
 
-def probe_slice_boundaries(project_root: Union[str, Path], max_loc: int = 600, fail_on_loc: bool = False) -> Dict[str, Any]:
+def probe_slice_boundaries(project_root: Union[str, Path], max_loc: int = 600, max_cohesive_loc: int = 1500, fail_on_loc: bool = False) -> Dict[str, Any]:
     """
     Scans project modules for illegal cross-slice internal imports
-    and checks implementation files against the max LOC guideline.
+    and checks implementation files against Semantic Enclosure bounds (cohesive modules up to 1,500 LOC).
     """
     root_path = Path(project_root).resolve()
     scripts_dir = Path(__file__).resolve().parent
@@ -543,7 +543,7 @@ def probe_slice_boundaries(project_root: Union[str, Path], max_loc: int = 600, f
         raise ImportError(f"Could not load slice-guard from {slice_guard_path}")
     slice_guard = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(slice_guard)
-    findings = slice_guard.scan_slice_project(root_path, max_loc=max_loc, fail_on_loc=fail_on_loc)
+    findings = slice_guard.scan_slice_project(root_path, max_loc=max_loc, max_cohesive_loc=max_cohesive_loc, fail_on_loc=fail_on_loc)
     is_pass = findings.get("status") == "pass"
     return {
         "status": findings.get("status", "pass"),

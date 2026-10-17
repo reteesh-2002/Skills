@@ -212,7 +212,7 @@ def copy_runtime_file(
         except OSError:
             pass
 
-    rel_manifest_path = str(dest_file.relative_to(dest_root))
+    rel_manifest_path = dest_file.relative_to(dest_root).as_posix()
     manifest_files[rel_manifest_path] = {
         "action": "created",
         "sha256": compute_sha256(dest_file),
@@ -551,7 +551,14 @@ def run_uninstall(
     restored_files = 0
 
     for rel_path, info in files_map.items():
-        file_path = dest_root / rel_path
+        file_path = (dest_root / rel_path).resolve()
+        
+        # Path containment check: ensure no path traversal escape from dest_root
+        if not file_path.is_relative_to(dest_root.resolve()):
+            if verbose:
+                print(f"⚠️  Skipping unsafe path traversal target: {file_path}")
+            continue
+
         action = info.get("action")
 
         if action == "created":

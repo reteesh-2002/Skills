@@ -215,20 +215,30 @@ def main():
                     rel_path = s_line[3:].strip()
                     if " -> " in rel_path:
                         rel_path = rel_path.split(" -> ")[-1].strip()
-                    if rel_path.startswith(".evidence/") or rel_path.startswith(".git/"):
+                    # Forgive internal metadata, scratch directories, and transient notes
+                    if (rel_path.startswith(".evidence/") or 
+                        rel_path.startswith(".git/") or 
+                        rel_path.startswith(".scratch/") or 
+                        rel_path.startswith("scratch/") or
+                        rel_path.startswith(".tmp") or
+                        rel_path.endswith(".tmp")):
                         continue
                     full_p = Path(REPO_ROOT) / rel_path
                     if full_p.is_file():
                         file_mtime = full_p.stat().st_mtime
                         if file_mtime > receipt_time:
-                            fail_gate(f"Stale evidence: working tree file '{rel_path}' modified after verification check was executed. Working directory is dirty (uncommitted or untracked changes present).", hook_mode=hook_mode)
+                            fail_gate(f"Stale evidence: working tree file '{rel_path}' modified after verification check was executed. Working directory is dirty (uncommitted changes present).", hook_mode=hook_mode)
 
             dirty_entries = [
                 s for s in status_out.splitlines()
-                if len(s) > 3 and not s[3:].strip().startswith(".evidence/") and not s[3:].strip().startswith(".git/")
+                if len(s) > 3 and not any(
+                    s[3:].strip().startswith(prefix) for prefix in (
+                        ".evidence/", ".git/", ".scratch/", "scratch/", ".tmp"
+                    )
+                ) and not s[3:].strip().endswith(".tmp")
             ]
             if dirty_entries:
-                fail_gate("Working directory is dirty (uncommitted or untracked changes present). Stash, commit, or clean working tree before release. Changes:\n" + "\n".join(dirty_entries), hook_mode=hook_mode)
+                fail_gate("Working directory is dirty (uncommitted or tracked modifications present). Stash, commit, or clean working tree before release. Changes:\n" + "\n".join(dirty_entries), hook_mode=hook_mode)
         except SystemExit:
             raise
         except Exception:

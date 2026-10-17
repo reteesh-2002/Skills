@@ -151,7 +151,7 @@ CREATE INDEX idx_outbox_pending ON outbox_events(status, next_retry_at) WHERE st
 
 ---
 
-## Sub-600 LOC Context Per Task & Module Cohesion Discipline
+## Bounded Context Windowing & Module Cohesion Discipline
 
 ### 1. Agent Task Context Boundedness
 When an agent implements or modifies a vertical slice, it loads only the files relevant to that specific task:
@@ -162,9 +162,9 @@ When an agent implements or modifies a vertical slice, it loads only the files r
 | `modules/<slice>/service.ts` | ~150–350 lines |
 | `modules/<slice>/routes.ts` | ~100–200 lines |
 | `modules/<slice>/<slice>.test.ts` | ~150–250 lines |
-| **Total in task context** | **~450–600 lines** |
+| **Total in task context** | **~450–700 lines** |
 
-The remaining thousands of lines in the project remain invisible to the prompt. This keeps working memory focused and prevents prompt degradation and multi-file regression loops.
+The remaining thousands of lines in the project remain invisible to the prompt. This keeps working memory focused and prevents prompt degradation and multi-file regression loops. In legacy monoliths where files are large, use line-range windowing.
 
 ### 2. Module Cohesion vs. Dogmatic Line Counting (Idea Council Consensus)
 A rigid file-size ceiling creates Goodhart's Law: agents game linters by inventing shallow `*_helpers.ts` or `*_utils.ts`, resulting in lasagna architecture, Confused Deputy security holes, and multi-file shotgun surgery.

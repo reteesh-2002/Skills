@@ -65,20 +65,21 @@ Select the smallest useful depth. See [`references/templates.md`](references/tem
 
 ---
 
-## 4. Sequencing, Parallelism & the Sub-600 LOC Context Rule
+## 4. Sequencing, Parallelism & Bounded Context Windowing
 
 - Provide a valid sequential order for every plan.
 - Sequential execution is the default. Recommend the orchestrator (`adaptive-worker-orchestrator-v2`) only when the user requests workers and the work is genuinely separable with non-overlapping file ownership.
 - Enforce strict 1-writer-per-file isolation for any concurrent tasks.
 - Dependency diagrams are optional; use them only when branching is clearer than an ordered list.
 
-**Sub-600 LOC Context Rule (enforced for vertical slice projects):**
-When a project uses vertical slice architecture (`src/modules/<slice>/`), each task must be scoped to a single slice. The agent context per task must stay below 600 lines by loading only the target slice files. Never plan a task that requires reading two different module slices simultaneously — break it into two separate tasks. See [`references/slice-dag-rules.md`](references/slice-dag-rules.md) for example DAGs.
+**Bounded Context Windowing & Semantic Enclosure:**
+To prevent prompt context degradation and hallucinated imports, tasks must be tightly scoped to target domain boundaries:
 
-- **1-Slice-Per-Task invariant**: A single task targets exactly one module slice.
-- **Explicit Context Ceiling**: If the `[CONTEXT SCOPE]` would exceed ~600 lines, split the task.
+- **1-Slice-Per-Task Invariant**: When a project uses vertical slice architecture (`src/modules/<slice>/`), a single task targets exactly one module slice.
 - **Cross-Slice Communication**: Tasks may reference another slice's `contract.ts` (its public interface) but never its `service.ts` or internal files.
-- **Cohesion Over File Chopping**: Individual cohesive files (state machines, parsers, schemas) may be larger (up to 1,200–1,500 LOC); do not fragment cohesive domain files into shallow helpers merely to satisfy line metrics.
+- **Call-Graph Windowing (Legacy Monolith Fallback)**: In legacy or monolithic codebases where files exceed 1,000 LOC, do NOT demand upfront file chopping or refuse to plan. Instead, scope context to relevant line ranges (e.g. lines 400–550 via `view_file`) and immediate caller-callee functions.
+- **Cohesion Over File Chopping**: Individual cohesive files (state machines, parsers, schemas, complex domain services) are expected and permitted up to 1,200–1,500 LOC under Semantic Enclosure. Strictly avoid fragmenting cohesive domain files into shallow mechanical helpers (`*_helpers`, `*_utils`, `*_ops`) merely to satisfy line metrics.
+- **Targeted File Scope**: Each task's `[CONTEXT SCOPE]` should strictly list only the 2–4 files or line ranges required for the deliverable. Never load entire directories.
 
 ---
 

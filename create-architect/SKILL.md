@@ -74,8 +74,8 @@ src/
 **Cross-Slice Import Rule & Context Boundedness (mandatory invariant):**
 - Modules communicate **only** through their own `contract.ts` or a shared event bus.
 - Direct imports of peer slice internals (e.g. `import { x } from '../billing/service'`) are strictly forbidden.
-- This invariant keeps the agent task context below 600 lines (reading only target slice contract, service, and tests) and prevents cascading regressions as codebases scale past 10,000 lines.
-- **Semantic Enclosure**: Atomic state machines, parsers, declarative schemas, and auth perimeters are permitted up to 1,200–1,500 LOC. Never mechanically fragment code into shallow `*_helpers` or `*_utils` to game line counts.
+- **Bounded Context Windowing**: Agents load only the target slice files (contract, service, routes, test) into prompt memory, keeping task context tightly bounded and preventing regressions as codebases scale to 50,000+ lines. In legacy monoliths, use line-range windowing.
+- **Semantic Enclosure**: Atomic state machines, parsers, declarative schemas, complex services, and auth perimeters are permitted up to 1,200–1,500 LOC. Never mechanically fragment code into shallow `*_helpers` or `*_utils` to game line counts.
 
 See [`references/vertical-slice-template.md`](references/vertical-slice-template.md) for the full scaffold with contract stubs.
 
