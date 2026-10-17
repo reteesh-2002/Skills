@@ -45,12 +45,14 @@ LOC_PRAGMA_RE = re.compile(r"""(?:@slice-guard-allow-loc|@allow-loc)""")
 
 # Regex for mechanical helper anti-pattern in slice directories (The Lasagna Blacklist)
 MECHANICAL_HELPER_RE = re.compile(
-    r"""^(?:.*[_-](?:helpers?|utils?|substate|sub_state|part[0-9]+|ops?|tools?|handlers?|delegates?|common|misc)\.[a-zA-Z0-9]+$|"""
-    r""".*(?:Helpers?|Utils?|SubState|Ops?|Tools?|Handlers?|Delegates?|Common|Misc)\.[a-zA-Z0-9]+$)""",
+    r"""^(?:.*[_-](?:helpers?|utils?|substate|sub_state|part[0-9]+|ops?|tools?|delegates?|common|misc)\.[a-zA-Z0-9]+$|"""
+    r""".*(?:Helpers?|Utils?|SubState|Ops?|Tools?|Delegates?|Common|Misc)\.[a-zA-Z0-9]+$)""",
     re.IGNORECASE
 )
 
 # Ubiquitous runtime, platform, and observability dependencies exempt from fan-out count
+# Note: Stateful persistence drivers (pg, redis, prisma, sqlite3) are intentionally excluded
+# so direct database access is measured as true architectural coupling against the fan-out budget.
 INFRASTRUCTURE_FAN_OUT_WHITELIST = {
     # Core React / Web runtime
     "react", "react-dom", "react/jsx-runtime", "next", "vue", "svelte",
@@ -61,8 +63,6 @@ INFRASTRUCTURE_FAN_OUT_WHITELIST = {
     "prom-client", "@opentelemetry/api", "@opentelemetry/sdk-node",
     # Styling & UI Primitives
     "clsx", "tailwind-merge", "class-variance-authority", "lucide-react",
-    # Common database drivers / clients
-    "pg", "postgres", "redis", "ioredis", "prisma", "@prisma/client", "sqlite3",
     # Core system & Python stdlib
     "os", "sys", "re", "json", "pathlib", "math", "time", "datetime",
     "collections", "functools", "itertools", "dataclasses",
@@ -410,7 +410,8 @@ def scan_slice_project(
     max_loc: int = 600,
     max_cohesive_loc: int = 1500,
     max_cyclomatic: int = 15,
-    max_total_cyclomatic: int = 50,
+    max_total_cyclomatic: int = 75,
+    max_branch_density: float = 0.06,
     max_fan_out: int = 7,
     enforce_loc: bool = True,
     fail_on_loc: bool = False,
@@ -457,6 +458,7 @@ def scan_slice_project(
 
                 files_count += 1
                 rel_file = str(file_path.relative_to(target_dir))
+                loc = count_lines_of_code(file_path)
 
                 # 1. Mechanical helper anti-pattern check (Semantic Enclosure)
                 if is_mechanical_helper_file(file_path):
@@ -481,9 +483,14 @@ def scan_slice_project(
                 fan_out = 0
                 targets: List[str] = []
 
+                # Compute dynamic branch density ceiling (≤ 0.06 CC/LOC, base ceiling 75)
+                effective_max_total_cc = max(max_total_cyclomatic, int(loc * max_branch_density)) if loc > 0 else max_total_cyclomatic
+                branch_density = round(total_file_complexity / loc, 3) if loc > 0 else 0.0
+
                 if not is_test_file(file_path):
                     funcs = analyze_cyclomatic_complexity(file_path)
                     total_file_complexity = sum(comp for _, _, comp in funcs)
+                    branch_density = round(total_file_complexity / loc, 3) if loc > 0 else 0.0
 
                     for fname, fline, comp in funcs:
                         if comp > max_func_complexity:
@@ -506,7 +513,7 @@ def scan_slice_project(
                                 "function": fname,
                             })
 
-                    if total_file_complexity > max_total_cyclomatic:
+                    if total_file_complexity > effective_max_total_cc:
                         violations.append({
                             "type": "high_total_complexity",
                             "severity": "WARNING",
@@ -514,11 +521,14 @@ def scan_slice_project(
                             "line": 0,
                             "module": mod_name,
                             "message": (
-                                f"Total file cyclomatic complexity of {total_file_complexity} exceeds ceiling of {max_total_cyclomatic} "
+                                f"Total file cyclomatic complexity of {total_file_complexity} (branch density: {branch_density:.3f} CC/LOC) "
+                                f"exceeds ceiling of {effective_max_total_cc} (base: {max_total_cyclomatic}, max density: {max_branch_density} CC/LOC) "
                                 f"across {len(funcs)} functions. God-Slice hazard. Decompose slice into distinct capabilities."
                             ),
                             "total_complexity": total_file_complexity,
-                            "max_total_cyclomatic": max_total_cyclomatic,
+                            "max_total_cyclomatic": effective_max_total_cc,
+                            "branch_density": branch_density,
+                            "max_branch_density": max_branch_density,
                         })
 
                     fan_out, targets = calculate_module_fan_out(file_path)
@@ -539,7 +549,6 @@ def scan_slice_project(
 
                 # 3. LOC check under Semantic Enclosure
                 if enforce_loc and not is_loc_exempt(file_path):
-                    loc = count_lines_of_code(file_path)
                     if loc > max_cohesive_loc:
                         violations.append({
                             "type": "loc_exceeded",
@@ -558,7 +567,7 @@ def scan_slice_project(
                         is_uncohesive = (
                             max_func_complexity > max_cyclomatic
                             or fan_out > max_fan_out
-                            or total_file_complexity > max_total_cyclomatic
+                            or total_file_complexity > effective_max_total_cc
                         )
                         if is_uncohesive:
                             violations.append({
@@ -570,7 +579,8 @@ def scan_slice_project(
                                 "message": (
                                     f"File has {loc} LOC and violates Semantic Enclosure complexity bounds "
                                     f"(worst cyclomatic complexity: {max_func_complexity}/{max_cyclomatic}, "
-                                    f"total complexity: {total_file_complexity}/{max_total_cyclomatic}, "
+                                    f"total complexity: {total_file_complexity}/{effective_max_total_cc}, "
+                                    f"branch density: {branch_density:.3f}/{max_branch_density}, "
                                     f"fan-out: {fan_out}/{max_fan_out}). "
                                     f"Decompose uncohesive logic or extract pure calculation functions."
                                 ),
@@ -578,6 +588,7 @@ def scan_slice_project(
                                 "max_loc": max_loc,
                                 "complexity": max_func_complexity,
                                 "total_complexity": total_file_complexity,
+                                "branch_density": branch_density,
                                 "fan_out": fan_out,
                             })
                         else:
@@ -587,6 +598,7 @@ def scan_slice_project(
                                 "loc": loc,
                                 "max_complexity": max_func_complexity,
                                 "total_complexity": total_file_complexity,
+                                "branch_density": branch_density,
                                 "fan_out": fan_out,
                             })
 
@@ -653,8 +665,14 @@ def main():
     parser.add_argument(
         "--max-total-cyclomatic",
         type=int,
-        default=50,
-        help="Maximum aggregate cyclomatic complexity per file (default: 50)",
+        default=75,
+        help="Base ceiling for aggregate cyclomatic complexity per file (default: 75)",
+    )
+    parser.add_argument(
+        "--max-branch-density",
+        type=float,
+        default=0.06,
+        help="Maximum cyclomatic branch density per LOC (default: 0.06 CC/LOC)",
     )
     parser.add_argument(
         "--max-fan-out",
@@ -704,6 +722,7 @@ def main():
         max_cohesive_loc=args.max_cohesive_loc,
         max_cyclomatic=args.max_cyclomatic,
         max_total_cyclomatic=args.max_total_cyclomatic,
+        max_branch_density=args.max_branch_density,
         max_fan_out=args.max_fan_out,
         enforce_loc=not args.no_loc_check,
         fail_on_loc=args.fail_on_loc,
@@ -723,10 +742,18 @@ def main():
     helper_warnings = [v for v in findings["violations"] if v.get("type") == "mechanical_helper_detected"]
     loc_warnings = [v for v in findings["violations"] if v.get("type") == "loc_exceeded"]
 
+    # Consolidate redundant diagnostics: files with explicit complexity breakdowns are not double-blasted under generic LOC warnings
+    complexity_files = {v["file"] for v in complexity_warnings}
+    standalone_loc_warnings = [
+        v for v in loc_warnings
+        if v["file"] not in complexity_files or "exceeds maximum cohesive ceiling" in v.get("message", "")
+    ]
+
     if findings.get("compliant_enclosures") and not args.quiet:
         print(f"\n📦 [slice-guard] Verified {len(findings['compliant_enclosures'])} cohesive module(s) under Semantic Enclosure:\n")
         for ce in findings["compliant_enclosures"]:
-            print(f"  ✅ [PASS: Semantic Enclosure] {ce['file']} ({ce['loc']} LOC, max CC: {ce['max_complexity']}, total CC: {ce['total_complexity']}, fan-out: {ce['fan_out']})")
+            density_str = f", density: {ce['branch_density']:.3f}" if "branch_density" in ce else ""
+            print(f"  ✅ [PASS: Semantic Enclosure] {ce['file']} ({ce['loc']} LOC, max CC: {ce['max_complexity']}, total CC: {ce['total_complexity']}{density_str}, fan-out: {ce['fan_out']})")
 
     if not findings["violations"]:
         if not args.quiet:
@@ -758,11 +785,11 @@ def main():
             print(f"  [COMPLEXITY] {v['file']}{loc_info}")
             print(f"     └── {v['message']}")
 
-    if loc_warnings:
+    if standalone_loc_warnings:
         prefix = "🚨" if args.fail_on_loc else "⚠️"
         status_label = "ERROR" if args.fail_on_loc else "WARNING"
-        print(f"\n{prefix} [slice-guard] Detected {len(loc_warnings)} file(s) exceeding LOC guidelines:\n")
-        for v in loc_warnings:
+        print(f"\n{prefix} [slice-guard] Detected {len(standalone_loc_warnings)} file(s) exceeding LOC guidelines:\n")
+        for v in standalone_loc_warnings:
             print(f"  [{status_label}] {v['file']}")
             print(f"     └── {v['message']}")
 

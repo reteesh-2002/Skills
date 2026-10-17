@@ -360,28 +360,59 @@ class TestSliceGuard(unittest.TestCase):
             self.assertIn("exceeds maximum cohesive ceiling", loc_violations[0]["message"])
 
     def test_aggregate_file_complexity_cap_detected(self):
-        """Files where total aggregate cyclomatic complexity exceeds 50 are flagged for high_total_complexity."""
+        """Files where total aggregate cyclomatic complexity exceeds effective ceiling are flagged for high_total_complexity."""
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             modules = root / "src" / "modules"
             billing = modules / "billing"
             billing.mkdir(parents=True)
 
-            # 6 functions each with CC=10 => Total CC = 66 (> 50 limit)
+            # 8 functions each with CC=10 => Total CC = 88 (> 75 base limit in a short file)
             funcs = []
-            for fn_idx in range(6):
+            for fn_idx in range(8):
                 branches = "\n".join([f"    if (x === {i}) return {i};" for i in range(10)])
                 funcs.append(f"export function fn_{fn_idx}(x: number) {{\n{branches}\n    return -1;\n}}\n")
             (billing / "service.ts").write_text("\n".join(funcs))
 
-            cmd = [sys.executable, str(SLICE_GUARD_SCRIPT), str(root), "--max-total-cyclomatic", "50", "--json"]
+            cmd = [sys.executable, str(SLICE_GUARD_SCRIPT), str(root), "--max-total-cyclomatic", "75", "--json"]
             res = subprocess.run(cmd, capture_output=True, text=True)
             self.assertEqual(res.returncode, 0)
             data = json.loads(res.stdout)
             total_violations = [v for v in data["violations"] if v["type"] == "high_total_complexity"]
             self.assertEqual(len(total_violations), 1)
-            self.assertEqual(total_violations[0]["total_complexity"], 66)
-            self.assertIn("Total file cyclomatic complexity of 66 exceeds ceiling of 50", total_violations[0]["message"])
+            self.assertEqual(total_violations[0]["total_complexity"], 88)
+            self.assertIn("Total file cyclomatic complexity of 88", total_violations[0]["message"])
+            self.assertIn("branch density", total_violations[0]["message"])
+
+    def test_branch_density_permits_cohesive_large_state_machine(self):
+        """Large cohesive files (1400 LOC) with low branch density (≤ 0.06 CC/LOC) pass cleanly under Semantic Enclosure."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            modules = root / "src" / "modules"
+            billing = modules / "billing"
+            billing.mkdir(parents=True)
+
+            # 1400 LOC file with 8 functions having CC=10 => Total CC = 88
+            # Effective ceiling: max(75, int(1400 * 0.06)) = 84.
+            # Let's give 7 functions with CC=10 => Total CC = 77.
+            # Branch density: 77 / 1400 = 0.055 <= 0.06, and 77 <= max(75, 84) = 84!
+            funcs = []
+            for fn_idx in range(7):
+                branches = "\n".join([f"    if (x === {i}) return {i};" for i in range(10)])
+                funcs.append(f"export function state_{fn_idx}(x: number) {{\n{branches}\n    return -1;\n}}\n")
+            padding = [f"const pad_{i} = {i};" for i in range(1300)]
+            (billing / "service.ts").write_text("\n".join(funcs + padding) + "\n")
+
+            cmd = [sys.executable, str(SLICE_GUARD_SCRIPT), str(root), "--max-loc", "600", "--max-cohesive-loc", "1500", "--json"]
+            res = subprocess.run(cmd, capture_output=True, text=True)
+            self.assertEqual(res.returncode, 0)
+            data = json.loads(res.stdout)
+            self.assertEqual(data["status"], "pass")
+            self.assertEqual(len(data["violations"]), 0)
+            self.assertEqual(len(data["compliant_enclosures"]), 1)
+            enc = data["compliant_enclosures"][0]
+            self.assertGreaterEqual(enc["loc"], 1300)
+            self.assertLessEqual(enc["branch_density"], 0.06)
 
     def test_fan_out_whitelists_standard_infrastructure(self):
         """Standard infrastructure/framework packages (React, Next, Zod, Pino, etc.) do NOT increment fan-out."""
@@ -400,7 +431,7 @@ class TestSliceGuard(unittest.TestCase):
                 "import pino from 'pino';",
                 "import { clsx } from 'clsx';",
                 "import { trace } from '@opentelemetry/api';",
-                "import { Client } from 'pg';",
+                "import winston from 'winston';",
                 "import { extA } from 'actual-domain-package-a';",
                 "import { extB } from 'actual-domain-package-b';",
             ]
@@ -413,8 +444,39 @@ class TestSliceGuard(unittest.TestCase):
             fan_violations = [v for v in data["violations"] if v["type"] == "high_fan_out"]
             self.assertEqual(len(fan_violations), 0)  # Fan-out is 2, well within <= 7 limit
 
-    def test_expanded_lasagna_filter_detects_substates_and_ops(self):
-        """Expanded lasagna filter catches *_ops, *_tools, *_handlers, *_delegates, *_substate, etc."""
+    def test_database_drivers_not_whitelisted_and_count_toward_fan_out(self):
+        """Stateful database drivers (pg, redis, prisma) are NOT whitelisted and count toward fan-out."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            modules = root / "src" / "modules"
+            billing = modules / "billing"
+            billing.mkdir(parents=True)
+
+            # 5 domain packages + 3 database drivers = 8 external coupling imports (> 7 limit)
+            imports = [
+                "import { Client } from 'pg';",
+                "import Redis from 'ioredis';",
+                "import { PrismaClient } from '@prisma/client';",
+                "import { a } from 'pkg-a';",
+                "import { b } from 'pkg-b';",
+                "import { c } from 'pkg-c';",
+                "import { d } from 'pkg-d';",
+                "import { e } from 'pkg-e';",
+            ]
+            (billing / "service.ts").write_text("\n".join(imports) + "\nexport const x = 1;\n")
+
+            cmd = [sys.executable, str(SLICE_GUARD_SCRIPT), str(root), "--max-fan-out", "7", "--json"]
+            res = subprocess.run(cmd, capture_output=True, text=True)
+            self.assertEqual(res.returncode, 0)
+            data = json.loads(res.stdout)
+            fan_violations = [v for v in data["violations"] if v["type"] == "high_fan_out"]
+            self.assertEqual(len(fan_violations), 1)
+            self.assertEqual(fan_violations[0]["fan_out"], 8)
+            self.assertIn("pg", fan_violations[0]["message"])
+            self.assertIn("ioredis", fan_violations[0]["message"])
+
+    def test_expanded_lasagna_filter_allows_handlers_but_catches_ops_and_substates(self):
+        """Expanded lasagna filter permits legitimate *_handlers.ts, but catches *_ops, *_tools, *_delegates, *_substate."""
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             modules = root / "src" / "modules"
@@ -422,6 +484,7 @@ class TestSliceGuard(unittest.TestCase):
             billing.mkdir(parents=True)
 
             (billing / "contract.ts").write_text("export const x = 1;\n")
+            (billing / "webhook_handlers.ts").write_text("export const webhookHandler = () => {};\n")
             (billing / "billing_ops.ts").write_text("export const op = 1;\n")
             (billing / "billing_tools.ts").write_text("export const tool = 1;\n")
             (billing / "billing_delegates.ts").write_text("export const del = 1;\n")
@@ -438,6 +501,30 @@ class TestSliceGuard(unittest.TestCase):
             self.assertTrue(any("billing_tools.ts" in f for f in detected_files))
             self.assertTrue(any("billing_delegates.ts" in f for f in detected_files))
             self.assertTrue(any("billing_substate.ts" in f for f in detected_files))
+            # webhook_handlers.ts is legitimate and MUST NOT be in violations!
+            self.assertFalse(any("webhook_handlers.ts" in f for f in detected_files))
+
+    def test_consolidated_human_output_prevents_duplicate_warning_blocks(self):
+        """When a file has complexity violations, human output does not double-blast with redundant generic LOC warnings."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            modules = root / "src" / "modules"
+            billing = modules / "billing"
+            billing.mkdir(parents=True)
+
+            branches = "\n".join([f"    if (x === {i}) return {i};" for i in range(20)])
+            extra_lines = "\n".join([f"const val_{i} = {i};" for i in range(700)])
+            code = f"export function process(x: number) {{\n{branches}\n  return -1;\n}}\n{extra_lines}\n"
+            (billing / "service.ts").write_text(code)
+
+            cmd = [sys.executable, str(SLICE_GUARD_SCRIPT), str(root), "--max-loc", "600"]
+            res = subprocess.run(cmd, capture_output=True, text=True)
+            self.assertEqual(res.returncode, 0)
+            # Should have [COMPLEXITY] block
+            self.assertIn("[COMPLEXITY]", res.stdout)
+            self.assertIn("Function 'process' has cyclomatic complexity", res.stdout)
+            # Should NOT have duplicate [WARNING] block for exceeding LOC guidelines
+            self.assertNotIn("Detected 1 file(s) exceeding LOC guidelines", res.stdout)
 
 
 if __name__ == "__main__":
