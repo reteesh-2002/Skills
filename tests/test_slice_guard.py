@@ -148,16 +148,18 @@ class TestSliceGuard(unittest.TestCase):
             self.assertEqual(data["status"], "pass")
 
     def test_loc_ceiling_advisory_warning_default(self):
-        """Files exceeding max-loc emit advisory warnings but do not fail build by default."""
+        """Files exceeding max-loc with complexity emit advisory warnings but do not fail build by default."""
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             modules = root / "src" / "modules"
             billing = modules / "billing"
             billing.mkdir(parents=True)
 
-            # 320 non-empty lines
-            lines = [f"const val_{i} = {i};" for i in range(320)]
-            (billing / "service.ts").write_text("\n".join(lines) + "\n")
+            # 320 lines with high cyclomatic complexity (uncohesive)
+            branches = "\n".join([f"    if (x === {i}) return {i};" for i in range(20)])
+            extra_lines = "\n".join([f"const val_{i} = {i};" for i in range(300)])
+            code = f"export function process(x: number) {{\n{branches}\n  return -1;\n}}\n{extra_lines}\n"
+            (billing / "service.ts").write_text(code)
 
             cmd = [sys.executable, str(SLICE_GUARD_SCRIPT), str(root), "--max-loc", "300", "--json"]
             res = subprocess.run(cmd, capture_output=True, text=True)
@@ -172,15 +174,17 @@ class TestSliceGuard(unittest.TestCase):
             self.assertIn("cyclomatic complexity", loc_violations[0]["message"])
 
     def test_loc_ceiling_fails_with_fail_on_loc_flag(self):
-        """With --fail-on-loc, files exceeding max-loc fail with exit 1."""
+        """With --fail-on-loc, uncohesive files exceeding max-loc fail with exit 1."""
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             modules = root / "src" / "modules"
             billing = modules / "billing"
             billing.mkdir(parents=True)
 
-            lines = [f"const val_{i} = {i};" for i in range(320)]
-            (billing / "service.ts").write_text("\n".join(lines) + "\n")
+            branches = "\n".join([f"    if (x === {i}) return {i};" for i in range(20)])
+            extra_lines = "\n".join([f"const val_{i} = {i};" for i in range(300)])
+            code = f"export function process(x: number) {{\n{branches}\n  return -1;\n}}\n{extra_lines}\n"
+            (billing / "service.ts").write_text(code)
 
             cmd = [sys.executable, str(SLICE_GUARD_SCRIPT), str(root), "--max-loc", "300", "--fail-on-loc", "--json"]
             res = subprocess.run(cmd, capture_output=True, text=True)
@@ -299,7 +303,7 @@ class TestSliceGuard(unittest.TestCase):
             self.assertEqual(fan_violations[0]["fan_out"], 9)
 
     def test_cohesive_module_large_loc_approved_under_semantic_enclosure(self):
-        """Cohesive modules (≤15 complexity, ≤7 fan-out) between 600 and 1500 LOC are marked cohesive."""
+        """Cohesive modules (≤15 CC, ≤50 total CC, ≤7 fan-out) between 600 and 1500 LOC pass cleanly as green PASS with zero warnings."""
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             modules = root / "src" / "modules"
@@ -319,10 +323,121 @@ class TestSliceGuard(unittest.TestCase):
             res = subprocess.run(cmd, capture_output=True, text=True)
             self.assertEqual(res.returncode, 0)
             data = json.loads(res.stdout)
+            self.assertEqual(data["status"], "pass")
+            self.assertEqual(len(data["violations"]), 0)
+            self.assertEqual(len(data["compliant_enclosures"]), 1)
+            enc = data["compliant_enclosures"][0]
+            self.assertGreaterEqual(enc["loc"], 800)
+            self.assertLessEqual(enc["max_complexity"], 15)
+            self.assertLessEqual(enc["total_complexity"], 50)
+            self.assertLessEqual(enc["fan_out"], 7)
+
+            # Also verify clean human-readable output contains [PASS: Semantic Enclosure] and no warning prefix
+            cmd_human = [sys.executable, str(SLICE_GUARD_SCRIPT), str(root), "--max-loc", "600", "--max-cohesive-loc", "1500"]
+            res_human = subprocess.run(cmd_human, capture_output=True, text=True)
+            self.assertEqual(res_human.returncode, 0)
+            self.assertIn("[PASS: Semantic Enclosure]", res_human.stdout)
+            self.assertNotIn("[WARNING]", res_human.stdout)
+
+    def test_file_exceeds_cohesive_ceiling_fails_with_fail_on_loc(self):
+        """Files exceeding the absolute cohesive ceiling (1500 LOC) fail when --fail-on-loc is set."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            modules = root / "src" / "modules"
+            billing = modules / "billing"
+            billing.mkdir(parents=True)
+
+            lines = [f"const line_{i} = {i};" for i in range(1600)]
+            (billing / "service.ts").write_text("\n".join(lines) + "\n")
+
+            cmd = [sys.executable, str(SLICE_GUARD_SCRIPT), str(root), "--max-cohesive-loc", "1500", "--fail-on-loc", "--json"]
+            res = subprocess.run(cmd, capture_output=True, text=True)
+            self.assertEqual(res.returncode, 1)
+            data = json.loads(res.stdout)
+            self.assertEqual(data["status"], "fail")
             loc_violations = [v for v in data["violations"] if v["type"] == "loc_exceeded"]
             self.assertEqual(len(loc_violations), 1)
-            self.assertTrue(loc_violations[0].get("cohesive", False))
-            self.assertIn("Permitted under Semantic Enclosure", loc_violations[0]["message"])
+            self.assertIn("exceeds maximum cohesive ceiling", loc_violations[0]["message"])
+
+    def test_aggregate_file_complexity_cap_detected(self):
+        """Files where total aggregate cyclomatic complexity exceeds 50 are flagged for high_total_complexity."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            modules = root / "src" / "modules"
+            billing = modules / "billing"
+            billing.mkdir(parents=True)
+
+            # 6 functions each with CC=10 => Total CC = 66 (> 50 limit)
+            funcs = []
+            for fn_idx in range(6):
+                branches = "\n".join([f"    if (x === {i}) return {i};" for i in range(10)])
+                funcs.append(f"export function fn_{fn_idx}(x: number) {{\n{branches}\n    return -1;\n}}\n")
+            (billing / "service.ts").write_text("\n".join(funcs))
+
+            cmd = [sys.executable, str(SLICE_GUARD_SCRIPT), str(root), "--max-total-cyclomatic", "50", "--json"]
+            res = subprocess.run(cmd, capture_output=True, text=True)
+            self.assertEqual(res.returncode, 0)
+            data = json.loads(res.stdout)
+            total_violations = [v for v in data["violations"] if v["type"] == "high_total_complexity"]
+            self.assertEqual(len(total_violations), 1)
+            self.assertEqual(total_violations[0]["total_complexity"], 66)
+            self.assertIn("Total file cyclomatic complexity of 66 exceeds ceiling of 50", total_violations[0]["message"])
+
+    def test_fan_out_whitelists_standard_infrastructure(self):
+        """Standard infrastructure/framework packages (React, Next, Zod, Pino, etc.) do NOT increment fan-out."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            modules = root / "src" / "modules"
+            billing = modules / "billing"
+            billing.mkdir(parents=True)
+
+            # 8 infrastructure packages + 2 actual external domain packages = 10 imports total
+            imports = [
+                "import React from 'react';",
+                "import ReactDOM from 'react-dom';",
+                "import { NextResponse } from 'next/server';",
+                "import { z } from 'zod';",
+                "import pino from 'pino';",
+                "import { clsx } from 'clsx';",
+                "import { trace } from '@opentelemetry/api';",
+                "import { Client } from 'pg';",
+                "import { extA } from 'actual-domain-package-a';",
+                "import { extB } from 'actual-domain-package-b';",
+            ]
+            (billing / "service.ts").write_text("\n".join(imports) + "\nexport const x = 1;\n")
+
+            cmd = [sys.executable, str(SLICE_GUARD_SCRIPT), str(root), "--max-fan-out", "7", "--json"]
+            res = subprocess.run(cmd, capture_output=True, text=True)
+            self.assertEqual(res.returncode, 0)
+            data = json.loads(res.stdout)
+            fan_violations = [v for v in data["violations"] if v["type"] == "high_fan_out"]
+            self.assertEqual(len(fan_violations), 0)  # Fan-out is 2, well within <= 7 limit
+
+    def test_expanded_lasagna_filter_detects_substates_and_ops(self):
+        """Expanded lasagna filter catches *_ops, *_tools, *_handlers, *_delegates, *_substate, etc."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            modules = root / "src" / "modules"
+            billing = modules / "billing"
+            billing.mkdir(parents=True)
+
+            (billing / "contract.ts").write_text("export const x = 1;\n")
+            (billing / "billing_ops.ts").write_text("export const op = 1;\n")
+            (billing / "billing_tools.ts").write_text("export const tool = 1;\n")
+            (billing / "billing_delegates.ts").write_text("export const del = 1;\n")
+            (billing / "billing_substate.ts").write_text("export const sub = 1;\n")
+
+            cmd = [sys.executable, str(SLICE_GUARD_SCRIPT), str(root), "--json"]
+            res = subprocess.run(cmd, capture_output=True, text=True)
+            self.assertEqual(res.returncode, 0)
+            data = json.loads(res.stdout)
+            helper_violations = [v for v in data["violations"] if v["type"] == "mechanical_helper_detected"]
+            self.assertEqual(len(helper_violations), 4)
+            detected_files = {v["file"] for v in helper_violations}
+            self.assertTrue(any("billing_ops.ts" in f for f in detected_files))
+            self.assertTrue(any("billing_tools.ts" in f for f in detected_files))
+            self.assertTrue(any("billing_delegates.ts" in f for f in detected_files))
+            self.assertTrue(any("billing_substate.ts" in f for f in detected_files))
 
 
 if __name__ == "__main__":

@@ -43,12 +43,42 @@ LOC_EXEMPT_PATTERNS = [
 
 LOC_PRAGMA_RE = re.compile(r"""(?:@slice-guard-allow-loc|@allow-loc)""")
 
-# Regex for mechanical helper anti-pattern in slice directories
+# Regex for mechanical helper anti-pattern in slice directories (The Lasagna Blacklist)
 MECHANICAL_HELPER_RE = re.compile(
-    r"""^(?:.*[_-](?:helpers?|utils?|substate|sub_state|part[0-9]+)\.[a-zA-Z0-9]+$|"""
-    r""".*(?:Helpers?|Utils?|SubState)\.[a-zA-Z0-9]+$)""",
+    r"""^(?:.*[_-](?:helpers?|utils?|substate|sub_state|part[0-9]+|ops?|tools?|handlers?|delegates?|common|misc)\.[a-zA-Z0-9]+$|"""
+    r""".*(?:Helpers?|Utils?|SubState|Ops?|Tools?|Handlers?|Delegates?|Common|Misc)\.[a-zA-Z0-9]+$)""",
     re.IGNORECASE
 )
+
+# Ubiquitous runtime, platform, and observability dependencies exempt from fan-out count
+INFRASTRUCTURE_FAN_OUT_WHITELIST = {
+    # Core React / Web runtime
+    "react", "react-dom", "react/jsx-runtime", "next", "vue", "svelte",
+    # Validation & Typing
+    "zod", "pydantic", "typing", "typing_extensions", "types",
+    # Logging, Observability & Telemetry
+    "pino", "winston", "bunyan", "sentry", "@sentry/node", "@sentry/react",
+    "prom-client", "@opentelemetry/api", "@opentelemetry/sdk-node",
+    # Styling & UI Primitives
+    "clsx", "tailwind-merge", "class-variance-authority", "lucide-react",
+    # Common database drivers / clients
+    "pg", "postgres", "redis", "ioredis", "prisma", "@prisma/client", "sqlite3",
+    # Core system & Python stdlib
+    "os", "sys", "re", "json", "pathlib", "math", "time", "datetime",
+    "collections", "functools", "itertools", "dataclasses",
+    "abc", "contextlib", "logging", "asyncio", "unittest",
+}
+
+
+def is_whitelisted_fan_out_dependency(target: str) -> bool:
+    """Check if imported package is ubiquitous platform/framework infrastructure."""
+    t = target.lower()
+    if t in INFRASTRUCTURE_FAN_OUT_WHITELIST:
+        return True
+    if t.startswith(("@opentelemetry/", "react/", "@types/", "@sentry/")):
+        return True
+    return False
+
 
 # Regex for JS/TS function boundaries & branching tokens
 JS_FUNC_START_RE = re.compile(
@@ -208,11 +238,14 @@ def calculate_module_fan_out(file_path: Path) -> Tuple[int, List[str]]:
                 if p.startswith(("../", "@/modules/", "~/modules/")):
                     clean = p.replace("@/", "").replace("~/", "")
                     parts = [x for x in clean.split("/") if x and x != ".."]
-                    targets.add("/".join(parts[:2]) if len(parts) >= 2 else parts[0])
+                    mod_target = "/".join(parts[:2]) if len(parts) >= 2 else parts[0]
+                    if not is_whitelisted_fan_out_dependency(mod_target):
+                        targets.add(mod_target)
                 else:
                     parts = p.split("/")
                     pkg = parts[0] if not p.startswith("@") else "/".join(parts[:2])
-                    targets.add(pkg)
+                    if not is_whitelisted_fan_out_dependency(pkg):
+                        targets.add(pkg)
 
         elif ext == ".py":
             m_from = PY_FROM_IMPORT_RE.match(stripped)
@@ -222,13 +255,17 @@ def calculate_module_fan_out(file_path: Path) -> Tuple[int, List[str]]:
                     continue
                 if mod.startswith(".."):
                     clean = mod.lstrip(".")
-                    targets.add(clean.split(".")[0])
+                    target_pkg = clean.split(".")[0]
                 else:
-                    targets.add(mod.split(".")[0])
+                    target_pkg = mod.split(".")[0]
+                if not is_whitelisted_fan_out_dependency(target_pkg):
+                    targets.add(target_pkg)
             else:
                 m_dir = PY_DIRECT_IMPORT_RE.match(stripped)
                 if m_dir:
-                    targets.add(m_dir.group("mod").split(".")[0])
+                    target_pkg = m_dir.group("mod").split(".")[0]
+                    if not is_whitelisted_fan_out_dependency(target_pkg):
+                        targets.add(target_pkg)
 
     return len(targets), sorted(list(targets))
 
@@ -373,6 +410,7 @@ def scan_slice_project(
     max_loc: int = 600,
     max_cohesive_loc: int = 1500,
     max_cyclomatic: int = 15,
+    max_total_cyclomatic: int = 50,
     max_fan_out: int = 7,
     enforce_loc: bool = True,
     fail_on_loc: bool = False,
@@ -389,6 +427,7 @@ def scan_slice_project(
         "modules_checked": 0,
         "files_checked": 0,
         "violations": [],
+        "compliant_enclosures": [],
         "summary": {},
     }
 
@@ -407,6 +446,7 @@ def scan_slice_project(
 
     files_count = 0
     violations = []
+    compliant_enclosures = []
 
     for mod_name, mod_dir in module_dirs.items():
         for root, _, files in os.walk(mod_dir):
@@ -429,12 +469,13 @@ def scan_slice_project(
                         "message": (
                             f"Mechanical helper file '{file_path.name}' detected. "
                             f"Violates Semantic Enclosure policy. Colocate atomic domain logic within the primary service "
-                            f"or extract a formal domain slice; avoid shallow lasagna helpers (*_helpers, *_utils)."
+                            f"or extract a formal domain slice; avoid shallow lasagna helpers (*_helpers, *_utils, *_ops)."
                         ),
                     })
 
                 # 2. Complexity & Fan-Out analysis (Semantic Enclosure invariants)
                 max_func_complexity = 0
+                total_file_complexity = 0
                 worst_func = ""
                 worst_func_line = 0
                 fan_out = 0
@@ -442,6 +483,8 @@ def scan_slice_project(
 
                 if not is_test_file(file_path):
                     funcs = analyze_cyclomatic_complexity(file_path)
+                    total_file_complexity = sum(comp for _, _, comp in funcs)
+
                     for fname, fline, comp in funcs:
                         if comp > max_func_complexity:
                             max_func_complexity = comp
@@ -462,6 +505,21 @@ def scan_slice_project(
                                 "max_cyclomatic": max_cyclomatic,
                                 "function": fname,
                             })
+
+                    if total_file_complexity > max_total_cyclomatic:
+                        violations.append({
+                            "type": "high_total_complexity",
+                            "severity": "WARNING",
+                            "file": rel_file,
+                            "line": 0,
+                            "module": mod_name,
+                            "message": (
+                                f"Total file cyclomatic complexity of {total_file_complexity} exceeds ceiling of {max_total_cyclomatic} "
+                                f"across {len(funcs)} functions. God-Slice hazard. Decompose slice into distinct capabilities."
+                            ),
+                            "total_complexity": total_file_complexity,
+                            "max_total_cyclomatic": max_total_cyclomatic,
+                        })
 
                     fan_out, targets = calculate_module_fan_out(file_path)
                     if fan_out > max_fan_out:
@@ -497,7 +555,11 @@ def scan_slice_project(
                             "max_loc": max_cohesive_loc,
                         })
                     elif loc > max_loc:
-                        is_uncohesive = max_func_complexity > max_cyclomatic or fan_out > max_fan_out
+                        is_uncohesive = (
+                            max_func_complexity > max_cyclomatic
+                            or fan_out > max_fan_out
+                            or total_file_complexity > max_total_cyclomatic
+                        )
                         if is_uncohesive:
                             violations.append({
                                 "type": "loc_exceeded",
@@ -507,30 +569,25 @@ def scan_slice_project(
                                 "module": mod_name,
                                 "message": (
                                     f"File has {loc} LOC and violates Semantic Enclosure complexity bounds "
-                                    f"(worst cyclomatic complexity: {max_func_complexity}/{max_cyclomatic}, fan-out: {fan_out}/{max_fan_out}). "
+                                    f"(worst cyclomatic complexity: {max_func_complexity}/{max_cyclomatic}, "
+                                    f"total complexity: {total_file_complexity}/{max_total_cyclomatic}, "
+                                    f"fan-out: {fan_out}/{max_fan_out}). "
                                     f"Decompose uncohesive logic or extract pure calculation functions."
                                 ),
                                 "loc": loc,
                                 "max_loc": max_loc,
                                 "complexity": max_func_complexity,
+                                "total_complexity": total_file_complexity,
                                 "fan_out": fan_out,
                             })
                         else:
-                            violations.append({
-                                "type": "loc_exceeded",
-                                "severity": "WARNING",
+                            # Compliant Semantic Enclosure: render clean green [PASS], do not scold with warnings!
+                            compliant_enclosures.append({
                                 "file": rel_file,
-                                "line": 0,
-                                "module": mod_name,
-                                "message": (
-                                    f"File exceeds {max_loc} LOC guideline ({loc} non-empty lines). "
-                                    f"Permitted under Semantic Enclosure up to {max_cohesive_loc} LOC because cyclomatic complexity "
-                                    f"({max_func_complexity} ≤ {max_cyclomatic}) and fan-out ({fan_out} ≤ {max_fan_out}) remain bounded. "
-                                    f"Avoid mechanical helper splitting (*_utils, *_helpers) that fragments atomic transactions."
-                                ),
                                 "loc": loc,
-                                "max_loc": max_loc,
-                                "cohesive": True,
+                                "max_complexity": max_func_complexity,
+                                "total_complexity": total_file_complexity,
+                                "fan_out": fan_out,
                             })
 
                 # 4. Cross-slice import check
@@ -547,12 +604,13 @@ def scan_slice_project(
 
     results["files_checked"] = files_count
     results["violations"] = violations
+    results["compliant_enclosures"] = compliant_enclosures
 
     # Any CRITICAL violation causes failure; LOC/complexity warnings only fail if explicitly requested
     has_critical = any(v.get("severity") == "CRITICAL" for v in violations)
     has_loc_errors = fail_on_loc and any(v.get("type") == "loc_exceeded" for v in violations)
     has_complexity_errors = fail_on_complexity and any(
-        v.get("type") in ("high_cyclomatic_complexity", "high_fan_out", "mechanical_helper_detected")
+        v.get("type") in ("high_cyclomatic_complexity", "high_total_complexity", "high_fan_out", "mechanical_helper_detected")
         for v in violations
     )
 
@@ -591,6 +649,12 @@ def main():
         type=int,
         default=15,
         help="Maximum cyclomatic complexity per function (default: 15)",
+    )
+    parser.add_argument(
+        "--max-total-cyclomatic",
+        type=int,
+        default=50,
+        help="Maximum aggregate cyclomatic complexity per file (default: 50)",
     )
     parser.add_argument(
         "--max-fan-out",
@@ -639,6 +703,7 @@ def main():
         max_loc=args.max_loc,
         max_cohesive_loc=args.max_cohesive_loc,
         max_cyclomatic=args.max_cyclomatic,
+        max_total_cyclomatic=args.max_total_cyclomatic,
         max_fan_out=args.max_fan_out,
         enforce_loc=not args.no_loc_check,
         fail_on_loc=args.fail_on_loc,
@@ -651,15 +716,23 @@ def main():
 
     # Human-readable output
     critical_violations = [v for v in findings["violations"] if v.get("severity") == "CRITICAL"]
-    complexity_warnings = [v for v in findings["violations"] if v.get("type") in ("high_cyclomatic_complexity", "high_fan_out")]
+    complexity_warnings = [
+        v for v in findings["violations"]
+        if v.get("type") in ("high_cyclomatic_complexity", "high_total_complexity", "high_fan_out")
+    ]
     helper_warnings = [v for v in findings["violations"] if v.get("type") == "mechanical_helper_detected"]
     loc_warnings = [v for v in findings["violations"] if v.get("type") == "loc_exceeded"]
+
+    if findings.get("compliant_enclosures") and not args.quiet:
+        print(f"\n📦 [slice-guard] Verified {len(findings['compliant_enclosures'])} cohesive module(s) under Semantic Enclosure:\n")
+        for ce in findings["compliant_enclosures"]:
+            print(f"  ✅ [PASS: Semantic Enclosure] {ce['file']} ({ce['loc']} LOC, max CC: {ce['max_complexity']}, total CC: {ce['total_complexity']}, fan-out: {ce['fan_out']})")
 
     if not findings["violations"]:
         if not args.quiet:
             mods = findings["modules_checked"]
             files = findings["files_checked"]
-            print(f"✅ [slice-guard] All module boundaries, complexity limits, and LOC guidelines respected.")
+            print(f"\n✅ [slice-guard] All module boundaries, complexity limits, and LOC guidelines respected.")
             print(f"   Checked {mods} vertical slices ({files} source files). Zero violations.")
         sys.exit(0)
 
