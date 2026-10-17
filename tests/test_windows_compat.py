@@ -135,21 +135,44 @@ class TestPurePythonExecProxy(unittest.TestCase):
         cmd = [sys.executable, "-c", "print('win_compat_output')"]
         test_args = ["exec_proxy.py", "--label", label] + cmd
 
-        with patch.object(sys, "argv", test_args):
-            try:
-                exec_proxy.main()
-            except SystemExit as se:
-                self.assertEqual(se.code, 0)
-
-        # Check receipt existence
         repo_root = Path(__file__).resolve().parent.parent
         manifest_file = repo_root / ".evidence" / "manifest.v1.json"
-        self.assertTrue(manifest_file.exists())
-        with open(manifest_file, "r") as mf:
-            m = json.load(mf)
-        checks = [c for c in m.get("checks", []) if c.get("label") == label]
-        self.assertTrue(len(checks) >= 1)
-        self.assertEqual(checks[-1]["exit_code"], 0)
+        created_receipt = None
+        try:
+            with patch.object(sys, "argv", test_args):
+                try:
+                    exec_proxy.main()
+                except SystemExit as se:
+                    self.assertEqual(se.code, 0)
+
+            # Check receipt existence
+            self.assertTrue(manifest_file.exists())
+            with open(manifest_file, "r") as mf:
+                m = json.load(mf)
+            checks = [c for c in m.get("checks", []) if c.get("label") == label]
+            self.assertTrue(len(checks) >= 1)
+            self.assertEqual(checks[-1]["exit_code"], 0)
+            created_receipt = checks[-1].get("receipt_id")
+        finally:
+            # Clean up test check to keep repo release manifest clean
+            if manifest_file.exists():
+                try:
+                    with open(manifest_file, "r") as mf:
+                        m = json.load(mf)
+                    m["checks"] = [c for c in m.get("checks", []) if c.get("label") != label]
+                    import runtime_evidence
+                    m["policy_disposition"] = runtime_evidence.calculate_policy_disposition(m.get("checks", []))
+                    with open(manifest_file, "w") as mf:
+                        json.dump(m, mf, indent=2)
+                    if created_receipt:
+                        rcpt_path = repo_root / ".evidence" / "receipts" / f"{created_receipt}.json"
+                        if rcpt_path.exists():
+                            rcpt_path.unlink()
+                        log_path = repo_root / ".evidence" / "logs" / f"{created_receipt}.log"
+                        if log_path.exists():
+                            log_path.unlink()
+                except Exception:
+                    pass
 
     def test_exec_proxy_batch_wrapper_exists(self):
         cmd_wrapper = SCRIPTS_DIR / "exec-proxy.cmd"
