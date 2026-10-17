@@ -281,6 +281,7 @@ class TestOutputPolicy(unittest.TestCase):
         sandbox_scripts = os.path.join(self.sandbox, "scripts")
         os.makedirs(sandbox_scripts, exist_ok=True)
         for fname in ("exec-proxy.sh", "verify-release-gate.sh",
+                      "exec_proxy.py", "verify_release_gate.py",
                       "runtime_evidence.py", "task_ledger.py"):
             src = os.path.join(scripts_src, fname)
             if os.path.exists(src):

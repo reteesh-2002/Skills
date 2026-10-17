@@ -94,6 +94,7 @@ Implement the smallest necessary change that directly resolves the root cause:
 - Do not refactor surrounding architecture during a bug fix unless explicitly requested.
 - Maintain existing style, variable naming conventions, and docstrings.
 - Add defensive guards or assertions if appropriate to prevent future silent degradation.
+- **Git Assertion Lock Enforced**: Pre-existing test files at Git `HEAD` are strictly immutable during bug repairs. Never mutate, delete, or weaken existing test assertions to fake a pass. Write reproduction test cases as new tests. If requirements legitimately evolved and existing tests must change, `--spec-evolution` must be explicitly declared.
 
 ### Stage 6: Regression & Verification Proof
 Prove the fix works using empirical evidence:

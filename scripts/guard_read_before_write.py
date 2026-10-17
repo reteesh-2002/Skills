@@ -24,11 +24,45 @@ def record_read(reads_file: Path, file_path: str) -> None:
     with open(reads_file, "a", encoding="utf-8") as f:
         f.write(json.dumps({"file": canonical, "ts": time.time()}) + "\n")
 
-def evaluate_mutation(target_file: str | None, reads: set) -> tuple[bool, str]:
+def check_transcript_for_read(canonical_path: str) -> bool:
+    """Fallback check: scan active Antigravity session transcript for view_file."""
+    import glob
+    home = Path.home()
+    pattern = str(home / ".gemini" / "antigravity" / "brain" / "*" / ".system_generated" / "logs" / "transcript.jsonl")
+    transcripts = glob.glob(pattern)
+    if not transcripts:
+        return False
+    transcripts.sort(key=os.path.getmtime, reverse=True)
+    target = canonical_path.lower()
+    for t_path in transcripts[:3]:
+        try:
+            with open(t_path, "r", encoding="utf-8", errors="ignore") as f:
+                for line in f:
+                    if "view_file" in line:
+                        try:
+                            data = json.loads(line)
+                            for tc in data.get("tool_calls", []):
+                                if tc.get("name") == "view_file":
+                                    p = tc.get("args", {}).get("AbsolutePath", "").strip('"\'')
+                                    if p and str(Path(p).resolve()).lower() == target:
+                                        return True
+                        except Exception:
+                            pass
+        except Exception:
+            pass
+    return False
+
+def evaluate_mutation(target_file: str | None, reads: set, reads_file: Path | None = None) -> tuple[bool, str]:
     if not target_file: return True, "No target file"
     p = Path(target_file).resolve()
     if not p.exists(): return True, "New file allowed"
-    if str(p) in reads: return True, "Read recorded"
+    canonical = str(p)
+    if canonical in reads: return True, "Read recorded"
+    if check_transcript_for_read(canonical):
+        if reads_file:
+            try: record_read(reads_file, canonical)
+            except Exception: pass
+        return True, "Read recorded from conversation transcript"
     return False, f"Read-Before-Write violation: file '{target_file}' not inspected with view_file in this session."
 
 def main():
@@ -45,7 +79,7 @@ def main():
     if name == "view_file" and args.get("AbsolutePath"):
         record_read(rf, args["AbsolutePath"])
     elif name in ("replace_file_content", "write_to_file"):
-        allowed, reason = evaluate_mutation(args.get("TargetFile"), load_reads(rf))
+        allowed, reason = evaluate_mutation(args.get("TargetFile"), load_reads(rf), rf)
         if not allowed:
             print(json.dumps({"decision": "deny", "reason": reason})); sys.exit(0)
     print("{}" if ("result" in payload or "output" in payload) else json.dumps({"decision": "allow"}))

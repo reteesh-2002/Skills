@@ -303,16 +303,18 @@ def main():
                 stderr=subprocess.STDOUT
             )
             
-            # Unbuffered real-time line streaming to log file and console
+            # Unbuffered real-time line streaming to log file (and console if VERBOSE_STREAM=1)
+            verbose_stream = (os.environ.get("VERBOSE_STREAM", "0") == "1")
             if proc.stdout:
                 for line in iter(proc.stdout.readline, b""):
                     log_f.write(line)
                     log_f.flush()
-                    try:
-                        sys.stdout.buffer.write(line)
-                        sys.stdout.buffer.flush()
-                    except Exception:
-                        pass
+                    if verbose_stream:
+                        try:
+                            sys.stdout.buffer.write(line)
+                            sys.stdout.buffer.flush()
+                        except Exception:
+                            pass
                 proc.stdout.close()
             exit_code = proc.wait()
         except Exception as exc:

@@ -355,3 +355,119 @@ def cross_validate_manifest_and_receipt(check_entry, rcpt_data, current_tree):
 
     if rcpt_tree != current_tree:
         raise ValueError(f"Mixed snapshot detected. Physical receipt '{receipt_id}' tree {rcpt_tree[:8]} does not match current git tree {current_tree[:8]}.")
+
+
+def is_test_file_path(file_path: str) -> bool:
+    """
+    Identifies whether a repository path is a test or specification file.
+    Matches paths in tests/ directories or files following test/spec naming conventions.
+    """
+    if not file_path:
+        return False
+    norm_path = file_path.replace("\\", "/").strip().lower()
+    parts = norm_path.split("/")
+    if any(part in ("tests", "test", "__tests__") for part in parts):
+        return True
+    filename = parts[-1]
+    patterns = (
+        r"^test_.*\.py$",
+        r".*_test\.py$",
+        r".*\.(?:test|spec)\.[jt]sx?$",
+        r".*_test\.go$",
+        r"^test.*\.java$",
+        r"^.*test\.java$"
+    )
+    return any(re.match(pat, filename, re.IGNORECASE) for pat in patterns)
+
+
+def check_git_assertion_lock(repo_root, base_ref=None, allow_spec_evolution=False):
+    """
+    Enforces the Git Assertion Lock (WP-04 / SEC-03):
+    Pre-existing test files at Git base/HEAD are strictly immutable during bug repairs.
+    Any modification ('M') or deletion ('D') to an existing test file is blocked unless
+    allow_spec_evolution is True.
+    Newly added test files ('A') are always permitted.
+
+    Returns:
+        tuple[bool, list[str]]: (passed, list_of_tampered_files)
+    """
+    if allow_spec_evolution:
+        return True, []
+
+    if os.environ.get("SPEC_EVOLUTION", "").lower() in ("1", "true", "yes") or \
+       os.environ.get("ANTIGRAVITY_SPEC_EVOLUTION", "").lower() in ("1", "true", "yes"):
+        return True, []
+
+    import subprocess
+    repo_path = str(repo_root)
+    tampered_files = set()
+
+    # 1. Inspect uncommitted modifications vs HEAD
+    try:
+        diff_out = subprocess.check_output(
+            ["git", "-C", repo_path, "diff", "--name-status", "HEAD"],
+            stderr=subprocess.DEVNULL,
+            text=True
+        )
+        for line in diff_out.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            parts = line.split(None, 1)
+            status_code = parts[0]
+            file_name = parts[1] if len(parts) > 1 else ""
+            if " -> " in file_name:
+                file_name = file_name.split(" -> ")[-1]
+            if is_test_file_path(file_name):
+                if status_code.startswith("M") or status_code.startswith("D"):
+                    tampered_files.add(file_name)
+    except Exception:
+        pass
+
+    # 2. Inspect committed modifications between base_ref and HEAD
+    if not base_ref:
+        for candidate in ["origin/main", "origin/master", "main", "master", "@{u}"]:
+            try:
+                mb = subprocess.check_output(
+                    ["git", "-C", repo_path, "merge-base", "HEAD", candidate],
+                    stderr=subprocess.DEVNULL,
+                    text=True
+                ).strip()
+                head_sha = subprocess.check_output(
+                    ["git", "-C", repo_path, "rev-parse", "HEAD"],
+                    stderr=subprocess.DEVNULL,
+                    text=True
+                ).strip()
+                if mb and mb != head_sha:
+                    base_ref = mb
+                    break
+            except Exception:
+                continue
+
+    if base_ref:
+        try:
+            diff_base = subprocess.check_output(
+                ["git", "-C", repo_path, "diff", "--name-status", base_ref, "HEAD"],
+                stderr=subprocess.DEVNULL,
+                text=True
+            )
+            for line in diff_base.splitlines():
+                line = line.strip()
+                if not line:
+                    continue
+                parts = line.split(None, 1)
+                status_code = parts[0]
+                file_name = parts[1] if len(parts) > 1 else ""
+                if " -> " in file_name:
+                    file_name = file_name.split(" -> ")[-1]
+                if is_test_file_path(file_name):
+                    # 'A' means added on this branch -> permitted
+                    # 'M' or 'D' means existed on base and was mutated/removed -> prohibited
+                    if status_code.startswith("M") or status_code.startswith("D"):
+                        tampered_files.add(file_name)
+        except Exception:
+            pass
+
+    tampered_list = sorted(list(tampered_files))
+    return len(tampered_list) == 0, tampered_list
+

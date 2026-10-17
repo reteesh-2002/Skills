@@ -103,6 +103,33 @@ def main():
     if Path(cwd_top).resolve() != Path(toplevel).resolve():
         fail_gate(f"Working directory mismatch: CWD is '{cwd_top}' but script repository is '{toplevel}'.", hook_mode=hook_mode)
 
+    # 2. Enforce Git Assertion Lock (WP-04 / SEC-03)
+    # Pre-existing test files at Git base/HEAD are strictly immutable during bug repairs
+    allow_spec_evolution = (
+        "--spec-evolution" in sys.argv
+        or os.environ.get("SPEC_EVOLUTION", "").lower() in ("1", "true", "yes")
+        or os.environ.get("ANTIGRAVITY_SPEC_EVOLUTION", "").lower() in ("1", "true", "yes")
+    )
+    base_ref = None
+    if "--base-ref" in sys.argv:
+        try:
+            b_idx = sys.argv.index("--base-ref")
+            if b_idx + 1 < len(sys.argv):
+                base_ref = sys.argv[b_idx + 1]
+        except ValueError:
+            pass
+
+    passed_lock, tampered_files = runtime_evidence.check_git_assertion_lock(
+        REPO_ROOT, base_ref=base_ref, allow_spec_evolution=allow_spec_evolution
+    )
+    if not passed_lock:
+        fail_gate(
+            f"Git Assertion Lock violation: Pre-existing test file(s) modified or deleted without --spec-evolution: {tampered_files}. "
+            "Pre-existing tests at base are immutable during bug repairs to prevent assertion tampering. "
+            "Add new test cases or pass --spec-evolution if specification changes are intentional.",
+            hook_mode=hook_mode
+        )
+
     evidence_dir = REPO_ROOT / ".evidence"
     manifest_path = evidence_dir / "manifest.v1.json"
 
@@ -260,17 +287,21 @@ def main():
             or any(kw in label.lower() for kw in ("test", "unit", "spec", "pytest", "jest", "e2e"))
         )
 
-        if is_unverified and is_test_check:
-            fail_gate(f"Check '{label}' is unverified (0 tests detected from a non-test-runner command). Use a test runner or add explicit verification.", hook_mode=hook_mode)
-
         if is_test_check:
             has_test_checks = True
             total_collected_tests += collected
-            if collected == 0 and not is_unverified:
-                fail_gate(f"Zero-test false-green check detected in '{label}'. A test-labeled check must collect and execute at least 1 test.", hook_mode=hook_mode)
+            if collected == 0 or is_unverified:
+                fail_gate(f"Test check '{label}' (cmd: '{cmd}') recorded 0 collected tests (Zero-inventory false green). Required test check is unverified.", hook_mode=hook_mode)
+        else:
+            if is_unverified or (collected == 0 and exit_code == 0):
+                if disposition == "GREEN":
+                    fail_gate(f"Check '{label}' is unverified (zero test inventory from non-test-runner). Policy disposition cannot be GREEN.", hook_mode=hook_mode)
 
     if has_test_checks and total_collected_tests == 0:
-        fail_gate("Zero tests executed across all test checks. At least 1 passing test required for release.", hook_mode=hook_mode)
+        fail_gate("Test checks were executed but total collected tests is 0.", hook_mode=hook_mode)
+
+    if not has_test_checks and disposition == "GREEN":
+        fail_gate("No test checks executed. Zero-inventory checks from non-test-runners cannot pass the release gate.", hook_mode=hook_mode)
 
     # 7. Check waivers if policy is AMBER
     if disposition == "AMBER":

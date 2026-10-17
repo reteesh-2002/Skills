@@ -394,6 +394,58 @@ class TestSkillsDoctor(unittest.TestCase):
             self.assertFalse(data["core_sound"])
             self.assertEqual(data["hooks"]["status"], "missing")
 
+    def test_doctor_fix_repairs_missing_hooks_and_directories(self):
+        """Test --fix heals missing .agents/hooks.json and creates required directories."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target_path = Path(tmpdir)
+            # Create dummy scripts
+            (target_path / "scripts").mkdir(parents=True, exist_ok=True)
+            for helper in [
+                "exec-proxy.sh",
+                "verify-release-gate.sh",
+                "runtime_evidence.py",
+                "task_ledger.py",
+                "task_shape_gating.py",
+                "slice-guard.py",
+                "guard_read_before_write.py",
+                "guard_anti_retry.py",
+            ]:
+                (target_path / "scripts" / helper).write_text("#!/bin/bash\n", encoding="utf-8")
+
+            # First run without --fix should fail
+            cmd_check = [sys.executable, str(DOCTOR_SCRIPT), "--project-dir", str(target_path), "--json"]
+            res1 = subprocess.run(cmd_check, capture_output=True, text=True)
+            self.assertEqual(res1.returncode, 1)
+
+            # Second run WITH --fix
+            cmd_fix = [sys.executable, str(DOCTOR_SCRIPT), "--project-dir", str(target_path), "--fix", "--json"]
+            res2 = subprocess.run(cmd_fix, capture_output=True, text=True)
+            self.assertEqual(res2.returncode, 0, f"Doctor --fix failed: {res2.stderr}")
+
+            data = json.loads(res2.stdout)
+            self.assertTrue(data["core_sound"])
+            self.assertEqual(data["status"], "healthy")
+            self.assertTrue((target_path / ".agents" / "hooks.json").exists())
+            self.assertTrue((target_path / ".evidence" / "receipts").exists())
+            self.assertTrue((target_path / ".evidence" / "logs").exists())
+            self.assertIn("repairs_applied", data)
+            self.assertGreater(len(data["repairs_applied"]), 0)
+
+    def test_doctor_fix_restores_missing_runtime_helpers(self):
+        """Test --fix restores missing runtime helpers from suite source."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target_path = Path(tmpdir)
+            # Empty workspace - missing everything
+            cmd_fix = [sys.executable, str(DOCTOR_SCRIPT), "--project-dir", str(target_path), "--fix", "--json"]
+            res = subprocess.run(cmd_fix, capture_output=True, text=True)
+            self.assertEqual(res.returncode, 0, f"Doctor --fix failed: {res.stderr}")
+
+            data = json.loads(res.stdout)
+            self.assertTrue(data["core_sound"])
+            self.assertTrue(data["runtime_helpers"]["all_present"])
+            self.assertTrue((target_path / "scripts" / "runtime_evidence.py").exists())
+            self.assertTrue((target_path / "scripts" / "task_ledger.py").exists())
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -378,6 +378,99 @@ def format_cli_report(diag: dict) -> str:
     return "\n".join(lines)
 
 
+def heal_environment(project_dir: Path) -> list[str]:
+    """
+    Self-healing routine (WP-06 / HEAL-01):
+    Repairs missing directories, restores missing hooks, copies missing runtime helpers
+    from suite source root if available, and fixes executable permissions.
+    Returns a list of repair actions performed.
+    """
+    actions = []
+    source_root = Path(__file__).resolve().parent.parent
+
+    # 1. Essential directories
+    dirs_to_create = [
+        project_dir / ".agents",
+        project_dir / ".evidence" / "receipts",
+        project_dir / ".evidence" / "logs",
+        project_dir / "scripts",
+    ]
+    for d in dirs_to_create:
+        if not d.exists():
+            d.mkdir(parents=True, exist_ok=True)
+            try:
+                rel = d.relative_to(project_dir)
+            except ValueError:
+                rel = d
+            actions.append(f"Created directory: {rel}")
+
+    # 2. Runtime Helpers restoration & permission repair
+    source_scripts = source_root / "scripts"
+    target_scripts = project_dir / "scripts"
+
+    for helper in REQUIRED_RUNTIME_HELPERS:
+        helper_path = find_helper(helper, project_dir)
+        if not helper_path and source_scripts.exists():
+            src_file = source_scripts / helper
+            if src_file.exists():
+                dst_file = target_scripts / helper
+                shutil.copy2(src_file, dst_file)
+                helper_path = dst_file
+                actions.append(f"Restored runtime helper: scripts/{helper}")
+
+        if helper_path and helper_path.exists():
+            if sys.platform != "win32":
+                try:
+                    cur_mode = helper_path.stat().st_mode
+                    if not (cur_mode & 0o111):
+                        helper_path.chmod(cur_mode | 0o755)
+                        actions.append(f"Added executable permission to: {helper_path.name}")
+                except Exception:
+                    pass
+
+    # 3. Hooks configuration repair
+    hooks_file = project_dir / ".agents" / "hooks.json"
+    needs_hooks = False
+    if not hooks_file.exists():
+        needs_hooks = True
+    else:
+        try:
+            content = json.loads(hooks_file.read_text(encoding="utf-8"))
+            if "evidence-policy" not in content:
+                needs_hooks = True
+        except Exception:
+            needs_hooks = True
+
+    if needs_hooks:
+        source_hooks = source_root / ".agents" / "hooks.json"
+        if source_hooks.exists():
+            shutil.copy2(source_hooks, hooks_file)
+            actions.append("Restored .agents/hooks.json from suite template")
+        else:
+            default_hooks = {
+                "evidence-policy": {
+                    "PreToolUse": [
+                        {
+                            "matcher": "run_command",
+                            "command": "python3 scripts/verify_release_gate.py --pre-tool"
+                        },
+                        {
+                            "matcher": "replace_file_content",
+                            "command": "python3 scripts/guard_read_before_write.py"
+                        },
+                        {
+                            "matcher": "write_to_file",
+                            "command": "python3 scripts/guard_read_before_write.py"
+                        }
+                    ]
+                }
+            }
+            hooks_file.write_text(json.dumps(default_hooks, indent=2), encoding="utf-8")
+            actions.append("Created default .agents/hooks.json with evidence-policy")
+
+    return actions
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Antigravity Skills Suite — Environment and Runtime Health Doctor"
@@ -394,6 +487,11 @@ def main():
         help="Output machine-readable JSON health report",
     )
     parser.add_argument(
+        "--fix",
+        action="store_true",
+        help="Automatically repair missing directories, hooks, and permissions (self-healing)",
+    )
+    parser.add_argument(
         "--verbose", "-v",
         action="store_true",
         help="Enable verbose output",
@@ -402,7 +500,23 @@ def main():
     args = parser.parse_args()
     project_dir = args.project_dir.resolve()
 
+    repairs_applied = []
+    if args.fix:
+        repairs_applied = heal_environment(project_dir)
+        if not args.json:
+            if repairs_applied:
+                print("🛠️ Antigravity Doctor: Self-Healing Repairs Applied")
+                print("=" * 62)
+                for act in repairs_applied:
+                    print(f"  [FIXED] {act}")
+                print("=" * 62)
+                print("")
+            else:
+                print("🛠️ Antigravity Doctor: Environment already intact, no repairs needed.\n")
+
     diag = diagnose_environment(project_dir)
+    if args.fix:
+        diag["repairs_applied"] = repairs_applied
 
     if args.json:
         print(json.dumps(diag, indent=2))
