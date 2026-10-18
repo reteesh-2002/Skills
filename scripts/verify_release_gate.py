@@ -315,15 +315,15 @@ def main():
 
         for w in open_waivers:
             if not isinstance(w, dict):
-                waiver_errors.append("Waiver entry must be a JSON object.")
+                waiver_errors.append("Invalid waiver format. Must be a structured object with author, reason, and expires_at.")
                 continue
 
             reason = w.get("reason")
-            authorizer = w.get("authorizer")
+            authorizer = w.get("authorizer") or w.get("author")
             expires_at = w.get("expires_at")
 
             if not reason or not authorizer or not expires_at:
-                waiver_errors.append("Waiver missing mandatory fields (reason, authorizer, expires_at).")
+                waiver_errors.append("Waiver missing mandatory fields (reason, author/authorizer, expires_at).")
                 continue
 
             exp = runtime_evidence.parse_waiver_expiry(expires_at)

@@ -1,4 +1,4 @@
-# 🛠️ Antigravity Engineering Skills Suite (v2.1)
+# 🛠️ Antigravity Engineering Skills Suite (v2.2)
 
 A high-craft software engineering operating system for **Google Antigravity**. Covers the full engineering lifecycle—from architectural intent extraction and visual art direction to parallel worktree orchestration, adversarial review, specialist verification, and release gate enforcement.
 
@@ -29,26 +29,33 @@ python3 scripts/install-skills.py --workspace
 python3 scripts/install-skills.py --global
 ```
 
-#### Option C: Health Check via Skills Doctor
-Run the diagnostic doctor to verify runtime helpers, hooks, and tool availability:
+#### Option C: Health Check & Self-Healing via Skills Doctor
+Run the diagnostic doctor to audit runtime helpers, hooks, and tool availability:
 ```bash
+# Diagnostic audit
 python3 scripts/skills-doctor.py
+
+# Self-healing auto-repair (recreates missing hooks, directories, and executable bits)
+python3 scripts/skills-doctor.py --fix
 ```
 *(Supports `--json` for automated environment auditing.)*
 
 ### 3. Release Gate & Boundary Verification
-The deterministic release gate verifies that the current git tree matches validated test evidence before release. Slices are mechanically verified via `slice-guard`:
+The deterministic release gate verifies that the current git tree matches validated test evidence before release and enforces the **Git Assertion Lock** to prevent test tampering:
 ```bash
-# Check vertical slice import isolation and 300 LOC limits
+# Check vertical slice import isolation and bounded context limits
 python3 scripts/slice-guard.py
 
-# Evaluate release gate against current git tree
+# Evaluate release gate against current git tree & Git Assertion Lock
 bash scripts/verify-release-gate.sh
+
+# Or allow intentional test specification changes
+bash scripts/verify-release-gate.sh --spec-evolution
 
 # Or run in non-blocking advisory mode during development
 bash scripts/verify-release-gate.sh --advisory
 ```
-Hook configuration in `.agents/hooks.json` operates in advisory mode, ensuring developers are never hijacked or blocked during routine local git operations.
+Hook configuration in `.agents/hooks.json` operates with **Zero-Latency Read Architecture**, ensuring read tools incur 0ms hook overhead while write and execute operations remain strictly protected.
 
 ### 4. Conformance & Test Suite Verification
 Verify skill metadata, contracts, policy drift, specialist probes, and runtime checks:
@@ -59,8 +66,8 @@ python3 scripts/validate-skills.py
 # 2. Run the environment health check
 python3 scripts/skills-doctor.py
 
-# 3. Run the full unit, probe, and behavioral regression suite (173 tests)
-pytest tests/ -v
+# 3. Run the full unit, probe, and behavioral regression suite (232 tests)
+python3 -m unittest discover tests
 
 # 4. Run the 27-test runtime conformance and adversarial shell suite
 bash tests/verify_runtime.sh
@@ -120,11 +127,15 @@ graph TD
         TSG["task_shape_gating.py<br>(Phase 0 Decision Engine)"]
         VRG["verify-release-gate.sh<br>(Anti-Tamper Release Gate)"]
         SI["ship-it<br>(Git Hygiene & PR Engine)"]
+        IP["infra-pilot<br>(Docker & CI Automation)"]
+        DA["docs-architect<br>(Viral README & OpenAPI 3.1)"]
         
         EP --> RE
         TL --> RE
         VRG --> RE
         SI --> VRG
+        IP --> SI
+        DA --> SI
         FA --> SP
         SC --> SP
         SV --> SP
@@ -132,7 +143,7 @@ graph TD
         AWO --> TSG
     end
 
-    PA -.->|Supplies Spec| PM
+    CA -.->|Supplies Blueprint| PM
     PM --> AWO
     PM --> QS
     DD --> QS
@@ -218,38 +229,43 @@ Implemented in [`create-architect`](create-architect/SKILL.md) with canonical te
 ### 1. Root Configuration & Governance
 | File | Role |
 | :--- | :--- |
-| [`suite-policy.json`](suite-policy.json) | **Authoritative Suite Policy**: Single source of truth for routing (3 auto, 14 explicit), output defaults, and tool boundaries. |
+| [`suite-policy.json`](suite-policy.json) | **Authoritative Suite Policy**: Single source of truth for routing (3 auto, 16 explicit = 19 skills), output defaults, and tool boundaries. |
 | [`AGENTS.md`](AGENTS.md) | Host routing instructions for Antigravity agents; defines the 3 auto-detected skills and on-demand rules. |
 | [`GEMINI.md`](GEMINI.md) | Workspace-level routing instructions mirroring AGENTS.md for compatibility with Google Gemini agent runtimes. |
 | [`REQUIREMENTS.md`](REQUIREMENTS.md) | Formal engineering requirements and specifications for the skills operating system. |
 | [`CHANGELOG.md`](CHANGELOG.md) | Detailed version history, breaking changes, and migration notes. |
 | [`README.md`](README.md) | Master documentation, quick start, architecture topology, file directory, and verification proofs. |
-| [`.agents/hooks.json`](.agents/hooks.json) | On-demand advisory hook configuration (blocking pre-tool interception disabled). |
+| [`.agents/hooks.json`](.agents/hooks.json) | Zero-latency selective hook configuration with automatic PreToolUse release gate and mutation protection. |
 
 ### 2. Runtime Scripts (`scripts/`)
 | Script | Language | Purpose & Functionality |
 | :--- | :---: | :--- |
-| [`exec_proxy.py`](scripts/exec_proxy.py)<br>[`exec-proxy.sh`](scripts/exec-proxy.sh)<br>[`exec-proxy.cmd`](scripts/exec-proxy.cmd) | Python 3<br>Bash<br>Windows CMD | **Execution Proxy & Log Sink**: Cross-platform runner (Windows PowerShell/CMD, Linux, macOS). Captures child exit codes, streams verbose logs to `.evidence/logs/<run_id>.log` while returning a 3-line bounded summary. Parses test frameworks (pytest, Jest, Vitest, Node TAP, Cargo, Python unittest) to capture exact test counts and `xfail`. Generates physical cryptographic receipts in `.evidence/receipts/`. Labels non-test-runner zero-inventory commands as `unverified`. |
-| [`verify_release_gate.py`](scripts/verify_release_gate.py)<br>[`verify-release-gate.sh`](scripts/verify-release-gate.sh)<br>[`verify-release-gate.cmd`](scripts/verify-release-gate.cmd) | Python 3<br>Bash<br>Windows CMD | **Deterministic Release Gate**: Cross-platform release gate intercepting `git push` via protojson PreToolUse hook. Validates that current `git write-tree` matches evidence receipts, working tree is clean, no zero-inventory false greens exist, and policy disposition is GREEN (or valid unexpired waiver). Fails safe on ambiguous command forms (`eval`, command substitution). |
-| [`runtime_evidence.py`](scripts/runtime_evidence.py) | Python 3 | **Shared Evidence & Policy Engine**: Cross-platform file locking (`msvcrt` on Windows, `fcntl` on POSIX), receipt schema validation, ISO-8601 and date-only waiver expiry normalization (to 23:59:59 UTC), command tokenization for `git -C` / `--git-dir` variants, GREEN / AMBER / RED disposition reduction, TDD Red-Green progression vs flaky retry detection. |
-| [`task_ledger.py`](scripts/task_ledger.py) | Python 3 | **Canonical Task State Ledger**: Multi-process locked ledger (`.evidence/tasks.json`) with cross-platform file locking. Tracks tasks with statuses (`Pending`, `Running`, `Blocked`, `Verifying`, `Done`, `Failed`, `Cancelled`). Enforces dependency existence and cycle validation via `validate_dependencies()`. Preserves corrupt ledger files to `.corrupt.<timestamp>` instead of resetting. Tracks `session_id` across agent turns. |
-| [`task_shape_gating.py`](scripts/task_shape_gating.py) | Python 3 | **Phase 0 Gating Engine**: Evaluates file touch counts, blast radius, auth/data sensitivity, and coupling to deterministically return `solo`, `sequenced`, `multi(n)`, or `solo+review`. Generates minimal worker briefs excluding chat history (`build_worker_brief`) and defines the 6-step durable resume protocol. |
-| [`specialist_probes.py`](scripts/specialist_probes.py) | Python 3 | **Empirical Specialist Verification Engine**: Cross-platform probes: WCAG AA relative luminance contrast calculator, static HTML viewport overflow detector (`heuristic: True`), disposable SQLite migration rehearsal engine, synthetic dual-tenant BOLA/IDOR isolation probe, child process graceful drain probe (`SIGTERM`), and memory soak plateau verifier with cross-platform RSS measurement (`ctypes/psapi` on Windows, `resource` on POSIX). |
-| [`validate-skills.py`](scripts/validate-skills.py) | Python 3 | **Skill Metadata & Syntax Linter**: Ingests all 17 skills in the suite, validates YAML frontmatter, measures token budgets, verifies relative documentation links, and prevents policy drift against `suite-policy.json`. |
-| [`install-skills.py`](scripts/install-skills.py) | Python 3 | **Suite Installer & Manifest Manager**: Installs skills and runtime helpers to workspace or global configuration (`~/.gemini/config/skills/`). Performs safe configuration merges, cross-platform hook generation, and tracks installations in `.skills-install-manifest.json` with `--uninstall` support. |
-| [`skills-doctor.py`](scripts/skills-doctor.py) | Python 3 | **Environment Health Diagnostic**: Inspects host OS platform (Windows, macOS, Linux), Python version, runtime helper availability, hook configuration, and optional tool capabilities (`pytest`, `playwright`, `git`, `node`). Reports missing optional tools gracefully without failing core health. |
+| [`exec_proxy.py`](scripts/exec_proxy.py)<br>[`exec-proxy.sh`](scripts/exec-proxy.sh)<br>[`exec-proxy.cmd`](scripts/exec-proxy.cmd) | Python 3<br>Bash Shim<br>Windows CMD | **Execution Proxy & Log Sink**: Pure Python 3 runner (Windows, Linux, macOS). Executes tokenized subprocesses (`shell=False` default) to prevent injection, captures child exit codes, streams logs to `.evidence/logs/<run_id>.log`, parses test frameworks (pytest, Jest, Vitest, Node TAP, Cargo, Python unittest), and generates physical receipts. Unbuffered live streaming available via `VERBOSE_STREAM=1`. |
+| [`verify_release_gate.py`](scripts/verify_release_gate.py)<br>[`verify-release-gate.sh`](scripts/verify-release-gate.sh)<br>[`verify-release-gate.cmd`](scripts/verify-release-gate.cmd) | Python 3<br>Bash Shim<br>Windows CMD | **Deterministic Release Gate & Git Assertion Lock**: Intercepts `git push` via protojson PreToolUse hook. Validates that current git tree matches validated receipts, working tree is clean (with scratch file forgiveness), and enforces the **Git Assertion Lock** (tests at base are immutable unless `--spec-evolution` is passed). |
+| [`runtime_evidence.py`](scripts/runtime_evidence.py) | Python 3 | **Shared Evidence & Policy Engine**: Cross-platform file locking (`msvcrt` on Windows, `fcntl` on POSIX), receipt schema validation, Git Assertion Lock diff engine, ISO-8601 waiver expiry normalization, and TDD progression vs flaky retry detection. |
+| [`guard_read_before_write.py`](scripts/guard_read_before_write.py) | Python 3 | **Zero-Latency Read Guard**: Enforces the Read-Before-Write invariant. Scans active conversation session transcripts so read tools (`view_file`) execute with **0ms hook overhead** while preventing blind mutations. |
+| [`guard_anti_retry.py`](scripts/guard_anti_retry.py) | Python 3 | **Anti-Exact-Retry Guard**: Halts runaway failure loops by detecting identical failing commands within a sliding window while whitelisting exploratory commands (`grep`, `diff`, `find`, `test`). |
+| [`slice-guard.py`](scripts/slice-guard.py) | Python 3 | **Architectural Slice & Context Guard**: Validates vertical slice import isolation, architectural boundaries, and Bounded Context Windowing (cohesive modules permitted up to 1,500 LOC). |
+| [`task_ledger.py`](scripts/task_ledger.py) | Python 3 | **Canonical Task State Ledger**: Multi-process locked ledger (`.evidence/tasks.json`). Tracks task lifecycle, validates dependency DAG acyclicity, mandates receipts for `Done`, and uses PID-isolated temp files. |
+| [`task_shape_gating.py`](scripts/task_shape_gating.py) | Python 3 | **Phase 0 Gating Engine**: Evaluates file touch counts, blast radius, auth/data sensitivity, and coupling to deterministically return `solo`, `sequenced`, `multi(n)`, or `solo+review`. |
+| [`specialist_probes.py`](scripts/specialist_probes.py) | Python 3 | **Empirical Specialist Verification Engine**: Probes for WCAG AA contrast, viewport overflow, disposable SQLite migration rehearsal, BOLA/IDOR isolation, SIGTERM graceful drain, and memory soak plateau. |
+| [`skills-doctor.py`](scripts/skills-doctor.py) | Python 3 | **Environment Health Diagnostic & Self-Healing**: Audits host OS, Python $\ge 3.9$, runtime helpers, hooks, and optional tools. Features `--fix` flag for automatic self-healing repair of missing directories, hooks, and permissions. |
+| [`validate-skills.py`](scripts/validate-skills.py) | Python 3 | **Skill Metadata & Syntax Linter**: Ingests all 19 skills, validates YAML frontmatter, measures token budgets, checks relative links, and prevents policy drift. |
+| [`install-skills.py`](scripts/install-skills.py) | Python 3 | **Suite Installer & Manifest Manager**: Installs skills and runtime helpers to workspace or global configuration with POSIX path normalization and containment guarantees. |
 
 ### 3. Test Suites (`tests/`)
 | Test File | Type | Focus & Scenarios |
 | :--- | :---: | :--- |
-| [`test_windows_compat.py`](tests/test_windows_compat.py) | Unit/Integration | Windows native compatibility: cross-platform file locking (`msvcrt` mock / POSIX), Windows RSS memory probe (`ctypes` mock / POSIX), pure Python `exec_proxy.py`, pure Python `verify_release_gate.py`, and Windows batch wrappers. |
+| [`test_verify_release_gate.py`](tests/test_verify_release_gate.py) | Unit/Integration | Release gate execution, Git Assertion Lock enforcement, test file regex matching, and `--spec-evolution` bypass. |
+| [`test_runtime_guards.py`](tests/test_runtime_guards.py) | Unit/Integration | Read-Before-Write guard with transcript scan fallback, Anti-Retry exploratory command whitelisting, and timestamp freshness. |
+| [`test_install_doctor.py`](tests/test_install_doctor.py) | Unit/Integration | Installer clean install, idempotent repeat install, uninstallation, doctor diagnostics, and `--fix` self-healing engine. |
+| [`test_windows_compat.py`](tests/test_windows_compat.py) | Unit/Integration | Windows native compatibility: cross-platform file locking (`msvcrt` mock / POSIX), Windows RSS memory probe, pure Python proxy, and batch wrappers. |
 | [`test_runtime_evidence.py`](tests/test_runtime_evidence.py) | Unit | Waiver parsing, `git -C` command matcher, policy disposition, and snapshot isolation. |
-| [`test_evidence_gate_regressions.py`](tests/test_evidence_gate_regressions.py) | Behavioral | Hermetic regression suite: push detection, tree SHA mismatch, corrupt receipts, date-only expiry, TDD progress, flaky retries, zero-inventory false greens, rescue commit failures. |
+| [`test_evidence_gate_regressions.py`](tests/test_evidence_gate_regressions.py) | Behavioral | Hermetic regression suite: push detection, tree SHA mismatch, corrupt receipts, date-only expiry, TDD progress, and zero-inventory false greens. |
 | [`test_t06_t07_evidence.py`](tests/test_t06_t07_evidence.py) | Unit/Integration | Framework detection, pytest `xfail` parsing, `unverified` check flag, `eval` / command substitution ambiguity detection, and release gate blocking. |
-| [`test_t08_t09_probes_ledger.py`](tests/test_t08_t09_probes_ledger.py) | Unit/Integration | Subprocess graceful drain, RSS memory soak plateau, heuristic viewport overflow labeling, task ledger cycle detection, corrupt ledger preservation, and session tracking. |
-| [`test_install_doctor.py`](tests/test_install_doctor.py) | Unit/Integration | Installer clean install, idempotent repeat install, clean uninstallation, manifest tracking, and doctor diagnostic output. |
-| [`test_suite_policy_enforcement.py`](tests/test_suite_policy_enforcement.py) | Behavioral | Suite policy validation: verifies exactly 3 skills auto-activate, 14 require explicit trigger, and output formats follow defaults. |
-| [`test_task_ledger.py`](tests/test_task_ledger.py) | Unit | Ledger initialization, task registration, state transitions, and markdown table rendering. |
+| [`test_t08_t09_probes_ledger.py`](tests/test_t08_t09_probes_ledger.py) | Unit/Integration | Subprocess graceful drain, RSS memory soak plateau, heuristic viewport overflow labeling, task ledger cycle detection, and session tracking. |
+| [`test_suite_policy_enforcement.py`](tests/test_suite_policy_enforcement.py) | Behavioral | Suite policy validation: verifies exactly 3 skills auto-activate, 16 require explicit trigger, and output formats follow defaults. |
+| [`test_task_ledger.py`](tests/test_task_ledger.py) | Unit | Ledger initialization, task registration, state transitions, receipt requirements, and markdown table rendering. |
 | [`test_release_b.py`](tests/test_release_b.py) | Acceptance | Live task flow (`T-01` to `T-07`), output bounding (`O-01` to `O-05`), code-reviewer transparency, and anti-tautology mutation probes. |
 | [`test_release_c.py`](tests/test_release_c.py) | Acceptance | Phase 0 task-shape gating (`E-01` to `E-06`), minimal worker brief contents, concurrency caps, and durable resume protocol. |
 | [`test_release_d.py`](tests/test_release_d.py) | Acceptance | WCAG AA contrast, viewport overflow detection, database migration rehearsal, dual-tenant IDOR probes, graceful drain, and memory soak plateaus. |
@@ -318,19 +334,20 @@ Below is a side-by-side comparison based on empirical trial data across standard
 The repository includes a comprehensive testing framework ensuring absolute reliability:
 
 ```bash
-# 1. Full Unit, Behavioral & Property Regression Suite (184 tests)
-pytest tests/ -v
+# 1. Full Unit, Behavioral & Property Regression Suite (232 tests)
+python3 -m unittest discover tests
 
 # 2. Conformance & Adversarial Runtime Suite (27 bash tests)
 bash tests/verify_runtime.sh
 
-# 3. Environment Health Check
-python3 scripts/skills-doctor.py
+# 3. Environment Health Check & Self-Healing
+python3 scripts/skills-doctor.py --fix
 ```
 
-- **Unit & Behavioral Tests**: **184 passed, 56 subtests passed** in ~4.3s.
-- **Runtime Conformance Tests**: **27/27 passed** in ~3.5s.
-- **Fraud Prevention**: Zero simulated sleep loops, zero hard-coded scores, and independent transcript auditing via `benchmarks/audit_trial.py`.
+- **Unit & Behavioral Tests**: **232 passed** in ~6.3s (`python3 -m unittest discover tests`).
+- **Runtime Conformance Tests**: **27/27 passed** in ~3.5s (`bash tests/verify_runtime.sh`).
+- **Deterministic Release Gate**: **GREEN** (`bash scripts/verify-release-gate.sh --check-only`).
+- **Fraud Prevention**: Zero simulated sleep loops, zero hard-coded scores, Git Assertion Lock against test tampering, and independent transcript auditing via `benchmarks/audit_trial.py`.
 
 ---
 

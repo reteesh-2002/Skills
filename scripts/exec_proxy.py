@@ -290,7 +290,10 @@ def main():
             # to prevent command injection and metacharacter expansion vulnerabilities.
             use_shell = False
             exec_target = cmd_args
-            if len(cmd_args) == 1 and any(c in cmd_args[0] for c in ("|", "&&", "||", ";", ">", "<")):
+            if len(cmd_args) >= 3 and cmd_args[0] == "bash" and cmd_args[1] == "-c":
+                exec_target = list(cmd_args)
+                exec_target[2] = f"set -o pipefail; {exec_target[2]}"
+            elif len(cmd_args) == 1 and any(c in cmd_args[0] for c in ("|", "&&", "||", ";", ">", "<")):
                 # Compound pipeline on POSIX or Windows fallback
                 use_shell = True
                 exec_target = command_str
