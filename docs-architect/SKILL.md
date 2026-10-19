@@ -39,7 +39,7 @@ A great README converts a skeptical developer in under 15 seconds. Follow the la
 Generate or compile machine-readable OpenAPI 3.1 definitions from domain contracts:
 - **Contract-to-Spec Ingestion**: Ingest Zod schemas (`modules/<slice>/contract.ts`) or Pydantic models and map them to OpenAPI components and endpoints.
 - **Strict Typing**: Include parameter types, enum constraints, required fields, and realistic example payloads.
-- **Error Response Definitions**: Document standard HTTP error shapes (`400 Bad Request`, `401 Unauthorized`, `403 Forbidden`, `404 Not Found`, `422 Unprocessable Entity`).
+- **Error Response Definitions**: Document standard HTTP error shapes (`400 Bad Request`, `401 Unauthorized`, `403 Forbidden`, `404 Not Found`, `422 Unprocessable Entity`), defaulting to RFC 7807 Problem Details (`application/problem+json`).
 - **Interactive UI Integration**: Provide configuration snippets for embedding Scalar, Swagger UI, or Redoc in the app.
 - See [`references/openapi-generator-guide.md`](references/openapi-generator-guide.md) for mapping patterns.
 

@@ -42,7 +42,7 @@ Index for demonstrated or anticipated query patterns rather than indexing every 
   3. Range filter columns last: `score > 80`
   - Example: `CREATE INDEX idx_orders_tenant_date ON orders (tenant_id, created_at DESC);`
 - **Engine-Specific Indexing**:
-  - **PostgreSQL**: Use `CREATE INDEX CONCURRENTLY` in non-transactional migrations for high-traffic tables.
+  - **PostgreSQL**: Use `CREATE INDEX CONCURRENTLY` in non-transactional migrations for high-traffic tables. In PostgreSQL, concurrent indexing cannot run inside a transaction block (`BEGIN ... COMMIT`) and will abort; execute it in a standalone non-transactional migration phase.
   - **SQLite**: Keep indexes compact; index for point lookups and range scans.
   - **Partial Indexes**: For soft-deleted tables (`deleted_at IS NOT NULL`), use partial indexes (`WHERE deleted_at IS NULL`) to keep active indexes compact.
 

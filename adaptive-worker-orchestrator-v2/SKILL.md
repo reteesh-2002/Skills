@@ -57,7 +57,8 @@ If `solo`, the Boss executes the work sequentially without spawning subagents.
 
 If workstreams share any API contracts, types, or schemas:
 1. Define interfaces up front in `contract.yaml` (or shared TypeScript/Python types).
-2. Paste the contract verbatim into each worker's prompt brief.
+2. Freeze the contract: record the contract content hash in `task_ledger.json` before dispatching workers. Workers must never be dispatched against an unfrozen or changing contract.
+3. Paste the contract verbatim into each worker's prompt brief.
 3. Boss exclusively owns shared types, root manifests, and configuration wiring.
 
 
