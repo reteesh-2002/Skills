@@ -16,6 +16,7 @@ Systematic, hypothesis-driven root cause analysis and surgical defect remediatio
 3. **Never touch working files outside the failure path**: Preserve untouched code integrity.
 4. **Log before you patch**: When state is unclear, insert non-destructive diagnostic logging or probe with minimal inspector commands before making persistent edits.
 5. **Protect Unrelated User Edits**: During rollback or reversion, only touch files modified during the active defect investigation. Never execute indiscriminate `git reset --hard` or wipe unrelated uncommitted changes.
+6. **Verification Proof Required**: Never claim or mark a bug fixed without actively executing the reproduction command and confirming it exits with code 0 and passing assertions.
 
 ---
 
@@ -98,9 +99,8 @@ Implement the smallest necessary change that directly resolves the root cause:
 
 ### Stage 6: Regression & Verification Proof
 Prove the fix works using empirical evidence:
-1. Re-run the reproduction command via the trusted execution proxy:
+1. **Mandatory Execution Verification**: You MUST execute the original reproducer command and capture its full output before declaring success. A task is only complete when the reproducer exits with a clean status code 0 and all failing assertions pass:
    `bash scripts/exec-proxy.sh --label debug_verify <reproduction command>`
-   Verify clean exit code 0 and valid output.
 2. Run adjacent tests via `exec-proxy.sh` -> Verify zero secondary regressions and update `.evidence/manifest.v1.json`.
 3. Clean up temporary diagnostic print statements and debug logs before concluding.
 
