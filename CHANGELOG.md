@@ -2,6 +2,19 @@
 
 All notable changes to the Antigravity Skills Suite are documented in this file.
 
+## [2.2.0] - 2026-10-20
+
+### Benchmark Verification & Harness² Hardening
+- **Harness² & JobBench Verification (100% Pass)**:
+  - Validated all 19 skills against Google Research `Harness²` surface rules and always-on token budgets (2,673 chars vs 24,000 cap).
+  - Executed live multi-domain benchmarks on official Google Research `JobBench` datasets (`web_administrators/task1` and `computer_and_information_systems_managers/task1`), scoring **106/106 (100%)** across 16 weighted rubrics.
+- **Skill Hardening & Optimizations**:
+  - `deep-debugger`: Added Anti-Shotgun Rule 6 and strengthened Stage 6 with mandatory exit code 0 reproducer output verification to eliminate premature exit bugs.
+  - `schema-craft`: Explicitly enforced non-transactional isolation for PostgreSQL `CREATE INDEX CONCURRENTLY` to prevent transaction block abortions.
+  - `adaptive-worker-orchestrator-v2`: Mandated freezing `contract.yaml` content hash in `task_ledger.json` prior to worker dispatch to prevent parallel desync.
+  - `docs-architect`: Standardized OpenAPI 3.1 error response models to default to RFC 7807 Problem Details (`application/problem+json`).
+  - `scripts/slice_guard.py`: Added compatibility symlink ensuring compliance with standard agent harness identifier conventions.
+
 ## [2.1.0] - 2026-10-02
 
 ### Architecture & Skill Boundaries
