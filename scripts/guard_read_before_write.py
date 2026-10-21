@@ -33,7 +33,8 @@ def check_transcript_for_read(canonical_path: str) -> bool:
     if not transcripts:
         return False
     transcripts.sort(key=os.path.getmtime, reverse=True)
-    target = canonical_path.lower()
+    is_windows = sys.platform == "win32"
+    target = canonical_path.lower() if is_windows else canonical_path
     for t_path in transcripts[:3]:
         try:
             with open(t_path, "r", encoding="utf-8", errors="ignore") as f:
@@ -44,8 +45,10 @@ def check_transcript_for_read(canonical_path: str) -> bool:
                             for tc in data.get("tool_calls", []):
                                 if tc.get("name") == "view_file":
                                     p = tc.get("args", {}).get("AbsolutePath", "").strip('"\'')
-                                    if p and str(Path(p).resolve()).lower() == target:
-                                        return True
+                                    if p:
+                                        res_p = str(Path(p).resolve())
+                                        if (res_p.lower() if is_windows else res_p) == target:
+                                            return True
                         except Exception:
                             pass
         except Exception:

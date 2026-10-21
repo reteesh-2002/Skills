@@ -275,7 +275,7 @@ def main():
         "git_tree_sha": git_tree_sha,
         "working_tree_sha": working_tree_sha,
         "working_tree_dirty": working_tree_dirty,
-        "log_path": f".evidence/logs/{run_id}.log",
+        "log_path": f"logs/{run_id}.log",
         "metrics": {"collected": 0, "passed": 0, "failed": 0, "skipped": 0},
         "has_warnings": False
     }
@@ -296,7 +296,14 @@ def main():
             elif len(cmd_args) == 1 and any(c in cmd_args[0] for c in ("|", "&&", "||", ";", ">", "<")):
                 # Compound pipeline on POSIX or Windows fallback
                 use_shell = True
-                exec_target = command_str
+                exec_target = cmd_args[0]
+            elif len(cmd_args) == 1 and " " in cmd_args[0].strip():
+                # Single command string with arguments (e.g. "python3 -m unittest ...")
+                try:
+                    exec_target = shlex.split(cmd_args[0], posix=(sys.platform != "win32"))
+                except ValueError:
+                    use_shell = True
+                    exec_target = cmd_args[0]
 
             proc = subprocess.Popen(
                 exec_target,

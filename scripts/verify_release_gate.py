@@ -242,6 +242,7 @@ def main():
                     rel_path = s_line[3:].strip()
                     if " -> " in rel_path:
                         rel_path = rel_path.split(" -> ")[-1].strip()
+                    rel_path = rel_path.strip('"\'')
                     # Forgive internal metadata, scratch directories, and transient notes
                     if (rel_path.startswith(".evidence/") or 
                         rel_path.startswith(".git/") or 
@@ -259,10 +260,10 @@ def main():
             dirty_entries = [
                 s for s in status_out.splitlines()
                 if len(s) > 3 and not any(
-                    s[3:].strip().startswith(prefix) for prefix in (
+                    s[3:].strip().strip('"\'').startswith(prefix) for prefix in (
                         ".evidence/", ".git/", ".scratch/", "scratch/", ".tmp"
                     )
-                ) and not s[3:].strip().endswith(".tmp")
+                ) and not s[3:].strip().strip('"\'').endswith(".tmp")
             ]
             if dirty_entries:
                 fail_gate("Working directory is dirty (uncommitted or tracked modifications present). Stash, commit, or clean working tree before release. Changes:\n" + "\n".join(dirty_entries), hook_mode=hook_mode)

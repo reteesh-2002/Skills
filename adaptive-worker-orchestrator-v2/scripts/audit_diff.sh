@@ -42,7 +42,8 @@ while IFS= read -r f; do
 
   ok=0
   for a in "${allowed[@]}"; do
-    prefix="${a%/}"
+    prefix="${a#./}"
+    prefix="${prefix%/}"
     if [[ "$f" == "$prefix" || "$f" == "$prefix"/* ]]; then
       ok=1
       break

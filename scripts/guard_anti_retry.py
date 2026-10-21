@@ -62,17 +62,20 @@ def main():
     name = tc.get("name") or payload.get("name") or ""
     args = tc.get("args") or payload.get("args") or payload.get("tool_input") or {}
     ff = get_failures_file(Path(payload.get("cwd") or os.getcwd()).resolve() / ".evidence")
-    if name in ("replace_file_content", "write_to_file"):
-        clear_failures(ff); print("{}" if ("result" in payload or "output" in payload) else json.dumps({"decision": "allow"})); sys.exit(0)
     status = payload.get("status") or payload.get("result", {}).get("status")
     exit_code = payload.get("exit_code") or payload.get("result", {}).get("exit_code")
     is_post = "result" in payload or "output" in payload
-    if is_post and (status == "error" or (exit_code is not None and exit_code != 0)):
-        record_failure(ff, compute_action_fingerprint(name, args), name, str(payload.get("error") or ""))
-        print("{}" if ("result" in payload or "output" in payload) else json.dumps({"decision": "allow"})); sys.exit(0)
+    if is_post:
+        if status == "error" or (exit_code is not None and exit_code != 0):
+            record_failure(ff, compute_action_fingerprint(name, args), name, str(payload.get("error") or ""))
+        elif name in ("replace_file_content", "write_to_file"):
+            clear_failures(ff)
+        print("{}"); sys.exit(0)
     allowed, reason = evaluate_retry(name, args, load_failures(ff))
     if not allowed:
         print(json.dumps({"decision": "deny", "reason": reason})); sys.exit(0)
-    print("{}" if ("result" in payload or "output" in payload) else json.dumps({"decision": "allow"}))
+    if name in ("replace_file_content", "write_to_file"):
+        clear_failures(ff)
+    print(json.dumps({"decision": "allow"}))
 
 if __name__ == "__main__": main()
