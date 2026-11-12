@@ -77,7 +77,7 @@ To prevent prompt context degradation and hallucinated imports, tasks must be ti
 
 - **1-Slice-Per-Task Invariant**: When a project uses vertical slice architecture (`src/modules/<slice>/`), a single task targets exactly one module slice.
 - **Cross-Slice Communication**: Tasks may reference another slice's `contract.ts` (its public interface) but never its `service.ts` or internal files.
-- **Call-Graph Windowing (Legacy Monolith Fallback)**: In legacy or monolithic codebases where files exceed 1,000 LOC, do NOT demand upfront file chopping or refuse to plan. Instead, scope context to relevant line ranges (e.g. lines 400–550 via `view_file`) and immediate caller-callee functions.
+- **Call-Graph Windowing (Legacy Monolith Fallback)**: In legacy or monolithic codebases where files exceed 1,000 LOC, do NOT demand upfront file chopping or refuse to plan. Instead, scope context to relevant line ranges (e.g. lines 400–550 via `read_file`) and immediate caller-callee functions.
 - **Cohesion Over File Chopping**: Individual cohesive files (state machines, parsers, schemas, complex domain services) are expected and permitted up to 1,200–1,500 LOC under Semantic Enclosure. Strictly avoid fragmenting cohesive domain files into shallow mechanical helpers (`*_helpers`, `*_utils`, `*_ops`) merely to satisfy line metrics.
 - **Targeted File Scope**: Each task's `[CONTEXT SCOPE]` should strictly list only the 2–4 files or line ranges required for the deliverable. Never load entire directories.
 
@@ -105,6 +105,7 @@ Before finalizing the plan:
 5. **Runnable verification** — every task has a concrete check command
 6. **Stop triggers** — defined failure conditions that pause execution
 7. **Slice isolation** (vertical slice projects) — no task writes to more than one module slice; no task's `[CONTEXT SCOPE]` contains internal files from a sibling slice; cross-slice interaction is limited to reading the sibling's `contract.ts` only
+8. **Optional ledger validation** (multi-agent / parallel plans) — if tracking tasks in `.task_ledger.json`, run `python3 scripts/task_ledger.py validate` to verify DAG acyclicity and file isolation mechanically
 
 Fix discrepancies before presenting the plan.
 

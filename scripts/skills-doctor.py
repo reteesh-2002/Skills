@@ -455,12 +455,38 @@ def heal_environment(project_dir: Path) -> list[str]:
                             "command": "python3 scripts/verify_release_gate.py --pre-tool"
                         },
                         {
+                            "matcher": "view_file",
+                            "command": "python3 scripts/guard_read_before_write.py"
+                        },
+                        {
+                            "matcher": "read_file",
+                            "command": "python3 scripts/guard_read_before_write.py"
+                        },
+                        {
                             "matcher": "replace_file_content",
+                            "command": "python3 scripts/guard_read_before_write.py"
+                        },
+                        {
+                            "matcher": "edit_file",
                             "command": "python3 scripts/guard_read_before_write.py"
                         },
                         {
                             "matcher": "write_to_file",
                             "command": "python3 scripts/guard_read_before_write.py"
+                        },
+                        {
+                            "matcher": "write_file",
+                            "command": "python3 scripts/guard_read_before_write.py"
+                        },
+                        {
+                            "matcher": "run_command",
+                            "command": "python3 scripts/guard_anti_retry.py"
+                        }
+                    ],
+                    "PostToolUse": [
+                        {
+                            "matcher": "*",
+                            "command": "python3 scripts/guard_anti_retry.py"
                         }
                     ]
                 }

@@ -42,7 +42,7 @@ def is_exploratory_command(command_line: str) -> bool:
     return any(c == p.strip() or c.startswith(p) for p in EXPLORATORY_COMMAND_PREFIXES)
 
 def evaluate_retry(tool_name: str, args: dict, active_failures: set) -> tuple[bool, str]:
-    if tool_name in ("view_file", "list_dir", "manage_task"):
+    if tool_name in ("view_file", "read_file", "list_dir", "manage_task"):
         return True, "Read-only inspection permitted"
     if tool_name == "run_command" and is_exploratory_command(args.get("CommandLine", "")):
         return True, "Exploratory discovery command permitted"
@@ -62,19 +62,21 @@ def main():
     name = tc.get("name") or payload.get("name") or ""
     args = tc.get("args") or payload.get("args") or payload.get("tool_input") or {}
     ff = get_failures_file(Path(payload.get("cwd") or os.getcwd()).resolve() / ".evidence")
-    status = payload.get("status") or payload.get("result", {}).get("status")
-    exit_code = payload.get("exit_code") or payload.get("result", {}).get("exit_code")
+    res_obj = payload.get("result") if isinstance(payload.get("result"), dict) else (payload.get("output") if isinstance(payload.get("output"), dict) else {})
+    status = payload.get("status") or res_obj.get("status")
+    exit_code = payload.get("exit_code") if payload.get("exit_code") is not None else res_obj.get("exit_code")
     is_post = "result" in payload or "output" in payload
+    mutation_tools = ("replace_file_content", "write_to_file", "edit_file", "write_file")
     if is_post:
         if status == "error" or (exit_code is not None and exit_code != 0):
             record_failure(ff, compute_action_fingerprint(name, args), name, str(payload.get("error") or ""))
-        elif name in ("replace_file_content", "write_to_file"):
+        elif name in mutation_tools:
             clear_failures(ff)
         print("{}"); sys.exit(0)
     allowed, reason = evaluate_retry(name, args, load_failures(ff))
     if not allowed:
         print(json.dumps({"decision": "deny", "reason": reason})); sys.exit(0)
-    if name in ("replace_file_content", "write_to_file"):
+    if name in mutation_tools:
         clear_failures(ff)
     print(json.dumps({"decision": "allow"}))
 

@@ -36,14 +36,14 @@ When handing off to `swarm`, adhere to parallel isolation invariants:
    - Never assign two parallel tasks to the same file (e.g. shared contract, common registry, or manifest).
 2. **Coordinator-Owned Shared Files**:
    - Files shared across modules (e.g. `package.json`, root `CMakeLists.txt`, central routing tables, DB migrations) must be designated as **Coordinator-Owned**.
-   - These are withheld from worker worktrees and integrated sequentially by the coordinator in Phase 4.
-3. **Audit Targets (`audit_diff.sh`)**:
-   - Each task brief must define concrete automated verification commands that the orchestrator's `audit_diff.sh` script can run against the worktree diff.
+   - These are withheld from parallel worker `workspace:"share"` / `"branch"` assignments and integrated sequentially by the coordinator after landing worker diffs.
+3. **Audit & Verification (`scripts/audit_diff.sh` & `scripts/exec_proxy.py`)**:
+   - Each task brief must define concrete automated verification commands that can be executed via `python3 scripts/exec_proxy.py --label <task_id> "<cmd>"` and checked with `bash scripts/audit_diff.sh`.
 4. **Adaptive Gating Threshold**:
-   - Only recommend parallel worker dispatch when the task scope exceeds **12–15+ files** or spans clearly independent modules (e.g. backend / frontend / test suite).
-   - For smaller tasks (<12 files), specify **Solo Mode** with sequential execution.
+   - Only recommend parallel worker dispatch when the user requests parallel workers or the task spans genuinely independent modules with non-overlapping file ownership.
+   - For tightly coupled or small tasks, specify **Solo Mode** with sequential execution.
 5. **Graceful Host Degradation**:
-   - If git is absent or worktrees fail, the executor must fall back to standard sequential execution in the primary workspace without crashing.
+   - If `swarm` is unavailable or `workspace:"share"` cannot be created, fall back to sequential execution in the primary workspace without crashing.
 
 ---
 

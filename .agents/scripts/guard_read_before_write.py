@@ -39,12 +39,13 @@ def check_transcript_for_read(canonical_path: str) -> bool:
         try:
             with open(t_path, "r", encoding="utf-8", errors="ignore") as f:
                 for line in f:
-                    if "view_file" in line:
+                    if "view_file" in line or "read_file" in line:
                         try:
                             data = json.loads(line)
                             for tc in data.get("tool_calls", []):
-                                if tc.get("name") == "view_file":
-                                    p = tc.get("args", {}).get("AbsolutePath", "").strip('"\'')
+                                if tc.get("name") in ("view_file", "read_file"):
+                                    tc_args = tc.get("args", {})
+                                    p = (tc_args.get("AbsolutePath") or tc_args.get("Path") or "").strip('"\'')
                                     if p:
                                         res_p = str(Path(p).resolve())
                                         if (res_p.lower() if is_windows else res_p) == target:
@@ -79,10 +80,12 @@ def main():
     args = tc.get("args") or payload.get("args") or payload.get("tool_input") or {}
     evidence_dir = Path(payload.get("cwd") or os.getcwd()).resolve() / ".evidence"
     rf = get_reads_file(evidence_dir)
-    if name == "view_file" and args.get("AbsolutePath"):
-        record_read(rf, args["AbsolutePath"])
-    elif name in ("replace_file_content", "write_to_file"):
-        allowed, reason = evaluate_mutation(args.get("TargetFile"), load_reads(rf), rf)
+    read_path = args.get("AbsolutePath") or args.get("Path")
+    if name in ("view_file", "read_file") and read_path:
+        record_read(rf, read_path)
+    elif name in ("replace_file_content", "write_to_file", "edit_file", "write_file"):
+        target_path = args.get("TargetFile") or args.get("Path")
+        allowed, reason = evaluate_mutation(target_path, load_reads(rf), rf)
         if not allowed:
             print(json.dumps({"decision": "deny", "reason": reason})); sys.exit(0)
     print("{}" if ("result" in payload or "output" in payload) else json.dumps({"decision": "allow"}))

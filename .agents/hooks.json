@@ -25,7 +25,29 @@
         ]
       },
       {
+        "matcher": "read_file",
+        "description": "Record file inspection for Read-Before-Write invariant",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 scripts/guard_read_before_write.py",
+            "timeout": 5
+          }
+        ]
+      },
+      {
         "matcher": "replace_file_content",
+        "description": "Enforce Read-Before-Write invariant to prevent blind mutations",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 scripts/guard_read_before_write.py",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "edit_file",
         "description": "Enforce Read-Before-Write invariant to prevent blind mutations",
         "hooks": [
           {
@@ -47,8 +69,32 @@
         ]
       },
       {
+        "matcher": "write_file",
+        "description": "Enforce Read-Before-Write invariant to prevent blind mutations",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 scripts/guard_read_before_write.py",
+            "timeout": 5
+          }
+        ]
+      },
+      {
         "matcher": "run_command",
         "description": "Enforce Anti-Exact-Retry invariant to halt runaway failure loops",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 scripts/guard_anti_retry.py",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "description": "Record tool failures and clear failures on successful edits for Anti-Exact-Retry",
         "hooks": [
           {
             "type": "command",

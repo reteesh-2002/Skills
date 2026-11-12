@@ -48,8 +48,8 @@ Once the design preset is confirmed, execute the 5-step image-to-code pipeline:
 ```
 
 1. **Inspect or Generate Reference**:
-   - **Supplied Reference Mode**: If the user provided a screenshot or mockup, inspect it directly using `view_file` (crop/zoom allowed to examine subtle borders, spacing, and typography).
-   - **New Concept Mode**: Call `generate_image` to establish a visual baseline matching the chosen design preset (use `AspectRatio: '16:9'` for desktop/hero or `'3:2'`). Generate at most 1 overview and 1 detail image maximum.
+   - **Supplied Reference Mode**: If the user provided a screenshot or mockup, inspect it directly using `read_file` (crop/zoom allowed to examine subtle borders, spacing, and typography).
+   - **New Concept Mode**: Delegate to the `image-generator` subagent via `invoke_subagent` to establish a visual baseline matching the chosen design preset (16:9 for desktop/hero or 3:2). Generate at most 1 overview and 1 detail image maximum.
    - **Existing Design / Bugfix**: Skip image generation; adhere strictly to existing tokens.
 2. **Extract Design Decisions**:
    - Identify exact canvas color, surface elevations, hairline borders (`1px border-white/10` or `border-slate-200`), font hierarchy, accent color, and interactive states.

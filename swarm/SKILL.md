@@ -377,3 +377,8 @@ right when you are waiting on one specific answer.
   user messages it. When the user tells you to continue, switch each member
   that ran out (the error messages you got name them), or, if quota is back or
   AI credits now cover it, post to each by name so it picks up its work.
+
+## Suite Verification & Ledger Integration
+
+- Run acceptance checks through `python3 scripts/exec_proxy.py --label <task_id> "<cmd>"` so `.evidence/manifest.v1.json` stays current for release gating.
+- When coordinating multi-task plans with `.task_ledger.json`, validate DAG acyclicity and file isolation using `python3 scripts/task_ledger.py validate`.

@@ -23,16 +23,16 @@ trap 'rm -rf "${TEST_SANDBOX}"' EXIT
 git -C "${TEST_SANDBOX}" init -b main --quiet
 git -C "${TEST_SANDBOX}" config user.name "Test Runner"
 git -C "${TEST_SANDBOX}" config user.email "test@antigravity.internal"
-mkdir -p "${TEST_SANDBOX}/scripts" "${TEST_SANDBOX}/adaptive-worker-orchestrator-v2/scripts"
+mkdir -p "${TEST_SANDBOX}/scripts"
 cp "${PROXY}" "${TEST_SANDBOX}/scripts/exec-proxy.sh"
 cp "${GATE}" "${TEST_SANDBOX}/scripts/verify-release-gate.sh"
 cp "${REPO_ROOT}/scripts/exec_proxy.py" "${TEST_SANDBOX}/scripts/exec_proxy.py"
 cp "${REPO_ROOT}/scripts/verify_release_gate.py" "${TEST_SANDBOX}/scripts/verify_release_gate.py"
 cp "${REPO_ROOT}/scripts/runtime_evidence.py" "${TEST_SANDBOX}/scripts/runtime_evidence.py"
 cp "${REPO_ROOT}/scripts/task_ledger.py" "${TEST_SANDBOX}/scripts/task_ledger.py"
-cp "${SETUP_WT}" "${TEST_SANDBOX}/adaptive-worker-orchestrator-v2/scripts/setup_worktrees.sh"
-cp "${AUDIT_DIFF}" "${TEST_SANDBOX}/adaptive-worker-orchestrator-v2/scripts/audit_diff.sh"
-chmod +x "${TEST_SANDBOX}/scripts/"* "${TEST_SANDBOX}/adaptive-worker-orchestrator-v2/scripts/"*
+cp "${SETUP_WT}" "${TEST_SANDBOX}/scripts/setup_worktrees.sh"
+cp "${AUDIT_DIFF}" "${TEST_SANDBOX}/scripts/audit_diff.sh"
+chmod +x "${TEST_SANDBOX}/scripts/"*
 
 # Add .gitignore ignoring .evidence/ and __pycache__/
 cat << 'GIEOF' > "${TEST_SANDBOX}/.gitignore"
@@ -49,8 +49,8 @@ cd "${TEST_SANDBOX}"
 SB_PROXY="${TEST_SANDBOX}/scripts/exec-proxy.sh"
 SB_GATE="${TEST_SANDBOX}/scripts/verify-release-gate.sh"
 SB_LEDGER="${TEST_SANDBOX}/scripts/task_ledger.py"
-SB_SETUP_WT="${TEST_SANDBOX}/adaptive-worker-orchestrator-v2/scripts/setup_worktrees.sh"
-SB_AUDIT_DIFF="${TEST_SANDBOX}/adaptive-worker-orchestrator-v2/scripts/audit_diff.sh"
+SB_SETUP_WT="${TEST_SANDBOX}/scripts/setup_worktrees.sh"
+SB_AUDIT_DIFF="${TEST_SANDBOX}/scripts/audit_diff.sh"
 
 # Test 1: Non-zero exit code propagation
 echo -n "  [1/26] Testing non-zero exit code capture... "

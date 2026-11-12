@@ -187,7 +187,7 @@ def resume_protocol_steps() -> List[str]:
         "1. Run `git status` and `git log --oneline -5` to inspect actual repository state.",
         "2. Run `python3 scripts/task_ledger.py status` to read current task ledger revision.",
         "3. Run `python3 scripts/task_ledger.py reconcile` to re-queue interrupted Running/Verifying tasks.",
-        "4. Check `.git/.orch-worktrees/` for surviving worktrees; inspect `git branch --list 'orch/rescue-*'`.",
+        "4. Check active swarm members with `swarm{action:\"status\"}` and inspect any surviving git worktrees (`git worktree list`).",
         "5. Validate evidence: compare `.evidence/manifest.v1.json` tree SHA against `git write-tree`.",
         "6. Resume from the first Pending task without re-running tasks already marked Done with valid evidence.",
     ]

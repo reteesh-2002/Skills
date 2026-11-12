@@ -36,9 +36,21 @@ class TestCodeHardeningFixes(unittest.TestCase):
 
     def test_exec_proxy_compound_pipeline(self):
         """Verify compound pipeline argument does not fail from quote mangling."""
+        subprocess.run(["git", "-C", str(self.tmp_path), "init", "--quiet"], check=True)
+        subprocess.run(["git", "-C", str(self.tmp_path), "config", "user.name", "Test"], check=True)
+        subprocess.run(["git", "-C", str(self.tmp_path), "config", "user.email", "test@local"], check=True)
+        (self.tmp_path / "README.md").write_text("init\n", encoding="utf-8")
+        subprocess.run(["git", "-C", str(self.tmp_path), "add", "."], check=True)
+        subprocess.run(["git", "-C", str(self.tmp_path), "commit", "-m", "init", "--quiet"], check=True)
+
+        sb_scripts = self.tmp_path / "scripts"
+        sb_scripts.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(EXEC_PROXY, sb_scripts / "exec_proxy.py")
+        shutil.copy2(SCRIPTS_DIR / "runtime_evidence.py", sb_scripts / "runtime_evidence.py")
+
         res = subprocess.run(
-            [sys.executable, str(EXEC_PROXY), "--label", "test_pipe", "echo hello_pipeline | grep hello"],
-            cwd=str(REPO_ROOT),
+            [sys.executable, str(sb_scripts / "exec_proxy.py"), "--label", "test_pipe", "echo hello_pipeline | grep hello"],
+            cwd=str(self.tmp_path),
             capture_output=True,
             text=True
         )

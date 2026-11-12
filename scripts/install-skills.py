@@ -118,6 +118,19 @@ def get_default_hook_template():
                     ],
                 },
             ],
+            "PostToolUse": [
+                {
+                    "matcher": "*",
+                    "description": "Record tool failures and clear failures on successful edits for Anti-Exact-Retry",
+                    "hooks": [
+                        {
+                            "type": "command",
+                            "command": f"{python_cmd} scripts/guard_anti_retry.py",
+                            "timeout": 5,
+                        }
+                    ],
+                },
+            ],
         }
     }
 
