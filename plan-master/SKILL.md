@@ -68,7 +68,7 @@ Select the smallest useful depth. See [`references/templates.md`](references/tem
 ## 4. Sequencing, Parallelism & Bounded Context Windowing
 
 - Provide a valid sequential order for every plan.
-- Sequential execution is the default. Recommend the orchestrator (`adaptive-worker-orchestrator-v2`) only when the user requests workers and the work is genuinely separable with non-overlapping file ownership.
+- Sequential execution is the default. Recommend `swarm` only when the user requests parallel workers and the work is genuinely separable with non-overlapping file ownership.
 - Enforce strict 1-writer-per-file isolation for any concurrent tasks.
 - Dependency diagrams are optional; use them only when branching is clearer than an ordered list.
 

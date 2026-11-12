@@ -23,7 +23,7 @@ GUARD_RBW = SCRIPTS_DIR / "guard_read_before_write.py"
 GUARD_AER = SCRIPTS_DIR / "guard_anti_retry.py"
 EXEC_PROXY = SCRIPTS_DIR / "exec_proxy.py"
 GATE_PY = SCRIPTS_DIR / "verify_release_gate.py"
-AUDIT_DIFF = REPO_ROOT / "adaptive-worker-orchestrator-v2" / "scripts" / "audit_diff.sh"
+AUDIT_DIFF = REPO_ROOT / "scripts" / "audit_diff.sh"
 
 
 class TestCodeHardeningFixes(unittest.TestCase):

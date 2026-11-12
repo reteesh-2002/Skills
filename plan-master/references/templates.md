@@ -41,7 +41,7 @@ Use for features, multi-phase systems, or parallel multi-worker tasks. Position 
 
 ```markdown
 # [Project or Feature] Plan
-Revision: [v1.0] | Mode: [Planning only / Execution authorized] | Target: [Solo / adaptive-worker-orchestrator-v2]
+Revision: [v1.0] | Mode: [Planning only / Execution authorized] | Target: [Solo / swarm]
 
 > [!NOTE]
 > ### 📋 Executive Outcome Card

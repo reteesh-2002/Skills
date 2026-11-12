@@ -45,7 +45,7 @@ def parse_frontmatter(content: str):
             key, val = line.split(":", 1)
             key = key.strip()
             val = val.strip()
-            if val in ("|", ">"):
+            if val in ("|", ">", "|-", ">-"):
                 current_key = key
                 multiline_lines = []
             else:

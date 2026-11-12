@@ -8,8 +8,8 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PROXY="${REPO_ROOT}/scripts/exec-proxy.sh"
 GATE="${REPO_ROOT}/scripts/verify-release-gate.sh"
-SETUP_WT="${REPO_ROOT}/adaptive-worker-orchestrator-v2/scripts/setup_worktrees.sh"
-AUDIT_DIFF="${REPO_ROOT}/adaptive-worker-orchestrator-v2/scripts/audit_diff.sh"
+SETUP_WT="${REPO_ROOT}/scripts/setup_worktrees.sh"
+AUDIT_DIFF="${REPO_ROOT}/scripts/audit_diff.sh"
 
 echo "🧪 Starting Antigravity Runtime Conformance & Adversarial Suite..."
 PASS_COUNT=0

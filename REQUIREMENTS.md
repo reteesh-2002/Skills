@@ -9,7 +9,7 @@ This document specifies the exact environment, runtime binaries, host tools, and
 | Binary | Minimum Version | Required By Skills | Purpose |
 | :--- | :---: | :--- | :--- |
 | **`python3`** | $\ge 3.10$ | `qa-sentinel`, `deep-debugger`, `schema-craft`, `scripts/*` | Script execution, AST verification, sqlite3 testing |
-| **`git`** | $\ge 2.30$ | `ship-it`, `adaptive-worker-orchestrator-v2`, `code-reviewer` | Release gate verification, branch/worktree isolation |
+| **`git`** | $\ge 2.30$ | `ship-it`, `swarm`, `code-reviewer` | Release gate verification, branch/worktree isolation |
 | **`bash`** | $\ge 4.0$ | `exec-proxy.sh`, `verify-release-gate.sh` | Deterministic proxy execution and receipt hashing |
 | **`node` & `npm`** | $\ge 18.0$ | `playwright-cli`, `web-interface-guidelines`, `frontend-artisan` | Syntax check (`node -c`), browser automation, Tailwind |
 | **`curl`** | Any | `qa-sentinel` (with python `urllib` fallback) | Pre-flight endpoint health and latency probes |

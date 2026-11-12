@@ -115,7 +115,7 @@ graph TD
     end
 
     subgraph "Tier 4: Distributed Orchestration & Council"
-        AWO["adaptive-worker-orchestrator-v2<br>(Git Worktrees & Recovery)"]
+        SWARM["swarm<br>(Parallel Board & Workspaces)"]
         IC["idea-council<br>(Multi-Agent Deliberation)"]
     end
 
@@ -140,11 +140,11 @@ graph TD
         SC --> SP
         SV --> SP
         RR --> SP
-        AWO --> TSG
+        SWARM --> TSG
     end
 
     CA -.->|Supplies Blueprint| PM
-    PM --> AWO
+    PM --> SWARM
     PM --> QS
     DD --> QS
     FA --> QS
@@ -153,7 +153,7 @@ graph TD
     RR --> QS
     CR --> SI
     QS --> EP
-    AWO --> TL
+    SWARM --> TL
 
     style PM fill:#e1f5fe,stroke:#0288d1,stroke-width:2px
     style DD fill:#ffebee,stroke:#d32f2f,stroke-width:2px
@@ -169,12 +169,12 @@ graph TD
    - `create-architect` does **not** auto-run before `plan-master`. A valid blueprint skips regeneration.
 
 2. **Autonomous Triad Handoffs**:
-   - **Feature Creation**: `plan-master` ingests requirements $\rightarrow$ evaluates `task_shape_gating.py` $\rightarrow$ if parallel, dispatches `adaptive-worker-orchestrator-v2` ($\le 4$ workers) $\rightarrow$ invokes specialist skills (`schema-craft`, `frontend-artisan`) when explicitly directed $\rightarrow$ delegates verification to `qa-sentinel` $\rightarrow$ calls `code-reviewer` $\rightarrow$ invokes `ship-it` for release staging.
+   - **Feature Creation**: `plan-master` ingests requirements $\rightarrow$ evaluates `task_shape_gating.py` $\rightarrow$ if parallel, dispatches `swarm` workers $\rightarrow$ invokes specialist skills (`schema-craft`, `frontend-artisan`) when explicitly directed $\rightarrow$ delegates verification to `qa-sentinel` $\rightarrow$ calls `code-reviewer` $\rightarrow$ invokes `ship-it` for release staging.
    - **Bug Remediation**: `deep-debugger` reproduces the bug $\rightarrow$ produces minimal surgical fix $\rightarrow$ delegates verification to `qa-sentinel` $\rightarrow$ delegates commit to `ship-it`.
    - **Verification**: `qa-sentinel` wraps all test runs in `scripts/exec-proxy.sh`, streaming verbose logs to `.evidence/logs/<run_id>.log` while returning a 3-line bounded summary and generating physical receipts in `.evidence/receipts/`.
 
 3. **Single-Writer File Isolation**:
-   - In multi-worker mode, `adaptive-worker-orchestrator-v2` enforces strict **1-writer-per-file** partitioning. Shared interfaces are frozen into `contract.yaml` before dispatch. Manifests and lockfiles remain exclusively owned by the coordinator.
+   - In multi-worker mode, `swarm` enforces strict **1-writer-per-file** partitioning with isolated `share`/`branch` workspaces. Manifests and lockfiles remain exclusively owned by the coordinator.
 
 4. **Pipeline Output Suppression Rule**:
    - Intermediate skills in a pipeline suppress verbose chat cards to a **single-line milestone heartbeat** (e.g. `✓ [deep-debugger]: Fixed bug in worker.py:L42 (exit 0)`).
@@ -197,7 +197,7 @@ Routing policy is defined authoritatively in [`suite-policy.json`](suite-policy.
 ### All Other Skills: Explicit Only
 
 The remaining 16 skills activate **only** when explicitly requested by name or slash command:
-`create-architect`, `frontend-artisan`, `schema-craft`, `adaptive-worker-orchestrator-v2`, `code-reviewer`, `security-verifier`, `runtime-reliability`, `idea-council`, `ship-it`, `anti-slop-spec`, `design-md`, `image-to-code`, `playwright-cli`, `web-interface-guidelines`, `infra-pilot`, `docs-architect`.
+`create-architect`, `frontend-artisan`, `schema-craft`, `swarm`, `code-reviewer`, `security-verifier`, `runtime-reliability`, `idea-council`, `ship-it`, `anti-slop-spec`, `design-md`, `image-to-code`, `playwright-cli`, `web-interface-guidelines`, `infra-pilot`, `docs-architect`.
 
 ### Mandatory Host Behaviors
 1. **Always read `SKILL.md`** using `view_file` when activating skills.
@@ -291,7 +291,7 @@ Every skill in the suite is optimized for high information density with zero flu
 | **`security-verifier`** | [`security-verifier/SKILL.md`](security-verifier/SKILL.md) | ~867 | **Tier 3**: OWASP API, BOLA/IDOR, injection, and payload audit. | Explicit only |
 | **`plan-master`** | [`plan-master/SKILL.md`](plan-master/SKILL.md) | ~910 | **Tier 1**: Current-state inspection, dependency DAGs, execution planning. | **Auto-activated** |
 | **`schema-craft`** | [`schema-craft/SKILL.md`](schema-craft/SKILL.md) | ~990 | **Tier 3**: Migration Impact Checklist, ESR indexing, reversible DDL. | Explicit only |
-| **`adaptive-worker-orchestrator-v2`** | [`adaptive-worker-orchestrator-v2/SKILL.md`](adaptive-worker-orchestrator-v2/SKILL.md) | ~1,095 | **Tier 4**: Git worktree parallel coordinator (cap $\le 4$) & DAG gating. | Explicit only |
+| **`swarm`** | [`swarm/SKILL.md`](swarm/SKILL.md) | ~5,000 | **Tier 4**: Native parallel swarm coordinator (shared message board & isolated workspaces). | Explicit only |
 | **`web-interface-guidelines`** | [`web-interface-guidelines/SKILL.md`](web-interface-guidelines/SKILL.md) | ~1,183 | **Tier 2**: Vercel interface standards with Scenario Selector table. | Explicit only |
 | **`frontend-artisan`** | [`frontend-artisan/SKILL.md`](frontend-artisan/SKILL.md) | ~1,242 | **Tier 2**: Master frontend orchestrator & Design-Source Record. | Explicit only |
 | **`idea-council`** | [`idea-council/SKILL.md`](idea-council/SKILL.md) | ~1,305 | **Tier 4**: Multi-agent council (Full 6-seat or Express 3-seat). | Explicit only |

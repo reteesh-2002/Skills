@@ -12,7 +12,7 @@ Routing policy is defined in [`suite-policy.json`](suite-policy.json). This file
 
 ## All other skills: explicit only
 
-`create-architect`, `frontend-artisan`, `schema-craft`, `adaptive-worker-orchestrator-v2`, `code-reviewer`, `security-verifier`, `runtime-reliability`, `idea-council`, `ship-it`, `anti-slop-spec`, `design-md`, `image-to-code`, `playwright-cli`, `web-interface-guidelines`, `infra-pilot`, `docs-architect`
+`create-architect`, `frontend-artisan`, `schema-craft`, `swarm`, `code-reviewer`, `security-verifier`, `runtime-reliability`, `idea-council`, `ship-it`, `anti-slop-spec`, `design-md`, `image-to-code`, `playwright-cli`, `web-interface-guidelines`, `infra-pilot`, `docs-architect`
 
 These activate only when the user explicitly requests them or invokes their slash commands.
 

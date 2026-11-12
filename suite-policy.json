@@ -21,7 +21,7 @@
       "create-architect",
       "frontend-artisan",
       "schema-craft",
-      "adaptive-worker-orchestrator-v2",
+      "swarm",
       "code-reviewer",
       "security-verifier",
       "runtime-reliability",

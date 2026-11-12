@@ -8,7 +8,7 @@ Use only integrations the user selects or source artifacts they provide. Plannin
 | :--- | :--- | :--- | :--- |
 | **Standalone (No skills)** | Idea, requirements, code, or user prompt | Ground the request, plan tasks/checks, produce a self-contained handoff. | No companion skills or subagents required. |
 | **Idea Council v2.0 Output** | Decision record with stance (🟢/🟡/🟠/⏸️/🔴), challenges, open questions | Map verdict directly to plan type: 🟢 $\rightarrow$ Execution Plan; 🟡 $\rightarrow$ Spike Plan with kill triggers; 🟠 $\rightarrow$ Remediation Plan; ⏸️ $\rightarrow$ Prerequisite list; 🔴 $\rightarrow$ Archival ADR. | Preserve dissent; translate accepted decisions into scope and unresolved assumptions into discovery tasks. |
-| **adaptive-worker-orchestrator-v2** | Plan plus multi-worker execution request | Format tasks into independent worktree-friendly module batches with zero-overlap write scopes, coordinator-owned files, and `audit_diff.sh` test targets. | Executor determines real worker count and launches git worktrees in `.git/.orch-worktrees/`. Solo fallback if <12 files. |
+| **swarm** | Plan plus multi-worker execution request | Format tasks into independent module batches with zero-overlap write scopes, coordinator-owned shared files, and clear verification targets. | Coordinator dispatches workers on the shared message board with `workspace:"share"` or `"branch"` for parallel edits. |
 | **Council + Planner + Orchestrator** | Strategic review to parallel execution | Plan Master ingests council verdict, drafts worktree-partitioned plan, and hands off execution prompt to orchestrator. | Pipeline runs sequentially: Council (strategic review) $\rightarrow$ Planner (contracts & DAG) $\rightarrow$ Orchestrator (parallel implementation). |
 
 ---
@@ -27,9 +27,9 @@ When an Idea Council decision record is provided, map stances deterministically:
 
 ---
 
-## 2. Adaptive Orchestrator Profile (`adaptive-worker-orchestrator-v2`)
+## 2. Parallel Swarm Profile (`swarm`)
 
-When handing off to `adaptive-worker-orchestrator-v2`, adhere to orchestrator invariants:
+When handing off to `swarm`, adhere to parallel isolation invariants:
 
 1. **Strict 1-Writer-Per-File Isolation**:
    - Each parallel task must specify an explicit, non-overlapping list of target files or directories.
