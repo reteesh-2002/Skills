@@ -16,7 +16,7 @@ forbidden_capabilities:
   - modify_code
   - execute_terminal
   - start_implementation_workers
-manual_only: false
+manual_only: true
 auto_trigger_before_plan_master: false
 report_policy: pragmatic_blueprint_always
 output_size_cap: none

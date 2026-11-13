@@ -13,11 +13,13 @@ if [[ ! -f "${GATE_PY}" ]]; then
   GIT_TOP="$(git rev-parse --show-toplevel 2>/dev/null || true)"
   if [[ -n "${GIT_TOP}" && -f "${GIT_TOP}/scripts/verify_release_gate.py" ]]; then
     GATE_PY="${GIT_TOP}/scripts/verify_release_gate.py"
+  elif [[ -f "${HOME}/.gemini/config/scripts/verify_release_gate.py" ]]; then
+    GATE_PY="${HOME}/.gemini/config/scripts/verify_release_gate.py"
   fi
 fi
 
 if [[ ! -f "${GATE_PY}" ]]; then
-  echo "Error: verify_release_gate.py not found in ${SCRIPT_DIR} or repository root." >&2
+  echo "Error: verify_release_gate.py not found in ${SCRIPT_DIR}, repository root, or ~/.gemini/config/scripts." >&2
   exit 1
 fi
 

@@ -104,23 +104,28 @@ def check_contract_drift(repo_root: Path) -> list[str]:
     explicit_only = set(policy.get("activation_modes", {}).get("explicit_only", []))
     auto_skills = {entry["skill"] for entry in policy.get("activation_modes", {}).get("auto", [])}
 
+    skills_subdir = repo_root / "skills"
+    base_dir = skills_subdir if (skills_subdir.exists() and skills_subdir.is_dir()) else repo_root
+
     for skill_name in explicit_only:
-        contract_path = repo_root / skill_name / "contract.yaml"
+        contract_path = base_dir / skill_name / "contract.yaml"
         if not contract_path.exists():
             continue
         content = contract_path.read_text(encoding="utf-8")
-        # Simple key check — full YAML parsing not needed
         if "manual_only: false" in content and skill_name not in auto_skills:
-            # Check if activation field is set to something other than explicit
-            if "activation: auto" in content:
-                errors.append(
-                    f"[{skill_name}] contract.yaml has 'activation: auto' but "
-                    f"suite-policy.json lists it as explicit_only"
-                )
+            errors.append(
+                f"[{skill_name}] contract.yaml has 'manual_only: false' but "
+                f"suite-policy.json lists it as explicit_only"
+            )
+        if "activation: auto" in content:
+            errors.append(
+                f"[{skill_name}] contract.yaml has 'activation: auto' but "
+                f"suite-policy.json lists it as explicit_only"
+            )
 
     for entry in policy.get("activation_modes", {}).get("auto", []):
         skill_name = entry["skill"]
-        contract_path = repo_root / skill_name / "contract.yaml"
+        contract_path = base_dir / skill_name / "contract.yaml"
         if not contract_path.exists():
             continue
         content = contract_path.read_text(encoding="utf-8")
@@ -138,13 +143,17 @@ def main():
     errors = []
     skills = []
 
-    for entry in sorted(repo_root.iterdir()):
-        if not entry.is_dir() or entry.name in IGNORED_DIRS or entry.name.startswith("."):
-            continue
-        skill_file = entry / "SKILL.md"
-        if not skill_file.exists():
-            continue
-        skills.append(entry)
+    skills_subdir = repo_root / "skills"
+    search_dirs = [skills_subdir] if (skills_subdir.exists() and skills_subdir.is_dir()) else [repo_root]
+
+    for base in search_dirs:
+        for entry in sorted(base.iterdir()):
+            if not entry.is_dir() or entry.name in IGNORED_DIRS or entry.name.startswith("."):
+                continue
+            skill_file = entry / "SKILL.md"
+            if not skill_file.exists():
+                continue
+            skills.append(entry)
 
     print(f"🔍 Validating {len(skills)} Antigravity skills in {repo_root}...\n")
     print(f"{'Skill Name':<32} {'Tokens':<10} {'Size':<10} {'Status'}")

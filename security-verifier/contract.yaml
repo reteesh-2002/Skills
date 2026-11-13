@@ -4,5 +4,5 @@ inputs: [task-contract.v1, endpoint-schema.v1, dependency-delta.v1]
 outputs: [security-assessment.v1, manifest-receipt.v1]
 required_capabilities: [run_security_probe, audit_dependencies, update_manifest]
 forbidden_capabilities: [approve_own_waiver, git_push, fuzz_production]
-manual_only: false
+manual_only: true
 report_policy: standalone_card

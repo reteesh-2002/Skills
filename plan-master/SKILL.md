@@ -1,6 +1,6 @@
 ---
 name: plan-master
-description: Turns user requirements or an existing blueprint into a grounded, actionable execution plan. Automatically activates for multi-step feature, system, or architecture requests. Do not activate before create-architect; do not regenerate the blueprint. Use plan-master to produce the plan after the blueprint exists.
+description: Turns user requirements or an existing blueprint into a grounded, actionable execution plan. Automatically activates for multi-step feature, system, or architecture requests.
 ---
 
 # Plan Master

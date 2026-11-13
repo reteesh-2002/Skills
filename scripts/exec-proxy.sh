@@ -13,11 +13,13 @@ if [[ ! -f "${PROXY_PY}" ]]; then
   GIT_TOP="$(git rev-parse --show-toplevel 2>/dev/null || true)"
   if [[ -n "${GIT_TOP}" && -f "${GIT_TOP}/scripts/exec_proxy.py" ]]; then
     PROXY_PY="${GIT_TOP}/scripts/exec_proxy.py"
+  elif [[ -f "${HOME}/.gemini/config/scripts/exec_proxy.py" ]]; then
+    PROXY_PY="${HOME}/.gemini/config/scripts/exec_proxy.py"
   fi
 fi
 
 if [[ ! -f "${PROXY_PY}" ]]; then
-  echo "Error: exec_proxy.py not found in ${SCRIPT_DIR} or repository root." >&2
+  echo "Error: exec_proxy.py not found in ${SCRIPT_DIR}, repository root, or ~/.gemini/config/scripts." >&2
   exit 1
 fi
 

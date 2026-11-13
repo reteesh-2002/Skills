@@ -4,5 +4,5 @@ inputs: [data-model-spec.v1, migration-task.v1]
 outputs: [ddl-migration.v1, typed-schema.v1, seed-data.v1]
 required_capabilities: [index_foreign_keys, generate_safe_ddl]
 forbidden_capabilities: [destructive_drop_table, git_push]
-manual_only: false
+manual_only: true
 report_policy: standalone_card

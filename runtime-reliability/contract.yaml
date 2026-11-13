@@ -4,5 +4,5 @@ inputs: [migration-spec.v1, service-config.v1, soak-budget.v1]
 outputs: [operational-readiness.v1, manifest-receipt.v1]
 required_capabilities: [rehearse_migration, run_soak_test, probe_shutdown, update_manifest]
 forbidden_capabilities: [approve_own_waiver, git_push, destructive_production_drop]
-manual_only: false
+manual_only: true
 report_policy: standalone_card
