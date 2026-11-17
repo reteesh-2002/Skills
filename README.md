@@ -29,7 +29,20 @@ python3 scripts/install-skills.py --workspace
 python3 scripts/install-skills.py --global
 ```
 
-#### Option C: Health Check & Self-Healing via Skills Doctor
+#### Option C: Selective Removal & Clean Uninstallation
+Cleanly remove specific skills or completely uninstall the suite and restore original configurations:
+```bash
+# Selectively remove specific skills (e.g. idea-council, infra-pilot)
+python3 scripts/install-skills.py --global --remove idea-council infra-pilot
+
+# Completely uninstall suite and restore original hooks/configs
+python3 scripts/install-skills.py --global --uninstall
+
+# Preview changes with dry-run
+python3 scripts/install-skills.py --global --uninstall --dry-run
+```
+
+#### Option D: Health Check & Self-Healing via Skills Doctor
 Run the diagnostic doctor to audit runtime helpers, hooks, and tool availability:
 ```bash
 # Diagnostic audit
@@ -66,10 +79,10 @@ python3 scripts/validate-skills.py
 # 2. Run the environment health check
 python3 scripts/skills-doctor.py
 
-# 3. Run the full unit, probe, and behavioral regression suite (232 tests)
+# 3. Run the full unit, probe, and behavioral regression suite (252 tests)
 python3 -m unittest discover tests
 
-# 4. Run the 27-test runtime conformance and adversarial shell suite
+# 4. Run the 27-test runtime conformance and adversarial shell suite (or python test_runtime_conformance.py)
 bash tests/verify_runtime.sh
 ```
 
@@ -251,11 +264,14 @@ Implemented in [`create-architect`](create-architect/SKILL.md) with canonical te
 | [`specialist_probes.py`](scripts/specialist_probes.py) | Python 3 | **Empirical Specialist Verification Engine**: Probes for WCAG AA contrast, viewport overflow, disposable SQLite migration rehearsal, BOLA/IDOR isolation, SIGTERM graceful drain, and memory soak plateau. |
 | [`skills-doctor.py`](scripts/skills-doctor.py) | Python 3 | **Environment Health Diagnostic & Self-Healing**: Audits host OS, Python $\ge 3.9$, runtime helpers, hooks, and optional tools. Features `--fix` flag for automatic self-healing repair of missing directories, hooks, and permissions. |
 | [`validate-skills.py`](scripts/validate-skills.py) | Python 3 | **Skill Metadata & Syntax Linter**: Ingests all 19 skills, validates YAML frontmatter, measures token budgets, checks relative links, and prevents policy drift. |
-| [`install-skills.py`](scripts/install-skills.py) | Python 3 | **Suite Installer & Manifest Manager**: Installs skills and runtime helpers to workspace or global configuration with POSIX path normalization and containment guarantees. |
+| [`install-skills.py`](scripts/install-skills.py) | Python 3 | **Suite Installer & Manifest Manager**: Installs skills and runtime helpers to workspace or global configuration with POSIX path normalization, selective skill removal (`--remove`), and full uninstallation (`--uninstall`) with rollback. |
+| [`audit_diff.py`](scripts/audit_diff.py)<br>[`audit_diff.sh`](scripts/audit_diff.sh)<br>[`audit-diff.cmd`](scripts/audit-diff.cmd) | Python 3<br>Bash Shim<br>Windows CMD | **Diff & Boundary Auditor**: Pure Python 3 auditor for committed and untracked changes. Validates declared path prefixes, flags out-of-scope symlinks, protected package manifests, and code placeholders. |
+| [`setup_worktrees.py`](scripts/setup_worktrees.py)<br>[`setup_worktrees.sh`](scripts/setup_worktrees.sh)<br>[`setup-worktrees.cmd`](scripts/setup-worktrees.cmd) | Python 3<br>Bash Shim<br>Windows CMD | **Worktree Isolation & Rescue**: Pure Python worktree manager. Automates worker git worktrees and branch isolation, and auto-rescues uncommitted changes to `orch/rescue-*` before safe detachment. |
 
 ### 3. Test Suites (`tests/`)
 | Test File | Type | Focus & Scenarios |
 | :--- | :---: | :--- |
+| [`test_runtime_conformance.py`](tests/test_runtime_conformance.py) | Conformance | Pure Python cross-platform conformance suite implementing 12 core runtime invariants (P01–P32): exit code capture, tree SHA mismatch, tamper detection, dirty worktree rescue, and boundary audits. |
 | [`test_verify_release_gate.py`](tests/test_verify_release_gate.py) | Unit/Integration | Release gate execution, Git Assertion Lock enforcement, test file regex matching, and `--spec-evolution` bypass. |
 | [`test_runtime_guards.py`](tests/test_runtime_guards.py) | Unit/Integration | Read-Before-Write guard with transcript scan fallback, Anti-Retry exploratory command whitelisting, and timestamp freshness. |
 | [`test_install_doctor.py`](tests/test_install_doctor.py) | Unit/Integration | Installer clean install, idempotent repeat install, uninstallation, doctor diagnostics, and `--fix` self-healing engine. |
@@ -344,9 +360,9 @@ bash tests/verify_runtime.sh
 python3 scripts/skills-doctor.py --fix
 ```
 
-- **Unit & Behavioral Tests**: **232 passed** in ~6.3s (`python3 -m unittest discover tests`).
-- **Runtime Conformance Tests**: **27/27 passed** in ~3.5s (`bash tests/verify_runtime.sh`).
-- **Deterministic Release Gate**: **GREEN** (`bash scripts/verify-release-gate.sh --check-only`).
+- **Unit & Behavioral Tests**: **252 passed** in ~9s (`python3 -m unittest discover tests`).
+- **Runtime Conformance Tests**: **27/27 passed** in ~3.5s (`bash tests/verify_runtime.sh` or `python -m unittest tests/test_runtime_conformance.py`).
+- **Deterministic Release Gate**: **GREEN** (`python scripts/verify_release_gate.py --check-only`).
 - **Fraud Prevention**: Zero simulated sleep loops, zero hard-coded scores, Git Assertion Lock against test tampering, and independent transcript auditing via `benchmarks/audit_trial.py`.
 
 ---
