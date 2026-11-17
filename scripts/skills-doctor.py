@@ -447,46 +447,47 @@ def heal_environment(project_dir: Path) -> list[str]:
             shutil.copy2(source_hooks, hooks_file)
             actions.append("Restored .agents/hooks.json from suite template")
         else:
+            python_bin = "python3" if shutil.which("python3") and sys.platform != "win32" else "python"
             default_hooks = {
                 "evidence-policy": {
                     "PreToolUse": [
                         {
                             "matcher": "run_command",
-                            "command": "python3 scripts/verify_release_gate.py --pre-tool"
+                            "command": f"{python_bin} scripts/verify_release_gate.py --pre-tool"
                         },
                         {
                             "matcher": "view_file",
-                            "command": "python3 scripts/guard_read_before_write.py"
+                            "command": f"{python_bin} scripts/guard_read_before_write.py"
                         },
                         {
                             "matcher": "read_file",
-                            "command": "python3 scripts/guard_read_before_write.py"
+                            "command": f"{python_bin} scripts/guard_read_before_write.py"
                         },
                         {
                             "matcher": "replace_file_content",
-                            "command": "python3 scripts/guard_read_before_write.py"
+                            "command": f"{python_bin} scripts/guard_read_before_write.py"
                         },
                         {
                             "matcher": "edit_file",
-                            "command": "python3 scripts/guard_read_before_write.py"
+                            "command": f"{python_bin} scripts/guard_read_before_write.py"
                         },
                         {
                             "matcher": "write_to_file",
-                            "command": "python3 scripts/guard_read_before_write.py"
+                            "command": f"{python_bin} scripts/guard_read_before_write.py"
                         },
                         {
                             "matcher": "write_file",
-                            "command": "python3 scripts/guard_read_before_write.py"
+                            "command": f"{python_bin} scripts/guard_read_before_write.py"
                         },
                         {
                             "matcher": "run_command",
-                            "command": "python3 scripts/guard_anti_retry.py"
+                            "command": f"{python_bin} scripts/guard_anti_retry.py"
                         }
                     ],
                     "PostToolUse": [
                         {
                             "matcher": "*",
-                            "command": "python3 scripts/guard_anti_retry.py"
+                            "command": f"{python_bin} scripts/guard_anti_retry.py"
                         }
                     ]
                 }

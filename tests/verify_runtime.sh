@@ -30,6 +30,8 @@ cp "${REPO_ROOT}/scripts/exec_proxy.py" "${TEST_SANDBOX}/scripts/exec_proxy.py"
 cp "${REPO_ROOT}/scripts/verify_release_gate.py" "${TEST_SANDBOX}/scripts/verify_release_gate.py"
 cp "${REPO_ROOT}/scripts/runtime_evidence.py" "${TEST_SANDBOX}/scripts/runtime_evidence.py"
 cp "${REPO_ROOT}/scripts/task_ledger.py" "${TEST_SANDBOX}/scripts/task_ledger.py"
+cp "${REPO_ROOT}/scripts/setup_worktrees.py" "${TEST_SANDBOX}/scripts/setup_worktrees.py"
+cp "${REPO_ROOT}/scripts/audit_diff.py" "${TEST_SANDBOX}/scripts/audit_diff.py"
 cp "${SETUP_WT}" "${TEST_SANDBOX}/scripts/setup_worktrees.sh"
 cp "${AUDIT_DIFF}" "${TEST_SANDBOX}/scripts/audit_diff.sh"
 chmod +x "${TEST_SANDBOX}/scripts/"*

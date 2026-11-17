@@ -8,7 +8,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash scripts/verify-release-gate.sh --pre-tool",
+            "command": "python scripts/verify_release_gate.py --pre-tool",
             "timeout": 5
           }
         ]
@@ -19,7 +19,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 scripts/guard_read_before_write.py",
+            "command": "python scripts/guard_read_before_write.py",
             "timeout": 5
           }
         ]
@@ -30,7 +30,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 scripts/guard_read_before_write.py",
+            "command": "python scripts/guard_read_before_write.py",
             "timeout": 5
           }
         ]
@@ -41,7 +41,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 scripts/guard_read_before_write.py",
+            "command": "python scripts/guard_read_before_write.py",
             "timeout": 5
           }
         ]
@@ -52,7 +52,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 scripts/guard_read_before_write.py",
+            "command": "python scripts/guard_read_before_write.py",
             "timeout": 5
           }
         ]
@@ -63,7 +63,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 scripts/guard_read_before_write.py",
+            "command": "python scripts/guard_read_before_write.py",
             "timeout": 5
           }
         ]
@@ -74,7 +74,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 scripts/guard_read_before_write.py",
+            "command": "python scripts/guard_read_before_write.py",
             "timeout": 5
           }
         ]
@@ -85,7 +85,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 scripts/guard_anti_retry.py",
+            "command": "python scripts/guard_anti_retry.py",
             "timeout": 5
           }
         ]
@@ -98,7 +98,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 scripts/guard_anti_retry.py",
+            "command": "python scripts/guard_anti_retry.py",
             "timeout": 5
           }
         ]

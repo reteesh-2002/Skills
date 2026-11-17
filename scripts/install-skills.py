@@ -74,12 +74,9 @@ RULE_FILES = [
 ]
 
 def get_default_hook_template():
-    gate_cmd = (
-        "python scripts/verify_release_gate.py --pre-tool"
-        if sys.platform == "win32"
-        else "bash scripts/verify-release-gate.sh --pre-tool"
-    )
-    python_cmd = "python" if sys.platform == "win32" else "python3"
+    # Pure Python is cross-platform across Windows, Linux, and macOS
+    python_cmd = "python3" if shutil.which("python3") and sys.platform != "win32" else "python"
+    gate_cmd = f"{python_cmd} scripts/verify_release_gate.py --pre-tool"
     return {
         "evidence-policy": {
             "description": "Deterministic release evidence and runtime safety policy (Selective Kernel Fusion)",
