@@ -283,6 +283,43 @@ class TestInstallSkills(unittest.TestCase):
             self.assertEqual(res_un.returncode, 0)
             self.assertFalse((target_path / "plan-master").exists())
 
+    def test_selective_skill_removal(self):
+        """Test --remove uninstalls only requested skills and updates manifest."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target_path = Path(tmpdir)
+            # Install in target directory
+            cmd = [sys.executable, str(INSTALL_SCRIPT), "--target-dir", str(target_path), "--workspace"]
+            res = subprocess.run(cmd, capture_output=True, text=True)
+            self.assertEqual(res.returncode, 0)
+            self.assertTrue((target_path / "skills" / "plan-master" / "SKILL.md").exists())
+            self.assertTrue((target_path / "skills" / "idea-council" / "SKILL.md").exists())
+            self.assertTrue((target_path / "skills" / "deep-debugger" / "SKILL.md").exists())
+
+            # Selectively remove idea-council
+            cmd_rem = [
+                sys.executable,
+                str(INSTALL_SCRIPT),
+                "--target-dir",
+                str(target_path),
+                "--remove",
+                "idea-council",
+            ]
+            res_rem = subprocess.run(cmd_rem, capture_output=True, text=True)
+            self.assertEqual(res_rem.returncode, 0)
+            self.assertIn("Successfully removed 1 skill(s)", res_rem.stdout)
+
+            # idea-council should be deleted, but plan-master and deep-debugger remain
+            self.assertFalse((target_path / "skills" / "idea-council").exists())
+            self.assertTrue((target_path / "skills" / "plan-master" / "SKILL.md").exists())
+            self.assertTrue((target_path / "skills" / "deep-debugger" / "SKILL.md").exists())
+
+            # Manifest should be updated with 18 skills remaining
+            manifest_file = target_path / ".skills-install-manifest.json"
+            self.assertTrue(manifest_file.exists())
+            m_data = json.loads(manifest_file.read_text(encoding="utf-8"))
+            self.assertNotIn("idea-council", m_data["installed_skills"])
+            self.assertEqual(len(m_data["installed_skills"]), 18)
+
 
 class TestSkillsDoctor(unittest.TestCase):
     """Integration and unit tests for scripts/skills-doctor.py."""

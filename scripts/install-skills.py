@@ -56,10 +56,17 @@ RUNTIME_SCRIPTS = [
     "scripts/guard_anti_retry.py",
     "scripts/validate-skills.py",
     "scripts/skills-doctor.py",
+    "scripts/audit_diff.py",
+    "scripts/audit_diff.sh",
+    "scripts/audit-diff.cmd",
+    "scripts/setup_worktrees.py",
+    "scripts/setup_worktrees.sh",
+    "scripts/setup-worktrees.cmd",
 ]
 
 RUNTIME_AGENT_SCRIPTS = [
     ".agents/scripts/verify-release-gate.sh",
+    ".agents/scripts/verify_release_gate.py",
     ".agents/scripts/guard_read_before_write.py",
     ".agents/scripts/guard_anti_retry.py",
 ]
@@ -507,8 +514,10 @@ def run_uninstall(
     target_dir: Path | None,
     dry_run: bool = False,
     verbose: bool = False,
+    specific_skills: list[str] | None = None,
 ) -> int:
-    """Read manifest and cleanly remove installed files, restoring user configuration."""
+    """Read manifest and cleanly remove installed files, restoring user configuration.
+    If specific_skills is provided, only remove those skills from the destination."""
     candidates = []
     if target_dir:
         td = target_dir.resolve()
@@ -550,17 +559,45 @@ def run_uninstall(
             dest_root = root_cand
 
     files_map = manifest_data.get("files", {})
-    if verbose:
-        print(f"🗑️  Uninstalling suite from {dest_root} using {manifest_path}...")
+    installed_skills = manifest_data.get("installed_skills", [])
+
+    # If specific skills requested, filter files_map to only those belonging to the skills
+    target_skill_names = set(specific_skills) if specific_skills else None
+    if target_skill_names:
+        matched_files = {}
+        for rel_path, info in files_map.items():
+            # Check if rel_path belongs to one of the specified skills
+            # Patterns: skills/<skill>/... or <skill>/...
+            parts = Path(rel_path).parts
+            is_match = False
+            if len(parts) >= 1 and parts[0] in target_skill_names:
+                is_match = True
+            elif len(parts) >= 2 and parts[0] == "skills" and parts[1] in target_skill_names:
+                is_match = True
+
+            if is_match:
+                matched_files[rel_path] = info
+
+        if not matched_files:
+            print(f"⚠️  No installed files found matching requested skill(s): {', '.join(sorted(target_skill_names))}")
+            return 0
+
+        target_files_map = matched_files
+        if verbose:
+            print(f"🗑️  Removing {len(target_skill_names)} skill(s) from {dest_root}: {', '.join(sorted(target_skill_names))}...")
+    else:
+        target_files_map = files_map
+        if verbose:
+            print(f"🗑️  Uninstalling suite from {dest_root} using {manifest_path}...")
 
     if dry_run:
-        print(f"🔍 Dry-run: Would remove {len(files_map)} tracked components.")
+        print(f"🔍 Dry-run: Would remove {len(target_files_map)} tracked components.")
         return 0
 
     removed_files = 0
     restored_files = 0
 
-    for rel_path, info in files_map.items():
+    for rel_path, info in target_files_map.items():
         file_path = (dest_root / rel_path).resolve()
         
         # Path containment check: ensure no path traversal escape from dest_root
@@ -606,6 +643,25 @@ def run_uninstall(
                     restored_files += 1
                 except Exception:
                     pass
+
+    # If partial uninstall, update manifest file instead of deleting it
+    if target_skill_names:
+        remaining_files = {k: v for k, v in files_map.items() if k not in target_files_map}
+        remaining_skills = [s for s in installed_skills if s not in target_skill_names]
+        manifest_data["files"] = remaining_files
+        manifest_data["installed_skills"] = remaining_skills
+        manifest_path.write_text(json.dumps(manifest_data, indent=2) + "\n", encoding="utf-8")
+
+        skills_dir_str = manifest_data.get("skills_dir")
+        if skills_dir_str:
+            sec_manifest = Path(skills_dir_str) / MANIFEST_FILENAME
+            if sec_manifest.exists() and sec_manifest != manifest_path:
+                try:
+                    sec_manifest.write_text(json.dumps(manifest_data, indent=2) + "\n", encoding="utf-8")
+                except OSError:
+                    pass
+        print(f"✅ Successfully removed {len(target_skill_names)} skill(s) ({', '.join(sorted(target_skill_names))}): removed {removed_files} files.")
+        return 0
 
     # Remove secondary manifest copy if it exists
     skills_dir_str = manifest_data.get("skills_dir")
@@ -661,6 +717,12 @@ def main():
         help="Uninstall skills suite and restore original configurations using manifest",
     )
     parser.add_argument(
+        "--remove",
+        nargs="+",
+        metavar="SKILL",
+        help="Selectively remove/uninstall one or more specific skills by name (e.g. --remove idea-council infra-pilot)",
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Preview changes without writing to disk",
@@ -673,13 +735,6 @@ def main():
 
     args = parser.parse_args()
     repo_root = find_repo_root()
-
-    if args.uninstall:
-        return run_uninstall(
-            target_dir=args.target_dir,
-            dry_run=args.dry_run,
-            verbose=args.verbose,
-        )
 
     # Determine default target directory
     if args.target_dir:
@@ -706,6 +761,14 @@ def main():
         else:
             mode = "workspace"
             target_dir = Path.cwd().resolve()
+
+    if args.uninstall or args.remove:
+        return run_uninstall(
+            target_dir=target_dir if (args.is_global or args.target_dir) else args.target_dir,
+            dry_run=args.dry_run,
+            verbose=args.verbose,
+            specific_skills=args.remove,
+        )
 
     return run_install(
         target_dir=target_dir,
