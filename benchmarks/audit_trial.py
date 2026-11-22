@@ -148,24 +148,38 @@ def main():
     parser.add_argument("--task", type=str, default="frontend-artisan", help="Task ID or skill to audit (FLAG-01, FLAG-02, FLAG-05)")
     args = parser.parse_args()
 
+    target_skill = args.task.strip()
+    valid_tasks = {
+        "frontend-artisan": "frontend-artisan",
+        "FLAG-01": "frontend-artisan",
+        "1": "frontend-artisan",
+        "deep-debugger": "deep-debugger",
+        "FLAG-02": "deep-debugger",
+        "2": "deep-debugger",
+        "create-architect": "create-architect",
+        "prompt-architect": "create-architect",
+        "FLAG-05": "create-architect",
+        "5": "create-architect",
+    }
+    if target_skill not in valid_tasks:
+        print(f"❌ Error: Unsupported benchmark task '{target_skill}'. Supported: FLAG-01, FLAG-02, FLAG-05.")
+        sys.exit(1)
+
     transcript = find_latest_transcript(args.transcript)
     if not transcript:
         print("❌ Error: No conversation transcript found.")
         sys.exit(1)
 
     print(f"Auditing transcript: {transcript}")
-    target_skill = args.task.strip()
 
+    matched = valid_tasks[target_skill]
     passed = False
-    if target_skill in ["frontend-artisan", "FLAG-01", "1"]:
+    if matched == "frontend-artisan":
         passed = audit_frontend_artisan(transcript)
-    elif target_skill in ["deep-debugger", "FLAG-02", "2"]:
+    elif matched == "deep-debugger":
         passed = audit_deep_debugger(transcript)
-    elif target_skill in ["create-architect", "prompt-architect", "FLAG-05", "5"]:
+    elif matched == "create-architect":
         passed = audit_create_architect(transcript)
-    else:
-        print(f"❌ Error: Unsupported benchmark task '{target_skill}'. Supported: FLAG-01, FLAG-02, FLAG-05.")
-        sys.exit(1)
 
     # Propagate failure to non-zero exit code
     sys.exit(0 if passed else 1)

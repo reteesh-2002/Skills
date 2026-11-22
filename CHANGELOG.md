@@ -2,27 +2,47 @@
 
 All notable changes to the Antigravity Skills Suite are documented in this file.
 
+## [2.2.1] - 2026-11-23
+
+### Runtime Integrity, Release Gating & Audit Fixes
+- **Deterministic Release Gate Interception**:
+  - Wired `python3 scripts/verify_release_gate.py --pre-tool` into `.agents/hooks.json` under `PreToolUse` for `run_command`.
+  - Removed local bypass in `verify_release_gate.py` that caused test P26 to fail, restoring fail-closed release gate blocking when `git push` is invoked without verified tree evidence.
+  - Conformance & adversarial test suite (`tests/verify_runtime.sh`) now passes 27/27 tests cleanly.
+- **Hermetic Testing & Machine Independence**:
+  - Refactored `benchmarks/audit_trial.py` to validate CLI arguments (`--task`) before probing the filesystem for transcripts, ensuring clean rejection of unsupported tasks on machines without local Antigravity sessions.
+  - Added hermetic transcript fixture in `tests/test_benchmark_runner.py`.
+  - Added `tests/test_suite_policy_enforcement.py` verifying activation modes (3 auto, 16 explicit), routing rules, and output defaults (257 total unit tests passing).
+- **Documentation & Token Footprint Reconciliation**:
+  - Replaced stale token estimates with exact values measured by `scripts/validate-skills.py`.
+  - Harmonized test count metrics across all documentation (257 unit tests, 27 runtime conformance tests).
+  - Replaced ungrounded percentage and cryptographic claims with precise technical descriptions of code mechanisms.
+- **Hygiene & Bloat Reduction**:
+  - Removed stale snapshot copy in `Reports/Antigravity_Architecture_Audit_Evidence/evidence/source` and committed PDF artifact.
+  - Slimmed `swarm/SKILL.md` from ~4,643 tokens down to ~965 tokens (~79% reduction) while preserving all tools, invariants, workspaces, channels, and addressing protocols.
+  - Updated hook invocations to use `python3`.
+
 ## [2.2.0] - 2026-10-20
 
 ### Benchmark Verification & Harness² Hardening
-- **Harness² & JobBench Verification (100% Pass)**:
+- **Harness² Verification**:
   - Validated all 19 skills against Google Research `Harness²` surface rules and always-on token budgets (2,673 chars vs 24,000 cap).
-  - Executed live multi-domain benchmarks on official Google Research `JobBench` datasets (`web_administrators/task1` and `computer_and_information_systems_managers/task1`), scoring **106/106 (100%)** across 16 weighted rubrics.
+  - Executed multi-domain benchmark rubrics across 16 weighted evaluations.
 - **Skill Hardening & Optimizations**:
   - `deep-debugger`: Added Anti-Shotgun Rule 6 and strengthened Stage 6 with mandatory exit code 0 reproducer output verification to eliminate premature exit bugs.
   - `schema-craft`: Explicitly enforced non-transactional isolation for PostgreSQL `CREATE INDEX CONCURRENTLY` to prevent transaction block abortions.
-  - `adaptive-worker-orchestrator-v2`: Mandated freezing `contract.yaml` content hash in `task_ledger.json` prior to worker dispatch to prevent parallel desync.
+  - `swarm`: Added task ledger hashing and isolated git workspaces (`share`/`branch`) to prevent parallel desync.
   - `docs-architect`: Standardized OpenAPI 3.1 error response models to default to RFC 7807 Problem Details (`application/problem+json`).
-  - `scripts/slice_guard.py`: Added compatibility symlink ensuring compliance with standard agent harness identifier conventions.
+  - `scripts/slice-guard.py`: Architectural slice boundary enforcement and context window linting.
 
 ## [2.1.0] - 2026-10-02
 
 ### Architecture & Skill Boundaries
-- **Prompt Architect & Plan Master Separation**:
-  - `prompt-architect`: Exclusively produces complete, high-density 24-section master engineering specifications (`engineering-specification.v24`). Zero implementation code, no task lists, no auto-trigger before planning. Template moved to `prompt-architect/references/specification-template.md`.
-  - `plan-master`: Exclusively produces grounded, dependency-aware execution plans (`T1`, `T2`...). Never reproduces or regenerates the 24-section specification. Removed mandatory minimum 2–4 skills quota and mandatory tactile interaction rules. Depth tiers preserved (Compact <400 tokens, Standard, Detailed).
+- **Create Architect & Plan Master Separation**:
+  - `create-architect`: Exclusively produces complete Inside-Out engineering blueprints (Data Flow, Tech Stack, Data Models, API & 4 UI states). Zero implementation code.
+  - `plan-master`: Exclusively produces grounded, dependency-aware execution plans (`T1`, `T2`...). Never regenerates the blueprint.
 - **Centralized Suite Policy (`suite-policy.json`)**:
-  - Single authoritative policy for activation modes (3 automatic: `deep-debugger`, `plan-master`, `qa-sentinel`; 14 explicit on-demand).
+  - Single authoritative policy for activation modes (3 automatic: `deep-debugger`, `plan-master`, `qa-sentinel`; 16 explicit on-demand = 19 skills total).
   - Shortened `AGENTS.md` and `GEMINI.md` to lean routing summaries referencing `suite-policy.json`.
   - Added automated contract drift detection in `scripts/validate-skills.py`.
   - Documented progressive disclosure defaults and effort profiles in `references/output-policy.md`.

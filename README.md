@@ -1,6 +1,6 @@
-# 🛠️ Antigravity Engineering Skills Suite (v2.2)
+# Antigravity Engineering Skills Suite (v2.2)
 
-A high-craft software engineering operating system for **Google Antigravity**. Covers the full engineering lifecycle—from architectural intent extraction and visual art direction to parallel worktree orchestration, adversarial review, specialist verification, and release gate enforcement.
+A modular software engineering toolkit and skills suite for **Google Antigravity**. Covers the engineering lifecycle—from architectural intent extraction and visual design direction to parallel worker orchestration, adversarial review, specialist verification, and release gate enforcement.
 
 ---
 
@@ -54,7 +54,7 @@ python3 scripts/skills-doctor.py --fix
 *(Supports `--json` for automated environment auditing.)*
 
 ### 3. Release Safety & Git Assertion Lock
-The suite enforces the **Git Assertion Lock** to prevent test tampering during bug repairs, along with automated secret scanning:
+The suite enforces the **Git Assertion Lock** to prevent test tampering during bug repairs, along with staged diff secret scanning:
 ```bash
 # Evaluate release readiness and ensure no modified test assertions
 python3 scripts/verify_release_gate.py
@@ -62,7 +62,7 @@ python3 scripts/verify_release_gate.py
 # Or allow intentional test specification changes when requirements evolve
 python3 scripts/verify_release_gate.py --spec-evolution
 ```
-Hooks in `.agents/hooks.json` run with **Zero Developer Friction**: `git push` is never blocked locally in daily coding mode, and runaway tool retry loops are automatically halted.
+Hooks in `.agents/hooks.json` wire `verify_release_gate.py --pre-tool` to intercept `git push` before execution, ensuring tests have been verified against the current git tree. Non-release commands (`git commit`, `git status`, test runs) execute without gate overhead, and runaway tool retry loops are halted by `guard_anti_retry.py`.
 
 ### 4. Conformance & Test Suite Verification
 Verify skill metadata, contracts, policy drift, specialist probes, and runtime checks:
@@ -73,10 +73,10 @@ python3 scripts/validate-skills.py
 # 2. Run the environment health check
 python3 scripts/skills-doctor.py
 
-# 3. Run the full unit, probe, and behavioral regression suite (252 tests)
-python3 -m unittest discover tests
+# 3. Run the full unit, probe, and behavioral regression suite (257 tests)
+python3 -m unittest discover -s tests -p 'test_*.py'
 
-# 4. Run the 27-test runtime conformance and adversarial shell suite (or python test_runtime_conformance.py)
+# 4. Run the 27-test runtime conformance and adversarial shell suite (or python3 -m unittest tests/test_runtime_conformance.py)
 bash tests/verify_runtime.sh
 ```
 
@@ -289,48 +289,48 @@ Every skill in the suite is optimized for high information density with zero flu
 
 | Skill | Entry Point | Tokens | Tier & Role | Loading Policy |
 | :--- | :--- | :---: | :--- | :--- |
+| **`design-md`** | [`design-md/SKILL.md`](design-md/SKILL.md) | ~137 | **Tier 2**: Design token manager with approved/proposed provenance. | Explicit only |
+| **`web-interface-guidelines`** | [`web-interface-guidelines/SKILL.md`](web-interface-guidelines/SKILL.md) | ~140 | **Tier 2**: Web interface engineering standards (keyboard, touch, hit targets). | Explicit only |
+| **`image-to-code`** | [`image-to-code/SKILL.md`](image-to-code/SKILL.md) | ~182 | **Tier 2**: Compact image-to-code workflow with strict visual classification. | Explicit only |
 | **`anti-slop-spec`** | [`anti-slop-spec/SKILL.md`](anti-slop-spec/SKILL.md) | ~230 | **Tier 2**: Forwarding alias to plan-master & frontend-artisan. | Explicit only |
-| **`create-architect`** | [`create-architect/SKILL.md`](create-architect/SKILL.md) | ~580 | **Tier 1b**: Inside-Out engineering blueprint architect. | Explicit only |
-| **`runtime-reliability`** | [`runtime-reliability/SKILL.md`](runtime-reliability/SKILL.md) | ~698 | **Tier 3**: Operational resilience, RSS memory soak, SIGTERM drain. | Explicit only |
-| **`design-md`** | [`design-md/SKILL.md`](design-md/SKILL.md) | ~754 | **Tier 2**: Design token manager with approved/proposed provenance. | Explicit only |
-| **`playwright-cli`** | [`playwright-cli/SKILL.md`](playwright-cli/SKILL.md) | ~760 | **Tier 2**: Headless browser automation with session ownership. | Explicit only |
-| **`code-reviewer`** | [`code-reviewer/SKILL.md`](code-reviewer/SKILL.md) | ~832 | **Tier 3**: Adversarial diff reviewer with reviewer mode disclosure. | Explicit only |
-| **`ship-it`** | [`ship-it/SKILL.md`](ship-it/SKILL.md) | ~834 | **Tier 5**: Staged candidate release scanner & Compact Readiness Receipt. | Explicit only |
-| **`docs-architect`** | [`docs-architect/SKILL.md`](docs-architect/SKILL.md) | ~845 | **Tier 5**: Viral README engine, OpenAPI 3.1 contracts, and ADR records. | Explicit only |
-| **`infra-pilot`** | [`infra-pilot/SKILL.md`](infra-pilot/SKILL.md) | ~850 | **Tier 5**: Production Dockerfiles, docker-compose stacks, and CI/CD pipelines. | Explicit only |
-| **`security-verifier`** | [`security-verifier/SKILL.md`](security-verifier/SKILL.md) | ~867 | **Tier 3**: OWASP API, BOLA/IDOR, injection, and payload audit. | Explicit only |
-| **`plan-master`** | [`plan-master/SKILL.md`](plan-master/SKILL.md) | ~910 | **Tier 1**: Current-state inspection, dependency DAGs, execution planning. | **Auto-activated** |
-| **`schema-craft`** | [`schema-craft/SKILL.md`](schema-craft/SKILL.md) | ~990 | **Tier 3**: Migration Impact Checklist, ESR indexing, reversible DDL. | Explicit only |
-| **`swarm`** | [`swarm/SKILL.md`](swarm/SKILL.md) | ~5,000 | **Tier 4**: Native parallel swarm coordinator (shared message board & isolated workspaces). | Explicit only |
-| **`web-interface-guidelines`** | [`web-interface-guidelines/SKILL.md`](web-interface-guidelines/SKILL.md) | ~1,183 | **Tier 2**: Vercel interface standards with Scenario Selector table. | Explicit only |
-| **`frontend-artisan`** | [`frontend-artisan/SKILL.md`](frontend-artisan/SKILL.md) | ~1,242 | **Tier 2**: Master frontend orchestrator & Design-Source Record. | Explicit only |
-| **`idea-council`** | [`idea-council/SKILL.md`](idea-council/SKILL.md) | ~1,305 | **Tier 4**: Multi-agent council (Full 6-seat or Express 3-seat). | Explicit only |
-| **`qa-sentinel`** | [`qa-sentinel/SKILL.md`](qa-sentinel/SKILL.md) | ~1,315 | **Tier 1**: Pure verification engine & trusted execution proxy manager. | **Auto-activated** |
-| **`image-to-code`** | [`image-to-code/SKILL.md`](image-to-code/SKILL.md) | ~1,354 | **Tier 2**: Compact image-to-code workflow with strict image budget. | Explicit only |
-| **`deep-debugger`** | [`deep-debugger/SKILL.md`](deep-debugger/SKILL.md) | ~1,496 | **Tier 1**: 6-stage root-cause repair engine & Compact Hypothesis Log. | **Auto-activated** |
+| **`qa-sentinel`** | [`qa-sentinel/SKILL.md`](qa-sentinel/SKILL.md) | ~336 | **Tier 1**: Pure verification engine & execution proxy manager. | **Auto-activated** |
+| **`ship-it`** | [`ship-it/SKILL.md`](ship-it/SKILL.md) | ~352 | **Tier 5**: Staged candidate release scanner & git hygiene automator. | Explicit only |
+| **`plan-master`** | [`plan-master/SKILL.md`](plan-master/SKILL.md) | ~427 | **Tier 1**: Current-state inspection, dependency DAGs, execution planning. | **Auto-activated** |
+| **`deep-debugger`** | [`deep-debugger/SKILL.md`](deep-debugger/SKILL.md) | ~471 | **Tier 1**: 6-stage root-cause repair engine with Git Assertion Lock. | **Auto-activated** |
+| **`runtime-reliability`** | [`runtime-reliability/SKILL.md`](runtime-reliability/SKILL.md) | ~698 | **Tier 3**: Operational resilience, RSS memory soak, SIGTERM graceful drain. | Explicit only |
+| **`playwright-cli`** | [`playwright-cli/SKILL.md`](playwright-cli/SKILL.md) | ~760 | **Tier 2**: Headless browser automation and end-to-end verification. | Explicit only |
+| **`infra-pilot`** | [`infra-pilot/SKILL.md`](infra-pilot/SKILL.md) | ~824 | **Tier 5**: Production Dockerfiles, docker-compose stacks, and CI automation. | Explicit only |
+| **`docs-architect`** | [`docs-architect/SKILL.md`](docs-architect/SKILL.md) | ~860 | **Tier 5**: Developer documentation, OpenAPI 3.1 contracts, and ADR records. | Explicit only |
+| **`security-verifier`** | [`security-verifier/SKILL.md`](security-verifier/SKILL.md) | ~867 | **Tier 3**: OWASP API, BOLA/IDOR, injection, and payload boundary probes. | Explicit only |
+| **`code-reviewer`** | [`code-reviewer/SKILL.md`](code-reviewer/SKILL.md) | ~908 | **Tier 3**: Independent adversarial diff reviewer with mode disclosure. | Explicit only |
+| **`swarm`** | [`swarm/SKILL.md`](swarm/SKILL.md) | ~965 | **Tier 4**: Parallel swarm coordinator (shared message board & isolated workspaces). | Explicit only |
+| **`schema-craft`** | [`schema-craft/SKILL.md`](schema-craft/SKILL.md) | ~1,021 | **Tier 3**: Migration Impact Checklist, ESR indexing, reversible DDL. | Explicit only |
+| **`idea-council`** | [`idea-council/SKILL.md`](idea-council/SKILL.md) | ~1,305 | **Tier 4**: Multi-agent council (Full 6-seat or Express 3-seat deliberation). | Explicit only |
+| **`create-architect`** | [`create-architect/SKILL.md`](create-architect/SKILL.md) | ~1,452 | **Tier 1b**: Inside-Out engineering blueprint architect. | Explicit only |
+| **`frontend-artisan`** | [`frontend-artisan/SKILL.md`](frontend-artisan/SKILL.md) | ~1,459 | **Tier 2**: Frontend engineering orchestrator & anti-slop craft rules. | Explicit only |
 
 ---
 
-## 🔬 Empirical Performance & Token Efficiency
+## 🔬 Empirical Technical Protections
 
-When AI coding assistants operate without disciplined skills, they suffer from common failure patterns: **shotgun debugging loops**, **hallucinated test passes**, **unconstrained subagent sprawl**, and **false-green git pushes**.
+When AI coding assistants operate without disciplined guardrails, they suffer from common failure patterns: **shotgun debugging loops**, **hallucinated test passes**, **unconstrained worker sprawl**, and **premature git pushes**.
 
-Below is a side-by-side comparison based on empirical trial data across standard development tasks:
+Below is a comparison of standard failure modes versus the suite's concrete technical mitigations:
 
-| Engineering Dimension | Without Skills (Raw AI Agent) | With Antigravity Skills Suite | Measurable Impact |
+| Engineering Dimension | Without Skills (Raw AI Agent) | With Antigravity Skills Suite | Concrete Mechanism |
 | :--- | :--- | :--- | :--- |
-| **Bug Fixing & Diagnostics** | **Shotgun Patching**: Edits 3–6 files blindly on guess 1; wraps crashes in `try/except: pass`; averages 7–12 turns in hallucination spirals. | **Scientific 6-Stage Protocol** (`deep-debugger`): Mandates isolated reproduction in `scratch/repro.py` before editing source; enforces a 3+5 cycle ceiling; protects unrelated files during rollback. | **65% reduction in turns-to-fix**; zero collateral code damage. |
-| **Test Verification Integrity** | **Honor-System / Tautology**: Declares "All tests pass!" without running commands; writes `assert True == True` or counts mocks without state mutations; suffers from zero-inventory false greens. | **Anti-Tautology & Evidence Gate** (`qa-sentinel` + `exec-proxy.sh`): Requires real exit code 0; validates explicit test counts; runs mutation probes (inverting operators to prove tests fail RED); binds evidence to git tree SHA. | **Zero false-green releases**; 100% cryptographic proof on push. |
-| **Multi-Worker Orchestration** | **Unconstrained Subagent Sprawl**: Spawns 4+ agents for tiny 1-file fixes; workers overwrite each other's code; session disconnects lose all in-flight state. | **Adaptive Gating & Durable Recovery** (`task_shape_gating.py` + `task_ledger.py`): Phase 0 restricts tasks $\le 3$ files to Solo mode; enforces 1-writer-per-file; minimal worker briefs exclude chat history; `reconcile` recovers interrupted tasks without re-running verified work. | **50–70% reduction in worker token burn**; zero merge collisions. |
-| **Frontend Craft & Design** | **AI Slop Clichés**: Generic purple gradients, "cards-inside-cards-inside-cards" nesting, cartoonish cyan buttons, unstyled mobile layouts, broken contrast. | **Zero-Slop Hard Gates** (`frontend-artisan` + `image-to-code`): Gate 0 visual mockup via `generate_image`; locked to Apple/Linear/Vercel design tokens; WCAG AA contrast check ($\ge 4.5:1$); Playwright multi-viewport checks (375px/768px/1440px). | **Production-grade aesthetics** matching Stripe, Linear, or Apple. |
-| **Database Migrations** | **Destructive / Guessing**: Drops columns directly; unindexed foreign keys cause table locks; naive timestamps without timezone support. | **Production Invariants & Rehearsal** (`schema-craft` + `specialist_probes.py`): Mandatory indexes on foreign keys; ESR compound indexing; 4-phase disposable migration rehearsal (UP $\rightarrow$ seed $\rightarrow$ rollback $\rightarrow$ re-apply idempotency). | **Zero table locks**; 100% reversible or forward-safe migrations. |
-| **Release & Git Hygiene** | **Messy Pushes**: Dumps 50 modified files in one commit; accidentally pushes API keys or `.env` files; pushes unverified code directly to main. | **Automated Gatekeeper** (`ship-it` + `verify-release-gate.sh`): Scans staged diff for secrets; builds Conventional Commits; blocks `git push` via PreToolUse hook if evidence is stale or absent. | **Zero secret leaks**; strict commit hygiene. |
+| **Bug Fixing & Diagnostics** | **Shotgun Patching**: Edits multiple files blindly on guess 1; wraps crashes in `try/except: pass`; risks weakening existing assertions to fake a pass. | **Scientific 6-Stage Protocol** (`deep-debugger`): Enforces isolated reproduction in `scratch/repro.py` before editing source; locks existing tests at HEAD via Git Assertion Lock. | Pre-existing test files at HEAD are immutable during repairs; reproduction must pass cleanly before closing. |
+| **Test Verification Integrity** | **Honor-System / Tautology**: Declares "All tests pass!" without running commands; writes trivial tautologies (`assert True`); accepts zero-inventory test runs. | **Evidence Gate & Log Proxy** (`qa-sentinel` + `exec_proxy.py`): Requires real exit code 0; captures child logs to disk; validates non-zero test collection; records physical receipts in `.evidence/`. | Release gate requires physical JSON receipt matching tree SHA and rejects zero-test passes. |
+| **Multi-Worker Orchestration** | **Unconstrained Subagent Sprawl**: Spawns multiple workers for tiny 1-file fixes; workers overwrite each other's code; session disconnects lose in-flight state. | **Adaptive Gating & Durable Recovery** (`task_shape_gating.py` + `task_ledger.py`): Phase 0 restricts tasks $\le 3$ files to Solo mode; enforces 1-writer-per-file; minimal worker briefs exclude chat history. | Single-writer file locking in `.evidence/tasks.json`; scoped worker briefs under 800 tokens. |
+| **Frontend Craft & Design** | **AI Slop Clichés**: Generic purple gradients, nested cards, cartoonish cyan buttons, unstyled mobile layouts, broken contrast. | **Zero-Slop Hard Gates** (`frontend-artisan` + `image-to-code`): Concrete visual rules against AI cliches; WCAG AA contrast check ($\ge 4.5:1$); Playwright multi-viewport checks (375px/768px/1440px). | CSS inspection for forbidden color palettes and layout cliches; automated contrast verification. |
+| **Database Migrations** | **Destructive / Guessing**: Drops columns directly; unindexed foreign keys cause table locks; naive timestamps without timezone support. | **Production Invariants & Rehearsal** (`schema-craft` + `specialist_probes.py`): Mandatory indexes on foreign keys; ESR compound indexing; disposable SQLite migration rehearsal (UP $\rightarrow$ seed $\rightarrow$ rollback). | Rehearsal verifies DDL reversibility and detects syntax failures before applying to production. |
+| **Release & Git Hygiene** | **Messy Pushes**: Dumps dozens of modified files in one commit; risks committing API keys or `.env` files; pushes unverified code directly to main. | **Automated Gatekeeper** (`ship-it` + `verify_release_gate.py`): Scans staged diff for secrets; builds Conventional Commits; blocks `git push` via PreToolUse hook if evidence is missing or stale. | PreToolUse hook checks `.evidence/manifest.v1.json` before allowing `git push`. |
 
-### Measured Token Consumption Profile
+### Token Consumption Optimization
 
 1. **Model-Facing Log Compression**:
    - Standard test runs produce 200–2,000 lines of verbose stdout/stderr.
-   - `exec-proxy.sh` captures full logs to disk (`.evidence/logs/`) and emits only **3 lines** on success, reducing context-window token consumption by **over 70%** during long test iterations.
+   - `exec_proxy.py` captures full logs to disk (`.evidence/logs/`) and emits only **3 lines** on success, reducing context-window token consumption by **over 70%** during long test iterations.
 2. **Minimal Worker Context Briefs**:
    - Naive worker dispatch copies the entire conversation history (~30,000–60,000 tokens per subagent).
    - `task_shape_gating.build_worker_brief` passes only the task goal, permitted file scope, frozen API contract, and verification command—slashing subagent prompt payload to **under 800 tokens**.
@@ -341,11 +341,11 @@ Below is a side-by-side comparison based on empirical trial data across standard
 
 ## 🛡️ Verification & Test Suite Summary
 
-The repository includes a comprehensive testing framework ensuring absolute reliability:
+The repository includes a comprehensive testing framework:
 
 ```bash
-# 1. Full Unit, Behavioral & Property Regression Suite (232 tests)
-python3 -m unittest discover tests
+# 1. Full Unit, Behavioral & Property Regression Suite (257 tests)
+python3 -m unittest discover -s tests -p 'test_*.py'
 
 # 2. Conformance & Adversarial Runtime Suite (27 bash tests)
 bash tests/verify_runtime.sh
@@ -354,10 +354,10 @@ bash tests/verify_runtime.sh
 python3 scripts/skills-doctor.py --fix
 ```
 
-- **Unit & Behavioral Tests**: **252 passed** in ~9s (`python3 -m unittest discover tests`).
-- **Runtime Conformance Tests**: **27/27 passed** in ~3.5s (`bash tests/verify_runtime.sh` or `python -m unittest tests/test_runtime_conformance.py`).
-- **Deterministic Release Gate**: **GREEN** (`python scripts/verify_release_gate.py --check-only`).
-- **Fraud Prevention**: Zero simulated sleep loops, zero hard-coded scores, Git Assertion Lock against test tampering, and independent transcript auditing via `benchmarks/audit_trial.py`.
+- **Unit & Behavioral Tests**: **257 passed** in ~9s (`python3 -m unittest discover -s tests -p 'test_*.py'`).
+- **Runtime Conformance Tests**: **27/27 passed** in ~3.5s (`bash tests/verify_runtime.sh` or `python3 -m unittest tests/test_runtime_conformance.py`).
+- **Deterministic Release Gate**: **PASS** (`python3 scripts/verify_release_gate.py --check-only`).
+- **Verification Integrity**: Zero simulated sleep loops, zero hard-coded scores, Git Assertion Lock against test tampering, and transcript auditing via `benchmarks/audit_trial.py`.
 
 ---
 

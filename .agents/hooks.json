@@ -1,15 +1,20 @@
 {
   "evidence-policy": {
-    "description": "Lightweight safety invariants (Anti-Retry and mutation hygiene)",
+    "description": "Lightweight safety invariants (Anti-Retry and Release Gate evidence verification)",
     "PreToolUse": [
       {
         "matcher": "run_command",
-        "description": "Enforce Anti-Exact-Retry invariant to halt runaway failure loops",
+        "description": "Enforce Anti-Exact-Retry invariant and Release Gate verification",
         "hooks": [
           {
             "type": "command",
-            "command": "python scripts/guard_anti_retry.py",
+            "command": "python3 scripts/guard_anti_retry.py",
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "python3 scripts/verify_release_gate.py --pre-tool",
+            "timeout": 10
           }
         ]
       }
@@ -21,7 +26,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python scripts/guard_anti_retry.py",
+            "command": "python3 scripts/guard_anti_retry.py",
             "timeout": 5
           }
         ]

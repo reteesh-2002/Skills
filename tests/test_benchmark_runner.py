@@ -53,10 +53,13 @@ class TestBenchmarkHarness(unittest.TestCase):
         """T12: audit_trial.py must exit with code 1 when given an unsupported task."""
         import subprocess
         audit_script = os.path.join(REPO_ROOT, "benchmarks", "audit_trial.py")
-        res = subprocess.run([sys.executable, audit_script, "--task", "UNKNOWN_TASK"],
-                             capture_output=True, text=True)
-        self.assertEqual(res.returncode, 1)
-        self.assertIn("Unsupported benchmark task", res.stdout)
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".jsonl") as f:
+            f.write("{}\n")
+            f.flush()
+            res = subprocess.run([sys.executable, audit_script, "--transcript", f.name, "--task", "UNKNOWN_TASK"],
+                                 capture_output=True, text=True)
+            self.assertEqual(res.returncode, 1)
+            self.assertIn("Unsupported benchmark task", res.stdout)
 
     def test_audit_trial_propagates_audit_failure_exit_code(self):
         """T12: audit_trial.py must exit with code 1 when transcript audit fails."""

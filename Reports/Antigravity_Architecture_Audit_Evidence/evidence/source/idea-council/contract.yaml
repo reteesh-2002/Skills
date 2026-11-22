@@ -1,8 +1,0 @@
-id: idea-council
-contract_version: 1
-inputs: [proposal.v1, architectural-dilemma.v1]
-outputs: [decision-record.v1, adversarial-dissent.v1]
-required_capabilities: [invoke_subagent, synthesize_stances]
-forbidden_capabilities: [modify_source, git_push, execute_code]
-manual_only: true
-report_policy: standalone_card

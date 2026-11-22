@@ -453,13 +453,30 @@ def heal_environment(project_dir: Path) -> list[str]:
                     "PreToolUse": [
                         {
                             "matcher": "run_command",
-                            "command": f"{python_bin} scripts/guard_anti_retry.py"
+                            "hooks": [
+                                {
+                                    "type": "command",
+                                    "command": f"{python_bin} scripts/guard_anti_retry.py",
+                                    "timeout": 5
+                                },
+                                {
+                                    "type": "command",
+                                    "command": f"{python_bin} scripts/verify_release_gate.py --pre-tool",
+                                    "timeout": 10
+                                }
+                            ]
                         }
                     ],
                     "PostToolUse": [
                         {
                             "matcher": "*",
-                            "command": f"{python_bin} scripts/guard_anti_retry.py"
+                            "hooks": [
+                                {
+                                    "type": "command",
+                                    "command": f"{python_bin} scripts/guard_anti_retry.py",
+                                    "timeout": 5
+                                }
+                            ]
                         }
                     ]
                 }
