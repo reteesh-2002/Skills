@@ -45,8 +45,12 @@ Write the plan as an actionable markdown document (`plan.md` in artifact hosts):
 ## 3. Grounding & Invariants
 
 1. **Grounded Paths**: Read files before proposing edits. Mark new files `[NEW]`.
-2. **Sequential Default**: Recommend parallel `swarm` only when modules are genuinely separable with non-overlapping file ownership.
-3. **Runnable Checks**: Every task has a concrete check command (`npm test`, `pytest`, `cargo test`).
-4. **Single-Writer Isolation**: Never assign two tasks or parallel workers to the same file.
+2. **Vertical Slice Boundaries**: 
+   - 1 task targets 1 module slice at a time.
+   - Slices interact strictly through public interfaces (`contract.ts` / public APIs), never by digging into a sibling slice's private internals.
+   - Cohesion over artificial file chopping: Keep cohesive domain logic together (parsers, state machines) without fragmenting into shallow mechanical helpers.
+3. **Sequential Default**: Recommend parallel `swarm` only when modules are genuinely separable with non-overlapping file ownership.
+4. **Runnable Checks**: Every task has a concrete check command (`npm test`, `pytest`, `cargo test`).
+5. **Single-Writer Isolation**: Never assign two tasks or parallel workers to the same file.
 
 A planning request ends with the plan. A "plan and execute" request continues directly into implementation.
