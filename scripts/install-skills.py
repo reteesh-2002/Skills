@@ -18,7 +18,6 @@ import sys
 
 # Explicit inventory of all 17 suite skills
 SKILL_INVENTORY = [
-    "swarm",
     "anti-slop-spec",
     "code-reviewer",
     "deep-debugger",

@@ -30,7 +30,6 @@ REQUIRED_RUNTIME_HELPERS = [
 OPTIONAL_TOOLS = ["pytest", "playwright", "git", "node"]
 
 SKILL_INVENTORY = [
-    "swarm",
     "anti-slop-spec",
     "code-reviewer",
     "deep-debugger",

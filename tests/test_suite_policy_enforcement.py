@@ -28,14 +28,13 @@ class TestSuitePolicyEnforcement(unittest.TestCase):
         self.assertEqual(auto_skills, expected)
 
     def test_explicit_only_skills(self):
-        """Verify exactly 16 skills are explicit-only."""
+        """Verify exactly 15 skills are explicit-only."""
         explicit_skills = self.policy.get("activation_modes", {}).get("explicit_only", [])
-        self.assertEqual(len(explicit_skills), 16, "Exactly 16 skills must be explicit-only")
+        self.assertEqual(len(explicit_skills), 15, "Exactly 15 skills must be explicit-only")
         expected = {
             "create-architect",
             "frontend-artisan",
             "schema-craft",
-            "swarm",
             "code-reviewer",
             "security-verifier",
             "runtime-reliability",
@@ -51,12 +50,12 @@ class TestSuitePolicyEnforcement(unittest.TestCase):
         }
         self.assertEqual(set(explicit_skills), expected)
 
-    def test_all_19_skills_exist_on_disk(self):
-        """Verify all 19 policy skills have corresponding directories with SKILL.md."""
+    def test_all_18_skills_exist_on_disk(self):
+        """Verify all 18 policy skills have corresponding directories with SKILL.md."""
         auto_skills = [e["skill"] for e in self.policy.get("activation_modes", {}).get("auto", [])]
         explicit_skills = self.policy.get("activation_modes", {}).get("explicit_only", [])
         all_policy_skills = auto_skills + explicit_skills
-        self.assertEqual(len(all_policy_skills), 19)
+        self.assertEqual(len(all_policy_skills), 18)
 
         for skill_name in all_policy_skills:
             skill_dir = REPO_ROOT / skill_name

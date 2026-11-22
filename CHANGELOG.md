@@ -12,14 +12,14 @@ All notable changes to the Antigravity Skills Suite are documented in this file.
 - **Hermetic Testing & Machine Independence**:
   - Refactored `benchmarks/audit_trial.py` to validate CLI arguments (`--task`) before probing the filesystem for transcripts, ensuring clean rejection of unsupported tasks on machines without local Antigravity sessions.
   - Added hermetic transcript fixture in `tests/test_benchmark_runner.py`.
-  - Added `tests/test_suite_policy_enforcement.py` verifying activation modes (3 auto, 16 explicit), routing rules, and output defaults (257 total unit tests passing).
+  - Added `tests/test_suite_policy_enforcement.py` verifying activation modes (3 auto, 15 explicit = 18 total skills), routing rules, and output defaults (257 total unit tests passing).
 - **Documentation & Token Footprint Reconciliation**:
   - Replaced stale token estimates with exact values measured by `scripts/validate-skills.py`.
   - Harmonized test count metrics across all documentation (257 unit tests, 27 runtime conformance tests).
   - Replaced ungrounded percentage and cryptographic claims with precise technical descriptions of code mechanisms.
 - **Hygiene & Bloat Reduction**:
   - Removed stale snapshot copy in `Reports/Antigravity_Architecture_Audit_Evidence/evidence/source` and committed PDF artifact.
-  - Preserved official Antigravity builtin swarm skill (`swarm/SKILL.md`) in its original form.
+  - Removed redundant `swarm/` duplicate from repository; multi-worker coordination delegates natively to Antigravity's built-in `native_swarm` platform skill.
   - Updated hook invocations to use `python3`.
 
 ## [2.2.0] - 2026-10-20

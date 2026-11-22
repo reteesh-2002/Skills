@@ -45,7 +45,7 @@ class TestInstallSkills(unittest.TestCase):
             self.assertTrue(manifest_file.exists(), "Manifest file was not created")
             manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
             self.assertEqual(manifest["mode"], "workspace")
-            self.assertEqual(len(manifest["installed_skills"]), 19)
+            self.assertEqual(len(manifest["installed_skills"]), 18)
 
             # 2. Verify skills installed in target_path/skills/
             for skill_name in manifest["installed_skills"]:
@@ -313,12 +313,12 @@ class TestInstallSkills(unittest.TestCase):
             self.assertTrue((target_path / "skills" / "plan-master" / "SKILL.md").exists())
             self.assertTrue((target_path / "skills" / "deep-debugger" / "SKILL.md").exists())
 
-            # Manifest should be updated with 18 skills remaining
+            # Manifest should be updated with 17 skills remaining
             manifest_file = target_path / ".skills-install-manifest.json"
             self.assertTrue(manifest_file.exists())
             m_data = json.loads(manifest_file.read_text(encoding="utf-8"))
             self.assertNotIn("idea-council", m_data["installed_skills"])
-            self.assertEqual(len(m_data["installed_skills"]), 18)
+            self.assertEqual(len(m_data["installed_skills"]), 17)
 
 
 class TestSkillsDoctor(unittest.TestCase):

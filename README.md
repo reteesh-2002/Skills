@@ -17,7 +17,7 @@ A modular software engineering toolkit and skills suite for **Google Antigravity
 
 ### 2. Installation & Environment Health
 
-Use the suite installer to cleanly install the 19 skills and runtime helpers with manifest tracking:
+Use the suite installer to cleanly install the 18 skills and runtime helpers with manifest tracking:
 
 #### Option A: Workspace Installation (Single Project)
 ```bash
@@ -67,7 +67,7 @@ Hooks in `.agents/hooks.json` wire `verify_release_gate.py --pre-tool` to interc
 ### 4. Conformance & Test Suite Verification
 Verify skill metadata, contracts, policy drift, specialist probes, and runtime checks:
 ```bash
-# 1. Validate skill frontmatter, metadata, and token budgets (19 skills)
+# 1. Validate skill frontmatter, metadata, and token budgets (18 skills)
 python3 scripts/validate-skills.py
 
 # 2. Run the environment health check
@@ -122,7 +122,7 @@ graph TD
     end
 
     subgraph "Tier 4: Distributed Orchestration & Council"
-        SWARM["swarm<br>(Parallel Board & Workspaces)"]
+        SWARM["native_swarm<br>(Built-in Platform Skill)"]
         IC["idea-council<br>(Multi-Agent Deliberation)"]
     end
 
@@ -203,8 +203,9 @@ Routing policy is defined authoritatively in [`suite-policy.json`](suite-policy.
 
 ### All Other Skills: Explicit Only
 
-The remaining 16 skills activate **only** when explicitly requested by name or slash command:
-`create-architect`, `frontend-artisan`, `schema-craft`, `swarm`, `code-reviewer`, `security-verifier`, `runtime-reliability`, `idea-council`, `ship-it`, `anti-slop-spec`, `design-md`, `image-to-code`, `playwright-cli`, `web-interface-guidelines`, `infra-pilot`, `docs-architect`.
+The remaining 15 skills activate **only** when explicitly requested by name or slash command:
+`create-architect`, `frontend-artisan`, `schema-craft`, `code-reviewer`, `security-verifier`, `runtime-reliability`, `idea-council`, `ship-it`, `anti-slop-spec`, `design-md`, `image-to-code`, `playwright-cli`, `web-interface-guidelines`, `infra-pilot`, `docs-architect`.
+*(Multi-worker swarm coordination delegates natively to Antigravity's built-in `native_swarm` skill.)*
 
 ### Mandatory Host Behaviors
 1. **Always read `SKILL.md`** using `view_file` when activating skills.
@@ -236,7 +237,7 @@ Implemented in [`create-architect`](create-architect/SKILL.md) with canonical te
 ### 1. Root Configuration & Governance
 | File | Role |
 | :--- | :--- |
-| [`suite-policy.json`](suite-policy.json) | **Authoritative Suite Policy**: Single source of truth for routing (3 auto, 16 explicit = 19 skills), output defaults, and tool boundaries. |
+| [`suite-policy.json`](suite-policy.json) | **Authoritative Suite Policy**: Single source of truth for routing (3 auto, 15 explicit = 18 skills), output defaults, and tool boundaries. |
 | [`AGENTS.md`](AGENTS.md) | Host routing instructions for Antigravity agents; defines the 3 auto-detected skills and on-demand rules. |
 | [`GEMINI.md`](GEMINI.md) | Workspace-level routing instructions mirroring AGENTS.md for compatibility with Google Gemini agent runtimes. |
 | [`REQUIREMENTS.md`](REQUIREMENTS.md) | Formal engineering requirements and specifications for the skills operating system. |
@@ -303,7 +304,6 @@ Every skill in the suite is optimized for high information density with zero flu
 | **`docs-architect`** | [`docs-architect/SKILL.md`](docs-architect/SKILL.md) | ~860 | **Tier 5**: Developer documentation, OpenAPI 3.1 contracts, and ADR records. | Explicit only |
 | **`security-verifier`** | [`security-verifier/SKILL.md`](security-verifier/SKILL.md) | ~867 | **Tier 3**: OWASP API, BOLA/IDOR, injection, and payload boundary probes. | Explicit only |
 | **`code-reviewer`** | [`code-reviewer/SKILL.md`](code-reviewer/SKILL.md) | ~908 | **Tier 3**: Independent adversarial diff reviewer with mode disclosure. | Explicit only |
-| **`swarm`** | [`swarm/SKILL.md`](swarm/SKILL.md) | ~4,643 | **Tier 4**: Official Antigravity parallel swarm coordinator (message board & isolated workspaces). | Explicit only |
 | **`schema-craft`** | [`schema-craft/SKILL.md`](schema-craft/SKILL.md) | ~1,021 | **Tier 3**: Migration Impact Checklist, ESR indexing, reversible DDL. | Explicit only |
 | **`idea-council`** | [`idea-council/SKILL.md`](idea-council/SKILL.md) | ~1,305 | **Tier 4**: Multi-agent council (Full 6-seat or Express 3-seat deliberation). | Explicit only |
 | **`create-architect`** | [`create-architect/SKILL.md`](create-architect/SKILL.md) | ~1,452 | **Tier 1b**: Inside-Out engineering blueprint architect. | Explicit only |
