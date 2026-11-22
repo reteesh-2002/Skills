@@ -13,9 +13,10 @@ Systematic, scientific root cause analysis and surgical defect repair. Eliminate
 
 1. **Reproduction Before Mutation**: Never edit code without an isolated reproduction or verified observed error trace.
 2. **Never Weaken Existing Tests**: Pre-existing test files at Git `HEAD` are strictly immutable during bug repairs. Never mutate, delete, or weaken existing assertions to fake a pass. Add new test cases to prove fixes.
-3. **Surgical Minimal Fix**: Change the minimum lines required. Do not refactor surrounding architecture during a bug fix.
-4. **Empirical Verification Proof**: Never claim a bug is fixed without running the reproducer command and confirming it exits with status code 0.
-5. **Protect User Edits**: Only touch files modified during the active investigation. Never execute indiscriminate hard resets.
+3. **Surgical Minimal Fix**: Change the minimum lines required. Never touch working files outside the failure path.
+4. **Blast Radius Check**: Assess risk and ensure fixes do not introduce blind try/catch blocks or regressions.
+5. **Empirical Verification Proof**: Never claim a bug is fixed without running the reproducer command and confirming it exits with status code 0.
+6. **Protect User Edits**: Only touch files modified during the active investigation. Never execute indiscriminate hard resets.
 
 ---
 
