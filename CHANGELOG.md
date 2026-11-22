@@ -19,7 +19,7 @@ All notable changes to the Antigravity Skills Suite are documented in this file.
   - Replaced ungrounded percentage and cryptographic claims with precise technical descriptions of code mechanisms.
 - **Hygiene & Bloat Reduction**:
   - Removed stale snapshot copy in `Reports/Antigravity_Architecture_Audit_Evidence/evidence/source` and committed PDF artifact.
-  - Slimmed `swarm/SKILL.md` from ~4,643 tokens down to ~965 tokens (~79% reduction) while preserving all tools, invariants, workspaces, channels, and addressing protocols.
+  - Preserved official Antigravity builtin swarm skill (`swarm/SKILL.md`) in its original form.
   - Updated hook invocations to use `python3`.
 
 ## [2.2.0] - 2026-10-20

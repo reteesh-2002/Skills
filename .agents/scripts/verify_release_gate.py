@@ -15,9 +15,14 @@ from pathlib import Path
 
 # Add script directory to sys.path to allow importing runtime_evidence
 SCRIPT_DIR = Path(__file__).resolve().parent
-REPO_ROOT = SCRIPT_DIR.parent
-if str(SCRIPT_DIR) not in sys.path:
-    sys.path.insert(0, str(SCRIPT_DIR))
+if SCRIPT_DIR.parent.name == ".agents":
+    REPO_ROOT = SCRIPT_DIR.parent.parent
+else:
+    REPO_ROOT = SCRIPT_DIR.parent
+
+for p in [str(SCRIPT_DIR), str(REPO_ROOT / "scripts"), str(REPO_ROOT / ".agents" / "scripts")]:
+    if p not in sys.path:
+        sys.path.insert(0, p)
 
 try:
     import runtime_evidence
@@ -78,10 +83,7 @@ def main():
             fail_gate(f"Command form is ambiguous or unsupported by static analyzer — fail-safe block: {cmd}", hook_mode=True)
         elif res is False:
             pass_gate("Non-release command allowed.", hook_mode=True)
-        # In razor/daily mode, allow git push directly if evidence enforcement is disabled or absent
-        if os.environ.get("ANTIGRAVITY_ENFORCE_EVIDENCE", "0") != "1":
-            pass_gate("Release command permitted in daily developer mode.", hook_mode=True)
-        # If explicitly enforcing, continue to release gate verification
+        # If release command, continue to release gate verification
 
     # 1. Enforce git repository presence and CWD alignment
     try:

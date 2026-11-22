@@ -15,9 +15,14 @@ from pathlib import Path
 
 # Add script directory to sys.path to allow importing runtime_evidence
 SCRIPT_DIR = Path(__file__).resolve().parent
-REPO_ROOT = SCRIPT_DIR.parent
-if str(SCRIPT_DIR) not in sys.path:
-    sys.path.insert(0, str(SCRIPT_DIR))
+if SCRIPT_DIR.parent.name == ".agents":
+    REPO_ROOT = SCRIPT_DIR.parent.parent
+else:
+    REPO_ROOT = SCRIPT_DIR.parent
+
+for p in [str(SCRIPT_DIR), str(REPO_ROOT / "scripts"), str(REPO_ROOT / ".agents" / "scripts")]:
+    if p not in sys.path:
+        sys.path.insert(0, p)
 
 try:
     import runtime_evidence

@@ -303,7 +303,7 @@ Every skill in the suite is optimized for high information density with zero flu
 | **`docs-architect`** | [`docs-architect/SKILL.md`](docs-architect/SKILL.md) | ~860 | **Tier 5**: Developer documentation, OpenAPI 3.1 contracts, and ADR records. | Explicit only |
 | **`security-verifier`** | [`security-verifier/SKILL.md`](security-verifier/SKILL.md) | ~867 | **Tier 3**: OWASP API, BOLA/IDOR, injection, and payload boundary probes. | Explicit only |
 | **`code-reviewer`** | [`code-reviewer/SKILL.md`](code-reviewer/SKILL.md) | ~908 | **Tier 3**: Independent adversarial diff reviewer with mode disclosure. | Explicit only |
-| **`swarm`** | [`swarm/SKILL.md`](swarm/SKILL.md) | ~965 | **Tier 4**: Parallel swarm coordinator (shared message board & isolated workspaces). | Explicit only |
+| **`swarm`** | [`swarm/SKILL.md`](swarm/SKILL.md) | ~4,643 | **Tier 4**: Official Antigravity parallel swarm coordinator (message board & isolated workspaces). | Explicit only |
 | **`schema-craft`** | [`schema-craft/SKILL.md`](schema-craft/SKILL.md) | ~1,021 | **Tier 3**: Migration Impact Checklist, ESR indexing, reversible DDL. | Explicit only |
 | **`idea-council`** | [`idea-council/SKILL.md`](idea-council/SKILL.md) | ~1,305 | **Tier 4**: Multi-agent council (Full 6-seat or Express 3-seat deliberation). | Explicit only |
 | **`create-architect`** | [`create-architect/SKILL.md`](create-architect/SKILL.md) | ~1,452 | **Tier 1b**: Inside-Out engineering blueprint architect. | Explicit only |

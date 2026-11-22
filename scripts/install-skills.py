@@ -67,6 +67,7 @@ RUNTIME_SCRIPTS = [
 RUNTIME_AGENT_SCRIPTS = [
     ".agents/scripts/verify-release-gate.sh",
     ".agents/scripts/verify_release_gate.py",
+    ".agents/scripts/runtime_evidence.py",
     ".agents/scripts/guard_read_before_write.py",
     ".agents/scripts/guard_anti_retry.py",
 ]
