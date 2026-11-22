@@ -53,22 +53,16 @@ python3 scripts/skills-doctor.py --fix
 ```
 *(Supports `--json` for automated environment auditing.)*
 
-### 3. Release Gate & Boundary Verification
-The deterministic release gate verifies that the current git tree matches validated test evidence before release and enforces the **Git Assertion Lock** to prevent test tampering:
+### 3. Release Safety & Git Assertion Lock
+The suite enforces the **Git Assertion Lock** to prevent test tampering during bug repairs, along with automated secret scanning:
 ```bash
-# Check vertical slice import isolation and bounded context limits
-python3 scripts/slice-guard.py
+# Evaluate release readiness and ensure no modified test assertions
+python3 scripts/verify_release_gate.py
 
-# Evaluate release gate against current git tree & Git Assertion Lock
-bash scripts/verify-release-gate.sh
-
-# Or allow intentional test specification changes
-bash scripts/verify-release-gate.sh --spec-evolution
-
-# Or run in non-blocking advisory mode during development
-bash scripts/verify-release-gate.sh --advisory
+# Or allow intentional test specification changes when requirements evolve
+python3 scripts/verify_release_gate.py --spec-evolution
 ```
-Hook configuration in `.agents/hooks.json` operates with **Zero-Latency Read Architecture**, ensuring read tools incur 0ms hook overhead while write and execute operations remain strictly protected.
+Hooks in `.agents/hooks.json` run with **Zero Developer Friction**: `git push` is never blocked locally in daily coding mode, and runaway tool retry loops are automatically halted.
 
 ### 4. Conformance & Test Suite Verification
 Verify skill metadata, contracts, policy drift, specialist probes, and runtime checks:

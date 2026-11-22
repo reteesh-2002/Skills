@@ -175,7 +175,8 @@ def copy_skill(
                 continue
             src_file = root_path / file
             dest_file = target_dir / file
-            shutil.copy2(src_file, dest_file)
+            if src_file.resolve() != dest_file.resolve():
+                shutil.copy2(src_file, dest_file)
             rel_manifest_path = str(dest_file.relative_to(dest_root))
             manifest_files[rel_manifest_path] = {
                 "action": "created",
@@ -197,7 +198,8 @@ def copy_runtime_file(
         return
 
     dest_file.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(src_file, dest_file)
+    if src_file.resolve() != dest_file.resolve():
+        shutil.copy2(src_file, dest_file)
 
     if dest_file.suffix in {".sh", ".py"}:
         try:
