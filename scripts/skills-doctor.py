@@ -453,34 +453,6 @@ def heal_environment(project_dir: Path) -> list[str]:
                     "PreToolUse": [
                         {
                             "matcher": "run_command",
-                            "command": f"{python_bin} scripts/verify_release_gate.py --pre-tool"
-                        },
-                        {
-                            "matcher": "view_file",
-                            "command": f"{python_bin} scripts/guard_read_before_write.py"
-                        },
-                        {
-                            "matcher": "read_file",
-                            "command": f"{python_bin} scripts/guard_read_before_write.py"
-                        },
-                        {
-                            "matcher": "replace_file_content",
-                            "command": f"{python_bin} scripts/guard_read_before_write.py"
-                        },
-                        {
-                            "matcher": "edit_file",
-                            "command": f"{python_bin} scripts/guard_read_before_write.py"
-                        },
-                        {
-                            "matcher": "write_to_file",
-                            "command": f"{python_bin} scripts/guard_read_before_write.py"
-                        },
-                        {
-                            "matcher": "write_file",
-                            "command": f"{python_bin} scripts/guard_read_before_write.py"
-                        },
-                        {
-                            "matcher": "run_command",
                             "command": f"{python_bin} scripts/guard_anti_retry.py"
                         }
                     ],

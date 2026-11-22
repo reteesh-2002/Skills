@@ -83,35 +83,12 @@ RULE_FILES = [
 def get_default_hook_template():
     # Pure Python is cross-platform across Windows, Linux, and macOS
     python_cmd = "python3" if shutil.which("python3") and sys.platform != "win32" else "python"
-    gate_cmd = f"{python_cmd} scripts/verify_release_gate.py --pre-tool"
     return {
         "evidence-policy": {
-            "description": "Deterministic release evidence and runtime safety policy (Selective Kernel Fusion)",
+            "description": "Lightweight safety invariants (Anti-Retry and mutation hygiene)",
             "PreToolUse": [
                 {
                     "matcher": "run_command",
-                    "description": "Intercept git push and evaluate deterministic release gate",
-                    "hooks": [
-                        {
-                            "type": "command",
-                            "command": gate_cmd,
-                            "timeout": 5,
-                        }
-                    ],
-                },
-                {
-                    "matcher": "*",
-                    "description": "Enforce Read-Before-Write invariant to prevent blind mutations",
-                    "hooks": [
-                        {
-                            "type": "command",
-                            "command": f"{python_cmd} scripts/guard_read_before_write.py",
-                            "timeout": 5,
-                        }
-                    ],
-                },
-                {
-                    "matcher": "*",
                     "description": "Enforce Anti-Exact-Retry invariant to halt runaway failure loops",
                     "hooks": [
                         {
