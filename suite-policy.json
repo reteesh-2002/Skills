@@ -42,7 +42,8 @@
     "require_minimum_skill_count": false,
     "minimum_skill_count": null,
     "small_task_threshold_files": 3,
-    "small_task_behavior": "direct_implementation_with_proportionate_check"
+    "small_task_behavior": "direct_implementation_with_proportionate_check",
+    "anti_overengineering_gate": true
   },
 
   "output_defaults": {

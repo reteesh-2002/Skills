@@ -69,6 +69,7 @@ class TestSuitePolicyEnforcement(unittest.TestCase):
         self.assertFalse(routing.get("create_architect_before_plan_master"))
         self.assertTrue(routing.get("plan_master_before_implementation"))
         self.assertEqual(routing.get("small_task_threshold_files"), 3)
+        self.assertTrue(routing.get("anti_overengineering_gate"))
 
     def test_output_defaults_exist(self):
         """Verify mandatory output formats are defined."""

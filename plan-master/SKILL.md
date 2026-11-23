@@ -21,7 +21,18 @@ Automatically activate when the user asks to plan, architect, or build a multi-s
 
 ---
 
-## 2. Actionable Plan Format
+## 2. Anti-Overengineering Gate (Occam's Razor)
+
+Before finalizing tasks, filter every proposed file and component through these 5 hard constraints:
+1. **Standard Library & Framework First**: If the language standard library or host framework natively supports the capability, forbid custom wrapper libraries, shims, or homemade mini-frameworks.
+2. **Rule of Three (Anti-Abstraction)**: Forbid creating interfaces, abstract base classes, or generic adapter layers that have only one concrete implementation. Build for today's concrete need; duplicate twice before abstracting on the third.
+3. **No Shadow Infrastructure**: Never propose custom execution proxies, local task runners, or shadow state databases when native CLI tools (`git`, `npm test`, `pytest`, `sqlite3`) already solve it.
+4. **Cohesion over Micro-Chopping**: Do not split a 50-line cohesive function across DTOs, interfaces, services, and repositories. Default to 1 vertical slice file.
+5. **Delete-Key Scope Cut**: Remove speculative "future-proofing" (pluggable backends, hypothetical multi-tenancy, dynamic configuration for static constants) from the task plan. Build strictly for today's requirements.
+
+---
+
+## 3. Actionable Plan Format
 
 Write the plan as an actionable markdown document (`plan.md` in artifact hosts):
 
@@ -42,7 +53,7 @@ Write the plan as an actionable markdown document (`plan.md` in artifact hosts):
 
 ---
 
-## 3. Grounding & Invariants
+## 4. Grounding & Invariants
 
 1. **Grounded Paths**: Read files before proposing edits. Mark new files `[NEW]`.
 2. **Vertical Slice Boundaries**: 
