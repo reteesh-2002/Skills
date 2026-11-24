@@ -1,6 +1,6 @@
 ---
 name: frontend-artisan
-description: Frontend engineering and design orchestrator. Handles UI, CSS, component, and web app work. Apply when building, styling, or refactoring web apps, landing pages, dashboards, or UI components. Explicit only — not auto-activated.
+description: Frontend engineering and design orchestrator. Handles UI, CSS, component, DESIGN.md tokens, image-to-code, anti-slop layout rules, and web interface guidelines (keyboard navigation, touch targets, accessibility). Apply when building, styling, or refactoring web apps, landing pages, dashboards, or UI components. Explicit only — not auto-activated.
 ---
 
 # Frontend Artisan

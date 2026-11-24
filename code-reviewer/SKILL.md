@@ -54,10 +54,10 @@ The reviewer evaluates a focused, self-contained context package without reading
 4. **Security & Data Isolation**:
    - Injection vectors, improper sanitization, unescaped shell inputs.
    - Tenant leaks: cross-account data exposure or broken authorization checks.
-5. **Vertical Slice Boundary Violations** (for vertical slice architecture projects):
+5. **Module Boundaries & Cohesion** (only when the project uses a `modules/<slice>/` architecture):
    - Direct imports of a peer module's internal files are a `[CRITICAL]` finding.
    - A single diff touching more than one module slice without an `[ARCH-REFACTOR]` label is a `[CRITICAL]` finding.
-   - Any `service.ts` or `routes.ts` file exceeding 300 lines is a `[WARNING]` finding (signals the slice needs subdivision).
+   - Flag file size only when a file mixes unrelated responsibilities or exceeds ~1,200 LOC; do not penalize cohesive single-file modules.
 
 ---
 
@@ -88,7 +88,7 @@ When defects are found, present actionable findings:
    - **Diff Scope**: `[N] files evaluated against task requirements`.
    - **Missing Acceptance Coverage**: Identify any acceptance criteria from requirements lacking test coverage.
 2. **One Correction Pass**: Implementer resolves agreed `CRITICAL` and `WARNING` items.
-3. **Re-Verification**: Implementer re-runs tests via `scripts/exec-proxy.sh`.
+3. **Re-Verification**: Implementer re-runs the project test suite (or `scripts/exec-proxy.sh` if installed).
 4. **Closure**: Reviewer verifies the fix against the probe. Stop diminishing-returns review loops.
 5. **Clean Pass Output**: If no issues are found, emit a concise statement:
    `✓ [code-reviewer]: Review clean (0 defects found across 4 dimensions; all acceptance criteria covered; diff approved)`

@@ -18,6 +18,8 @@ All notable changes to the Antigravity Skills Suite are documented in this file.
   - Harmonized test count metrics across all documentation (257 unit tests, 27 runtime conformance tests).
   - Replaced ungrounded percentage and cryptographic claims with precise technical descriptions of code mechanisms.
 - **Hygiene & Bloat Reduction**:
+  - Removed 4 pure forwarding-alias skills (`anti-slop-spec`, `design-md`, `image-to-code`, `web-interface-guidelines`) and consolidated their capabilities into `frontend-artisan` and `plan-master` (14 skills total: 3 auto, 11 explicit).
+  - Removed stale `exec-proxy.sh` and `slice-guard.py` couplings from `code-reviewer`, `security-verifier`, and `infra-pilot`, and removed `"Viral README"` phrasing from `docs-architect`.
   - Integrated Anti-Overengineering Gate (Occam's Razor) directly into `plan-master` to prevent premature abstractions, shadow infrastructure, micro-chopping, and speculative future-proofing.
   - Removed stale snapshot copy in `Reports/Antigravity_Architecture_Audit_Evidence/evidence/source` and committed PDF artifact.
   - Removed redundant `swarm/` duplicate from repository; multi-worker coordination delegates natively to Antigravity's built-in `native_swarm` platform skill.

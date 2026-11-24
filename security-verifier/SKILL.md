@@ -12,7 +12,7 @@ Deterministic security boundary inspection and vulnerability verification. Close
 ## 1. Core Invariants
 
 1. **Synthetic Isolation**: Always use synthetic, isolated test accounts and test data. Never probe third-party or production systems autonomously.
-2. **Deterministic Evidence**: Never claim an endpoint is "secure" without executing a discriminating boundary probe through `scripts/exec-proxy.sh`.
+2. **Deterministic Evidence**: Never claim an endpoint is "secure" without executing a discriminating boundary probe and observing real test output (via the project test runner, or `scripts/exec-proxy.sh` if installed).
 3. **Payload & Side-Effect Validation**: Do not rely solely on HTTP status codes. An endpoint returning `200 OK` that leaks another tenant's records, exposes password hashes, or leaks internal tokens is a critical failure. Always inspect response bodies, data fields, and persistent side-effects.
 4. **Explicit Boundary Disclosure**: Explicitly list which trust boundaries were probed and which were out of scope. Never generalize a single passing check into blanket system-wide security.
 
@@ -44,10 +44,10 @@ Write targeted, reproducible probes using test runners or `scripts/specialist_pr
 - **SSRF Probes**:
   - Submit private IP addresses (`http://169.254.169.254/latest/meta-data`) and assert egress is blocked.
 
-### Stage 3: Execution via Trusted Proxy
-Run the security test suite through the capture proxy:
+### Stage 3: Execution & Verification
+Run the security test suite using the project's test runner (or `scripts/exec-proxy.sh --label security_audit <test-command>` when installed):
 ```bash
-bash scripts/exec-proxy.sh --label security_audit <test-command>
+pytest tests/security/   # or npm test -- security
 ```
 Verify that tests genuinely fail when vulnerabilities are present and pass cleanly once hardened.
 

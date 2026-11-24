@@ -1,8 +1,0 @@
-id: anti-slop-spec
-contract_version: 1
-inputs: [ui-intent.v1, design-brief.v1]
-outputs: [anti-slop-spec.v1]
-required_capabilities: [define_archetype, select_palette, define_motion]
-forbidden_capabilities: [modify_backend, approve_release]
-manual_only: true
-report_policy: standalone_card

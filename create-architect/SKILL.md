@@ -55,8 +55,8 @@ Software is mostly views over a database. Define entities, relationships, seed d
 - Validation constraints (unique keys, not-null, check constraints).
 - **Mandatory Seed Data**: Specify 2–3 realistic records so development never starts against empty tables.
 
-**3b. Vertical Slice Module Layout (required for every project):**
-Every project must adopt a domain-bounded vertical slice structure — not flat layers (`controllers/`, `models/`):
+**3b. Vertical Slice Module Layout (for multi-module / growing apps):**
+For small single-purpose apps (< 3–5 endpoints), keep cohesive flat files instead of scaffolding empty directories. For multi-domain apps, adopt a domain-bounded vertical slice structure — not flat layers (`controllers/`, `models/`):
 ```
 src/
 ├── core/                    # Shared frozen primitives only
@@ -89,8 +89,8 @@ See [`references/vertical-slice-template.md`](references/vertical-slice-template
   3. **Success State**: Rich interactive components, tables, and cards styled with chosen design preset.
   4. **Error State**: Non-blocking toast or banner with clear failure copy and a retry action.
 
-**4c. The Missing 70% — required for production-grade systems:**
-Real production software is ~70% defensive infrastructure, not happy-path CRUD. Every blueprint must specify which of these layers apply and how they are implemented. Omitting this section is what caps AI-generated codebases at 3,000 lines.
+**4c. Defensive Layers (apply proportionally to scale):**
+Apply only the defensive layers the project actually requires today (every API needs input validation; add RLS, Outbox queues, or Audit Ledgers only when multi-tenant or stateful production workflows actually demand them):
 
 | Layer | Description | When Required |
 |---|---|---|

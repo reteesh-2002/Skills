@@ -42,7 +42,7 @@ Every infrastructure artifact produced by `infra-pilot` must adhere to these fou
 ### Invariant 3: Deterministic GitHub Actions CI/CD Pipelines
 - **Dependency Caching**: Cache package manager stores (`actions/cache` for npm/pnpm, pip, or go) to keep CI runtime fast.
 - **Fail-Fast Parallelism**: Split verification into parallel jobs:
-  1. `lint-and-types`: Static analysis and boundary checks (`slice-guard.py`, TypeScript, linters).
+  1. `lint-and-types`: Static analysis and typechecks (TypeScript, Ruff/ESLint, or repo-configured linters).
   2. `test-suite`: Unit and integration tests with coverage reporting.
   3. `docker-build`: Container build validation with Buildx cache.
 - **Deterministic Release Gate**: Verify clean git tree and test execution receipts before allowing release branches.

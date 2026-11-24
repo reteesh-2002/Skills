@@ -18,13 +18,10 @@ import sys
 
 # Explicit inventory of all 17 suite skills
 SKILL_INVENTORY = [
-    "anti-slop-spec",
     "code-reviewer",
     "deep-debugger",
-    "design-md",
     "frontend-artisan",
     "idea-council",
-    "image-to-code",
     "plan-master",
     "playwright-cli",
     "create-architect",
@@ -33,7 +30,6 @@ SKILL_INVENTORY = [
     "schema-craft",
     "security-verifier",
     "ship-it",
-    "web-interface-guidelines",
     "infra-pilot",
     "docs-architect",
 ]

@@ -17,7 +17,7 @@ A modular software engineering toolkit and skills suite for **Google Antigravity
 
 ### 2. Installation & Environment Health
 
-Use the suite installer to cleanly install the 18 skills and runtime helpers with manifest tracking:
+Use the suite installer to cleanly install the 14 skills and runtime helpers with manifest tracking:
 
 #### Option A: Workspace Installation (Single Project)
 ```bash
@@ -67,7 +67,7 @@ Hooks in `.agents/hooks.json` wire `verify_release_gate.py --pre-tool` to interc
 ### 4. Conformance & Test Suite Verification
 Verify skill metadata, contracts, policy drift, specialist probes, and runtime checks:
 ```bash
-# 1. Validate skill frontmatter, metadata, and token budgets (18 skills)
+# 1. Validate skill frontmatter, metadata, and token budgets (14 skills)
 python3 scripts/validate-skills.py
 
 # 2. Run the environment health check
@@ -99,19 +99,10 @@ graph TD
     end
 
     subgraph "Tier 2: Frontend & Interface Superstructure"
-        FA["frontend-artisan<br>(Design Orchestrator)"]
-        ITC["image-to-code<br>(Taste Skill & Anti-Slop)"]
-        DMD["design-md<br>(Brand Design Systems)"]
-        WIG["web-interface-guidelines<br>(Vercel Standards)"]
+        FA["frontend-artisan<br>(Design, Anti-Slop, Tokens & UI)"]
         PW["playwright-cli<br>(Headless Browser CLI)"]
-        ASS["anti-slop-spec<br>(Forwarding Alias)"]
         
-        FA --> ITC
-        FA --> DMD
-        FA --> WIG
         FA --> PW
-        ASS --> PM
-        ASS --> FA
     end
 
     subgraph "Tier 3: Specialist Systems Engineering"
@@ -203,8 +194,8 @@ Routing policy is defined authoritatively in [`suite-policy.json`](suite-policy.
 
 ### All Other Skills: Explicit Only
 
-The remaining 15 skills activate **only** when explicitly requested by name or slash command:
-`create-architect`, `frontend-artisan`, `schema-craft`, `code-reviewer`, `security-verifier`, `runtime-reliability`, `idea-council`, `ship-it`, `anti-slop-spec`, `design-md`, `image-to-code`, `playwright-cli`, `web-interface-guidelines`, `infra-pilot`, `docs-architect`.
+The remaining 11 skills activate **only** when explicitly requested by name or slash command:
+`create-architect`, `frontend-artisan`, `schema-craft`, `code-reviewer`, `security-verifier`, `runtime-reliability`, `idea-council`, `ship-it`, `playwright-cli`, `infra-pilot`, `docs-architect`.
 *(Multi-worker swarm coordination delegates natively to Antigravity's built-in `native_swarm` skill.)*
 
 ### Mandatory Host Behaviors
@@ -237,7 +228,7 @@ Implemented in [`create-architect`](create-architect/SKILL.md) with canonical te
 ### 1. Root Configuration & Governance
 | File | Role |
 | :--- | :--- |
-| [`suite-policy.json`](suite-policy.json) | **Authoritative Suite Policy**: Single source of truth for routing (3 auto, 15 explicit = 18 skills), output defaults, and tool boundaries. |
+| [`suite-policy.json`](suite-policy.json) | **Authoritative Suite Policy**: Single source of truth for routing (3 auto, 11 explicit = 14 skills), output defaults, and tool boundaries. |
 | [`AGENTS.md`](AGENTS.md) | Host routing instructions for Antigravity agents; defines the 3 auto-detected skills and on-demand rules. |
 | [`GEMINI.md`](GEMINI.md) | Workspace-level routing instructions mirroring AGENTS.md for compatibility with Google Gemini agent runtimes. |
 | [`REQUIREMENTS.md`](REQUIREMENTS.md) | Formal engineering requirements and specifications for the skills operating system. |
@@ -290,24 +281,20 @@ Every skill in the suite is optimized for high information density with zero flu
 
 | Skill | Entry Point | Tokens | Tier & Role | Loading Policy |
 | :--- | :--- | :---: | :--- | :--- |
-| **`design-md`** | [`design-md/SKILL.md`](design-md/SKILL.md) | ~137 | **Tier 2**: Design token manager with approved/proposed provenance. | Explicit only |
-| **`web-interface-guidelines`** | [`web-interface-guidelines/SKILL.md`](web-interface-guidelines/SKILL.md) | ~140 | **Tier 2**: Web interface engineering standards (keyboard, touch, hit targets). | Explicit only |
-| **`image-to-code`** | [`image-to-code/SKILL.md`](image-to-code/SKILL.md) | ~182 | **Tier 2**: Compact image-to-code workflow with strict visual classification. | Explicit only |
-| **`anti-slop-spec`** | [`anti-slop-spec/SKILL.md`](anti-slop-spec/SKILL.md) | ~230 | **Tier 2**: Forwarding alias to plan-master & frontend-artisan. | Explicit only |
 | **`qa-sentinel`** | [`qa-sentinel/SKILL.md`](qa-sentinel/SKILL.md) | ~336 | **Tier 1**: Pure verification engine & execution proxy manager. | **Auto-activated** |
 | **`ship-it`** | [`ship-it/SKILL.md`](ship-it/SKILL.md) | ~352 | **Tier 5**: Staged candidate release scanner & git hygiene automator. | Explicit only |
-| **`plan-master`** | [`plan-master/SKILL.md`](plan-master/SKILL.md) | ~630 | **Tier 1**: Execution planner with Anti-Overengineering (Occam's Razor) Gate. | **Auto-activated** |
 | **`deep-debugger`** | [`deep-debugger/SKILL.md`](deep-debugger/SKILL.md) | ~471 | **Tier 1**: 6-stage root-cause repair engine with Git Assertion Lock. | **Auto-activated** |
+| **`plan-master`** | [`plan-master/SKILL.md`](plan-master/SKILL.md) | ~630 | **Tier 1**: Execution planner with Anti-Overengineering (Occam's Razor) Gate. | **Auto-activated** |
 | **`runtime-reliability`** | [`runtime-reliability/SKILL.md`](runtime-reliability/SKILL.md) | ~698 | **Tier 3**: Operational resilience, RSS memory soak, SIGTERM graceful drain. | Explicit only |
 | **`playwright-cli`** | [`playwright-cli/SKILL.md`](playwright-cli/SKILL.md) | ~760 | **Tier 2**: Headless browser automation and end-to-end verification. | Explicit only |
-| **`infra-pilot`** | [`infra-pilot/SKILL.md`](infra-pilot/SKILL.md) | ~824 | **Tier 5**: Production Dockerfiles, docker-compose stacks, and CI automation. | Explicit only |
-| **`docs-architect`** | [`docs-architect/SKILL.md`](docs-architect/SKILL.md) | ~860 | **Tier 5**: Developer documentation, OpenAPI 3.1 contracts, and ADR records. | Explicit only |
-| **`security-verifier`** | [`security-verifier/SKILL.md`](security-verifier/SKILL.md) | ~867 | **Tier 3**: OWASP API, BOLA/IDOR, injection, and payload boundary probes. | Explicit only |
-| **`code-reviewer`** | [`code-reviewer/SKILL.md`](code-reviewer/SKILL.md) | ~908 | **Tier 3**: Independent adversarial diff reviewer with mode disclosure. | Explicit only |
+| **`infra-pilot`** | [`infra-pilot/SKILL.md`](infra-pilot/SKILL.md) | ~825 | **Tier 5**: Production Dockerfiles, docker-compose stacks, and CI automation. | Explicit only |
+| **`docs-architect`** | [`docs-architect/SKILL.md`](docs-architect/SKILL.md) | ~843 | **Tier 5**: Developer documentation, OpenAPI 3.1 contracts, and ADR records. | Explicit only |
+| **`security-verifier`** | [`security-verifier/SKILL.md`](security-verifier/SKILL.md) | ~895 | **Tier 3**: OWASP API, BOLA/IDOR, injection, and payload boundary probes. | Explicit only |
+| **`code-reviewer`** | [`code-reviewer/SKILL.md`](code-reviewer/SKILL.md) | ~915 | **Tier 3**: Independent adversarial diff reviewer with mode disclosure. | Explicit only |
 | **`schema-craft`** | [`schema-craft/SKILL.md`](schema-craft/SKILL.md) | ~1,021 | **Tier 3**: Migration Impact Checklist, ESR indexing, reversible DDL. | Explicit only |
 | **`idea-council`** | [`idea-council/SKILL.md`](idea-council/SKILL.md) | ~1,305 | **Tier 4**: Multi-agent council (Full 6-seat or Express 3-seat deliberation). | Explicit only |
 | **`create-architect`** | [`create-architect/SKILL.md`](create-architect/SKILL.md) | ~1,452 | **Tier 1b**: Inside-Out engineering blueprint architect. | Explicit only |
-| **`frontend-artisan`** | [`frontend-artisan/SKILL.md`](frontend-artisan/SKILL.md) | ~1,459 | **Tier 2**: Frontend engineering orchestrator & anti-slop craft rules. | Explicit only |
+| **`frontend-artisan`** | [`frontend-artisan/SKILL.md`](frontend-artisan/SKILL.md) | ~1,474 | **Tier 2**: Frontend orchestrator (DESIGN.md tokens, image-to-code, anti-slop, accessibility). | Explicit only |
 
 ---
 

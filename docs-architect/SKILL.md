@@ -1,11 +1,11 @@
 ---
 name: docs-architect
-description: Public documentation, viral developer README, OpenAPI 3.1 contract, and Architecture Decision Record (ADR) engine. Transforms internal vertical slice code and contracts into high-craft, anti-slop documentation, interactive API specifications, and frictionless developer quickstart guides.
+description: Public documentation, developer README, OpenAPI 3.1 contract, and Architecture Decision Record (ADR) engine. Transforms internal code and API contracts into concise, factual documentation, OpenAPI specifications, and developer quickstart guides.
 ---
 
-# Docs Architect (Public Documentation, Viral README & OpenAPI Engine)
+# Docs Architect (Documentation, README & OpenAPI Engine)
 
-Bridge the gap between internal working code and external human adoption. Transforms raw codebases and vertical slice contracts into **high-craft, anti-slop public documentation**, interactive **OpenAPI 3.1 specifications**, and immutable **Architecture Decision Records (ADRs)**.
+Bridge the gap between working code and developer adoption. Transforms codebases and API contracts into **concise, factual public documentation**, **OpenAPI 3.1 specifications**, and **Architecture Decision Records (ADRs)**.
 
 ---
 
@@ -26,7 +26,7 @@ Bridge the gap between internal working code and external human adoption. Transf
 
 Every documentation deliverable produced by `docs-architect` must adhere to these four disciplines:
 
-### Discipline 1: The Viral, High-Craft README (`README.md`)
+### Discipline 1: High-Craft Developer README (`README.md`)
 A great README converts a skeptical developer in under 15 seconds. Follow the layout in [`references/readme-template.md`](references/readme-template.md):
 1. **The 5-Second Hook**: Single-sentence problem statement $\rightarrow$ concrete solution $\rightarrow$ key technical differentiator.
 2. **1-Command Quickstart**: Exactly one command to clone, install, and run locally (e.g. `npx ...` or `docker compose up`).
