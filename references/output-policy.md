@@ -29,7 +29,7 @@ Support conversational detail toggles without requiring special slash commands:
 ## 3. Pipeline Invariants
 
 1. **Terminal Writer Only**: The coordinating or terminal skill writes the user-facing summary; workers and intermediate skills emit single-line heartbeats.
-2. **Dual-Surface Logging**: Full stdout/stderr goes to bounded disk logs (`.evidence/logs/`); chat receives compact extracts on failure.
+2. **Bounded Output**: Keep chat failure summaries concise with the failing command, relevant excerpt, and next action.
 3. **Secret Redaction**: Credentials, tokens, and private keys must be scrubbed from logs and summaries.
 4. **Readiness vs. Publishing**: Verifying technical candidate readiness does not authorize publishing or pushing. Pushing or publishing requires explicit user consent.
 

@@ -36,7 +36,7 @@ The reviewer evaluates a focused, self-contained context package without reading
 1. **Task Requirements & Acceptance IDs**: Target goals, invariants, and acceptance criteria.
 2. **Changed Diff**: `git diff --staged` or `git diff <base>..<branch>`.
 3. **Surrounding Context**: Function boundaries and imported interfaces adjacent to the diff.
-4. **Verification Evidence**: Executed test receipts from `.evidence/receipts/`.
+4. **Verification Evidence**: Executed test command output and pass/fail counts.
 
 ---
 

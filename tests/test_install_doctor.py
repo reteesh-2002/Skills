@@ -200,10 +200,11 @@ class TestInstallSkills(unittest.TestCase):
             self.assertFalse((target_path / "skills").exists(), "Skills folder was not removed")
 
             # Verify installed runtime helpers removed
-            self.assertFalse(
-                (target_path / "scripts" / "exec-proxy.sh").exists(),
-                "Runtime helper was not removed",
-            )
+            for helper in ["guard_anti_retry.py", "validate-skills.py", "skills-doctor.py"]:
+                self.assertFalse(
+                    (target_path / "scripts" / helper).exists(),
+                    f"Runtime helper was not removed: {helper}",
+                )
 
             # Verify manifest was removed
             self.assertFalse(
@@ -407,16 +408,11 @@ class TestSkillsDoctor(unittest.TestCase):
             # Create scripts but no hooks
             (target_path / "scripts").mkdir(parents=True, exist_ok=True)
             for helper in [
-                "exec-proxy.sh",
-                "verify-release-gate.sh",
-                "runtime_evidence.py",
-                "task_ledger.py",
-                "task_shape_gating.py",
-                "slice-guard.py",
-                "guard_read_before_write.py",
                 "guard_anti_retry.py",
+                "validate-skills.py",
+                "skills-doctor.py",
             ]:
-                (target_path / "scripts" / helper).write_text("#!/bin/bash\n", encoding="utf-8")
+                (target_path / "scripts" / helper).write_text("#!/usr/bin/env python3\n", encoding="utf-8")
 
             cmd = [sys.executable, str(DOCTOR_SCRIPT), "--project-dir", str(target_path), "--json"]
             res = subprocess.run(cmd, capture_output=True, text=True)
@@ -433,16 +429,11 @@ class TestSkillsDoctor(unittest.TestCase):
             # Create dummy scripts
             (target_path / "scripts").mkdir(parents=True, exist_ok=True)
             for helper in [
-                "exec-proxy.sh",
-                "verify-release-gate.sh",
-                "runtime_evidence.py",
-                "task_ledger.py",
-                "task_shape_gating.py",
-                "slice-guard.py",
-                "guard_read_before_write.py",
                 "guard_anti_retry.py",
+                "validate-skills.py",
+                "skills-doctor.py",
             ]:
-                (target_path / "scripts" / helper).write_text("#!/bin/bash\n", encoding="utf-8")
+                (target_path / "scripts" / helper).write_text("#!/usr/bin/env python3\n", encoding="utf-8")
 
             # First run without --fix should fail
             cmd_check = [sys.executable, str(DOCTOR_SCRIPT), "--project-dir", str(target_path), "--json"]

@@ -190,6 +190,21 @@ def main():
         link_errors = check_relative_links(skill_dir, skill_file, body)
         skill_errors.extend(link_errors)
 
+        stale_patterns = (
+            "exec_proxy", "exec-proxy.sh", "verify_release_gate", "verify-release-gate.sh",
+            "specialist_probes.py", "task_ledger.py", "task_shape_gating.py",
+            "slice-guard.py", ".evidence/manifest.v1.json",
+        )
+        files_to_scan = [skill_file]
+        refs_dir = skill_dir / "references"
+        if refs_dir.is_dir():
+            files_to_scan.extend(sorted(refs_dir.rglob("*.md")))
+        for md_file in files_to_scan:
+            md_text = md_file.read_text(encoding="utf-8")
+            for pat in stale_patterns:
+                if pat in md_text:
+                    skill_errors.append(f"Stale deleted reference '{pat}' in {md_file.relative_to(skill_dir)}")
+
         if skill_errors:
             status = "❌ FAIL"
             errors.extend([f"[{skill_dir.name}] {e}" for e in skill_errors])

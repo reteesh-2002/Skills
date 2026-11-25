@@ -25,13 +25,13 @@ Select checks based on the operational surface changed:
 ### Profile A: Memory Soak & Resource Plateau
 *When to run: Caches, long-running batch workers, event listeners, websocket servers.*
 - Warm up process (run initial iterations to prime JIT/caches).
-- Sample RSS memory via `probe_memory_soak_plateau(use_rss=True)` across bounded synthetic operations (e.g. 1,000–5,000 ops).
+- Sample process RSS memory (e.g., via `resource.getrusage` or `psutil`) across bounded synthetic operations (e.g., 1,000–5,000 ops).
 - Measure memory delta across sample intervals. Verify consumption stabilizes within an acceptable threshold rather than climbing monotonically.
 - If iterations $\le 0$: mark as `UNVERIFIED (insufficient iterations)`.
 
 ### Profile B: Graceful Shutdown & Drain
 *When to run: Background workers, queue consumers, HTTP servers with in-flight transactions.*
-- Spawn a real child process using `probe_graceful_drain_subprocess()`.
+- Spawn a real child process via `subprocess.Popen`.
 - Dispatch synthetic in-flight work.
 - Send real `SIGTERM` (`os.kill(child.pid, signal.SIGTERM)`).
 - Assert process exits within declared deadline (`drain_timeout_ms`) with 0 aborted tasks. A process that drops work or hangs past deadline fails.
@@ -64,7 +64,7 @@ Follow [`references/output-policy.md`](../references/output-policy.md):
 - **Profile Executed**: Profile A (Memory), Profile B (Shutdown), or Profile C (Migration).
 - **Sample Sufficiency**: Iterations, duration, samples, and measured deltas.
 - **Limits & Unverified Conditions**: Disclosed boundaries (e.g. local single-process, local SQLite, not distributed Postgres).
-- **Evidence**: Receipt ID and log location in `.evidence/manifest.v1.json`.
+- **Evidence**: Command executed, exit code, and measured deltas.
 
 ### Intermediate Milestone:
 `✓ [runtime-reliability]: Soak & lifecycle check PASS (N samples, rcpt_id)`

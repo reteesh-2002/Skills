@@ -1,4 +1,4 @@
-# Antigravity Engineering Skills Suite (v2.2)
+# Antigravity Engineering Skills Suite (v2.3)
 
 A modular software engineering toolkit and skills suite for **Google Antigravity**. Covers the engineering lifecycle—from architectural intent extraction and visual design direction to parallel worker orchestration, adversarial review, specialist verification, and release gate enforcement.
 
@@ -146,7 +146,7 @@ Routing policy is defined authoritatively in [`suite-policy.json`](suite-policy.
 | User Intent | Auto-Activated Skill | Operational Protocol |
 | :--- | :--- | :--- |
 | **Fix a bug / Error / Breakage / Failure** | [`deep-debugger`](deep-debugger/SKILL.md) | 1. 6-stage protocol: `Reproduce → Isolate → State Inspection → Hypothesis → Surgical Minimal Fix → Regression Proof`.<br>2. Multi-file fixes permitted when root cause requires it.<br>3. Protects user edits outside failure path; preserves intermittent bug uncertainty in Compact Hypothesis Log. |
-| **Plan / Implement / Architect multi-step feature** | [`plan-master`](plan-master/SKILL.md) | 1. Current-state inspection & dependency DAG ($T_1 \dots T_n$).<br>2. Phase 0 gating (`task_shape_gating.py`) to select solo vs. multi-worker.<br>3. Strict 1-writer-per-file bounds.<br>4. Small tasks (< 3 files) go directly to implementation. |
+| **Plan / Implement / Architect multi-step feature** | [`plan-master`](plan-master/SKILL.md) | 1. Current-state inspection & dependency DAG ($T_1 \dots T_n$).<br>2. Anti-Overengineering Gate (Occam's Razor) before task generation.<br>3. Strict 1-writer-per-file bounds.<br>4. Small tasks (< 3 files) go directly to implementation. |
 | **Verify / Test / Validate code changes** | [`qa-sentinel`](qa-sentinel/SKILL.md) | 1. Pure verification engine (no implementation duties).<br>2. Executes real test suites (`pytest`, `npm test`, `cargo test`, `unittest`).<br>3. Rejects zero-inventory false greens and labels unverified checks honestly. |
 
 ### All Other Skills: Explicit Only

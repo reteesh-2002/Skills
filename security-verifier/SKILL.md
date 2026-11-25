@@ -33,7 +33,7 @@ Inspect modified files to define the attack surface and boundary targets:
 - **Data Leakage & Response Sanitization**: Does the response payload include sensitive fields (PII, credentials, internal IDs)?
 
 ### Stage 2: Adversarial Probe Generation
-Write targeted, reproducible probes using test runners or `scripts/specialist_probes.py`:
+Write targeted, reproducible probes using the project's test runner (e.g. `pytest`, `unittest`, or `vitest`):
 - **Cross-Tenant Isolation Probe**:
   - Test request with Tenant A's credentials against Tenant B's resource ID.
   - Assert that access is denied (`403`/`404`) **AND** verify response body contains zero Tenant B records.
@@ -75,7 +75,7 @@ When a vulnerability is discovered, present:
 - **Tested Boundaries**: `TESTED_CLEAN: [list]`, `VULNERABLE: [list]`.
 - **Payload & Side-Effect Validation**: Confirmed response bodies inspected (not status codes alone).
 - **Unchecked Scope**: Disclosed `UNTESTED` surfaces.
-- **Evidence**: Receipt ID and manifest path in `.evidence/manifest.v1.json`.
+- **Evidence**: Test command executed and pass/fail counts.
 
 ### Intermediate Milestone:
 `✓ [security-verifier]: Security audit PASS (<N> boundaries clean, rcpt_id)`

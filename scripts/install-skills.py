@@ -16,7 +16,7 @@ import shutil
 import stat
 import sys
 
-# Explicit inventory of all 17 suite skills
+# Explicit inventory of all 14 suite skills
 SKILL_INVENTORY = [
     "code-reviewer",
     "deep-debugger",
@@ -437,7 +437,7 @@ def run_install(
     # 6. Build and write manifest
     manifest_data = {
         "manifest_version": "1.0",
-        "suite_version": "1.0.0",
+        "suite_version": "2.3.0",
         "installed_at": datetime.now(timezone.utc).isoformat(),
         "mode": mode,
         "target_dir": str(target_dir),

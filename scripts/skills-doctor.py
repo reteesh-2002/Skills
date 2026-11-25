@@ -72,31 +72,23 @@ def check_host_paths(project_dir: Path) -> dict:
 
 
 def find_helper(helper_name: str, project_dir: Path) -> Path | None:
-    """Find a runtime helper across standard project directories with cross-platform alternatives."""
-    names_to_try = [helper_name]
-    if helper_name == "exec-proxy.sh":
-        names_to_try.extend(["exec_proxy.py", "exec-proxy.cmd", "exec-proxy.py"])
-    elif helper_name == "verify-release-gate.sh":
-        names_to_try.extend(["verify_release_gate.py", "verify-release-gate.cmd", "verify-release-gate.py"])
-
+    """Find a runtime helper across standard project directories."""
     script_dir = Path(__file__).resolve().parent
-    for name in names_to_try:
-        candidates = [
-            project_dir / "scripts" / name,
-            project_dir / name,
-            project_dir / ".agents" / "scripts" / name,
-        ]
-        if project_dir == script_dir.parent:
-            candidates.append(script_dir / name)
+    candidates = [
+        project_dir / "scripts" / helper_name,
+        project_dir / helper_name,
+    ]
+    if project_dir == script_dir.parent:
+        candidates.append(script_dir / helper_name)
 
-        for cand in candidates:
-            if cand.exists() and cand.is_file():
-                return cand
+    for cand in candidates:
+        if cand.exists() and cand.is_file():
+            return cand
     return None
 
 
 def check_runtime_helpers(project_dir: Path) -> dict:
-    """Verify all 5 required runtime helpers exist and are accessible."""
+    """Verify all 3 required runtime helpers exist and are accessible."""
     results = {}
     all_sound = True
 

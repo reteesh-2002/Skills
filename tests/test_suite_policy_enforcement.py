@@ -81,6 +81,17 @@ class TestSuitePolicyEnforcement(unittest.TestCase):
             self.assertIn(required_key, output_defaults)
             self.assertIn("format", output_defaults[required_key])
 
+    def test_agents_and_gemini_md_parity(self):
+        """Verify AGENTS.md and GEMINI.md list the exact same skills as suite-policy.json."""
+        auto_skills = {e["skill"] for e in self.policy["activation_modes"]["auto"]}
+        explicit_skills = set(self.policy["activation_modes"]["explicit_only"])
+        for doc_name in ("AGENTS.md", "GEMINI.md"):
+            text = (REPO_ROOT / doc_name).read_text(encoding="utf-8")
+            for s in auto_skills | explicit_skills:
+                self.assertIn(f"`{s}`", text, f"{doc_name} missing skill `{s}`")
+            for removed in ("swarm", "anti-slop-spec", "design-md", "image-to-code", "web-interface-guidelines"):
+                self.assertNotIn(f"`{removed}`", text, f"{doc_name} still lists removed `{removed}`")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -90,12 +90,12 @@ Sequence the implementation from the foundation up:
   - Insert initial seed data and verify query execution.
 - **Phase 2: Core Engine (API & Business Logic)**
   - Implement endpoints with input validation.
-  - Verify endpoint status codes and payloads via `exec_proxy`.
+  - Verify endpoint status codes and payloads with integration tests.
 - **Phase 3: The Interface (Frontend & 4 UI States)**
   - Hand off to `frontend-artisan`: apply design preset & parallax/motion effects.
   - Implement all 4 screen states (Empty, Loading, Success, Error).
-- **Phase 4: Mechanical Verification**
-  - Run `qa-sentinel` via `exec_proxy`: verify `exit 0`, `collected > 0`, and `passed == collected`.
+- **Phase 4: Verification**
+  - Run `qa-sentinel`: verify `exit 0` and real tests executed (`passed == collected`).
 
 ---
 

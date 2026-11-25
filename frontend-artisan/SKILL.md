@@ -11,7 +11,7 @@ Deliver frontend work with intentional craft: correct layout, accessible interac
 
 ## 1. Always Ask for Design & Interactive Effects (Step 0)
 
-Before generating images or writing code, **ALWAYS ask the user for both their visual aesthetic preset AND interactive motion/effects preferences** (unless explicitly specified in their prompt).
+Before generating images or writing code for a **new page or greenfield concept** without an implied style, ask the user for their visual aesthetic preset and motion preference. **Skip this step** for targeted edits, bug fixes, or projects with an existing `DESIGN.md` / design system.
 
 ### A. Visual Aesthetic Preset (from [`references/design-presets.md`](references/design-presets.md))
 1. **Linear Dark Minimalist** — `#08090a` canvas, `#5e6ad2` blurple, `tabular-nums`, high-density devtools
