@@ -26,7 +26,7 @@ Example:
 ## 2. Decision Drivers
 
 - Need hermetic module isolation to prevent cascading cross-file regressions.
-- Need bounded LLM working context (< 600 lines) per development task.
+- Need bounded LLM working context (target ~400–600 lines per slice task; cohesive modules up to 1,200–1,500 LOC) per development task.
 - Need mechanical boundary enforcement in CI.
 
 ---
@@ -46,7 +46,7 @@ Chosen option: **Option 3: Vertical Slice Architecture**, because it delivers th
 ### Positive Consequences
 - Every module (`modules/<slice>/`) is self-contained with its own contract, service, routes, and tests.
 - Cross-slice imports are restricted to public `contract.ts` boundaries and checked in code review / ESLint.
-- Tasks can be planned and executed within a strict Sub-600 LOC context window.
+- Tasks can be planned and executed within a bounded slice context window.
 
 ### Negative Consequences & Trade-offs
 - Duplication of minor helper utilities across slices is preferred over shared mutable coupling.

@@ -9,25 +9,34 @@ on:
 jobs:
   validate:
     name: Conformance, Probes & Suite Validation
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.9", "3.11"]
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: ${{ matrix.python-version }}
+
+      - name: Syntax Check Python Scripts
+        run: |
+          python -m py_compile scripts/guard_anti_retry.py scripts/install-skills.py scripts/skills-doctor.py scripts/validate-skills.py
 
       - name: Validate Skill Metadata, Contracts & Policy Drift
         run: |
-          python3 scripts/validate-skills.py
+          python scripts/validate-skills.py
 
       - name: Run Environment & Skills Doctor
         run: |
-          python3 scripts/skills-doctor.py
+          python scripts/skills-doctor.py
 
       - name: Run Unit & Policy Enforcement Suite
         run: |
-          python3 -m unittest discover -s tests -p 'test_*.py' -v
+          python -m unittest discover -s tests -p "test_*.py" -v

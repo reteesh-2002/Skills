@@ -43,13 +43,13 @@ All pairings below guarantee a contrast ratio $\ge 4.5:1$ (pass automated Lighth
 
 | Background | Safe Text Class | Contrast Ratio |
 | :--- | :--- | :--- |
-| `bg-white` (Pure Light) | `text-stone-900` / `text-zinc-900` | 19.3:1 (AAA) |
-| `bg-white` (Secondary) | `text-stone-600` / `text-zinc-600` | 5.6:1 (AA) |
-| `bg-stone-50` (Warm Canvas) | `text-stone-900` | 18.2:1 (AAA) |
-| `bg-[#16181d]` (Dark Card) | `text-stone-100` / `text-zinc-100` | 13.8:1 (AAA) |
-| `bg-[#16181d]` (Muted Dark)| `text-zinc-400` | 5.4:1 (AA) |
-| `bg-amber-500` (Accent) | `text-stone-950` / `text-black` | 9.8:1 (AAA) |
-| `bg-emerald-600` (Badge) | `text-white` | 4.8:1 (AA) |
+| `bg-white` (Pure Light) | `text-stone-900` / `text-zinc-900` | 17.5:1 (AAA) |
+| `bg-white` (Secondary) | `text-stone-600` / `text-zinc-600` | 7.6:1 (AAA) |
+| `bg-stone-50` (Warm Canvas) | `text-stone-900` | 16.8:1 (AAA) |
+| `bg-[#16181d]` (Dark Card) | `text-stone-100` / `text-zinc-100` | 16.0:1 (AAA) |
+| `bg-[#16181d]` (Muted Dark)| `text-zinc-400` | 6.9:1 (AA) |
+| `bg-amber-500` (Accent) | `text-stone-950` / `text-black` | 10.1:1 (AAA) |
+| `bg-emerald-700` (Badge) | `text-white` | 5.5:1 (AA) |
 
 ---
 

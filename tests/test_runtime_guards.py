@@ -145,6 +145,51 @@ class TestAntiRetryGuard(unittest.TestCase):
         self.assertEqual(res.returncode, 0)
         self.assertEqual(json.loads(res.stdout).get("decision"), "allow")
 
+    def test_non_dict_and_malformed_json_fail_open(self):
+        for raw in ("[]", '"hello"', "null", "{bad json"):
+            res = subprocess.run(
+                [sys.executable, str(GUARD_AER)],
+                input=raw,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(res.returncode, 0)
+            self.assertEqual(json.loads(res.stdout).get("decision"), "allow")
+
+    def test_clean_calls_do_not_create_evidence_dir(self):
+        res = subprocess.run(
+            [sys.executable, str(GUARD_AER)],
+            input=json.dumps({"cwd": str(self.tmp_path), "toolCall": {"name": "run_command", "args": {"CommandLine": "echo hi"}}}),
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(res.returncode, 0)
+        self.assertFalse(self.evidence_dir.exists(), ".evidence must not be created on clean PreToolUse")
+
+    def test_string_zero_exit_code_and_curl_i_exempt(self):
+        res = subprocess.run(
+            [sys.executable, str(GUARD_AER)],
+            input=json.dumps({"cwd": str(self.tmp_path), "toolCall": {"name": "run_command", "args": {"CommandLine": "make"}}, "result": {"exit_code": "0"}}),
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(res.returncode, 0)
+        self.assertFalse(self.failures_file.exists())
+
+        allowed, _ = gaer.evaluate_retry("run_command", {"CommandLine": "curl -I https://example.com"}, {"any_fp"})
+        self.assertTrue(allowed)
+        allowed_env, _ = gaer.evaluate_retry("run_command", {"CommandLine": "LC_ALL=C grep -n foo bar"}, {"any_fp"})
+        self.assertTrue(allowed_env)
+
+    def test_hooks_json_command_runs_from_root_and_subdir(self):
+        hooks = json.loads((REPO_ROOT / ".agents" / "hooks.json").read_text(encoding="utf-8"))
+        cmd_str = hooks["evidence-policy"]["PreToolUse"][0]["hooks"][0]["command"]
+        payload = json.dumps({"cwd": str(self.tmp_path), "toolCall": {"name": "run_command", "args": {"CommandLine": "echo ok"}}})
+        for cwd in (REPO_ROOT, REPO_ROOT / "scripts"):
+            res = subprocess.run(cmd_str, shell=True, cwd=str(cwd), input=payload, capture_output=True, text=True)
+            self.assertEqual(res.returncode, 0, res.stderr)
+            self.assertEqual(json.loads(res.stdout).get("decision"), "allow")
+
 
 if __name__ == "__main__":
     unittest.main()

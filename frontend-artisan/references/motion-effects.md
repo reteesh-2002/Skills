@@ -26,12 +26,13 @@ Create atmospheric depth where background stars/mesh move slower than foreground
   ```
 - **Implementation (React / Framer Motion)**:
   ```tsx
-  import { useScroll, useTransform, motion } from "framer-motion";
+  import { useScroll, useTransform, useReducedMotion, motion } from "framer-motion";
 
   export function ParallaxHero() {
+    const shouldReduceMotion = useReducedMotion();
     const { scrollY } = useScroll();
-    const yBg = useTransform(scrollY, [0, 500], [0, 150]); // slower
-    const yText = useTransform(scrollY, [0, 500], [0, -50]); // faster / lift
+    const yBg = useTransform(scrollY, [0, 500], [0, shouldReduceMotion ? 0 : 150]);
+    const yText = useTransform(scrollY, [0, 500], [0, shouldReduceMotion ? 0 : -50]);
 
     return (
       <div className="relative h-screen overflow-hidden">
@@ -45,7 +46,7 @@ Create atmospheric depth where background stars/mesh move slower than foreground
 ---
 
 ## 2. Scroll-Driven Sticky Stacking Cards
-Cards that scroll in, stick to the top, and subsequent cards slide over them with subtle scale down:
+Cards that scroll in and stick to the top (pair with `useScroll`/`useTransform` scale if dynamic scale-down is desired):
 - **Pure CSS Sticky Stacking**:
   ```html
   <div class="space-y-8">
@@ -182,6 +183,12 @@ GPU-accelerated horizontal scroll ticker that pauses on hover:
 
 .animate-marquee:hover {
   animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee {
+    animation: none;
+  }
 }
 ```
 

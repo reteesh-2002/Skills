@@ -7,13 +7,13 @@ Use only integrations the user selects or source artifacts they provide. Plannin
 | Companion Skill | Input to Plan Master | Planner Responsibility | Execution Boundary |
 | :--- | :--- | :--- | :--- |
 | **Standalone (No skills)** | Idea, requirements, code, or user prompt | Ground the request, plan tasks/checks, produce a self-contained handoff. | No companion skills or subagents required. |
-| **Idea Council v2.0 Output** | Decision record with stance (🟢/🟡/🟠/⏸️/🔴), challenges, open questions | Map verdict directly to plan type: 🟢 $\rightarrow$ Execution Plan; 🟡 $\rightarrow$ Spike Plan with kill triggers; 🟠 $\rightarrow$ Remediation Plan; ⏸️ $\rightarrow$ Prerequisite list; 🔴 $\rightarrow$ Archival ADR. | Preserve dissent; translate accepted decisions into scope and unresolved assumptions into discovery tasks. |
-| **native_swarm** | Plan plus multi-worker execution request | Format tasks into independent module batches with zero-overlap write scopes, coordinator-owned shared files, and clear verification targets. | Coordinator dispatches workers on the shared message board with `workspace:"share"` or `"branch"` for parallel edits. |
-| **Council + Planner + Orchestrator** | Strategic review to parallel execution | Plan Master ingests council verdict, drafts worktree-partitioned plan, and hands off execution prompt to orchestrator. | Pipeline runs sequentially: Council (strategic review) $\rightarrow$ Planner (contracts & DAG) $\rightarrow$ Orchestrator (parallel implementation). |
+| **Idea Council Output** | Decision record with stance (🟢/🟡/🟠/⏸️/🔴), challenges, open questions | Map verdict directly to plan type: 🟢 → Execution Plan; 🟡 → Spike Plan with kill triggers; 🟠 → Remediation Plan; ⏸️ → Prerequisite list; 🔴 → Archival ADR. | Preserve dissent; translate accepted decisions into scope and unresolved assumptions into discovery tasks. |
+| **Parallel Workers** | Plan plus multi-worker execution request | Format tasks into independent module batches with zero-overlap write scopes, coordinator-owned shared files, and clear verification targets. | Coordinator dispatches workers with isolated workspaces or non-overlapping file ownership for parallel edits. |
+| **Council + Planner** | Strategic review to execution plan | Plan Master ingests council verdict and drafts a dependency-ordered plan for solo or parallel execution. | Pipeline runs sequentially: Council (strategic review) → Planner (contracts & DAG) → Implementer. |
 
 ---
 
-## 1. Idea Council v2.0 Verdict Routing Contract
+## 1. Idea Council Verdict Routing Contract
 
 When an Idea Council decision record is provided, map stances deterministically:
 
@@ -27,23 +27,23 @@ When an Idea Council decision record is provided, map stances deterministically:
 
 ---
 
-## 2. Parallel Swarm Profile (`native_swarm`)
+## 2. Parallel Worker Isolation Profile
 
-When handing off to `native_swarm`, adhere to parallel isolation invariants:
+When handing off to parallel workers or subagents, adhere to these isolation invariants:
 
 1. **Strict 1-Writer-Per-File Isolation**:
    - Each parallel task must specify an explicit, non-overlapping list of target files or directories.
    - Never assign two parallel tasks to the same file (e.g. shared contract, common registry, or manifest).
 2. **Coordinator-Owned Shared Files**:
    - Files shared across modules (e.g. `package.json`, root `CMakeLists.txt`, central routing tables, DB migrations) must be designated as **Coordinator-Owned**.
-   - These are withheld from parallel worker `workspace:"share"` / `"branch"` assignments and integrated sequentially by the coordinator after landing worker diffs.
+   - These are withheld from parallel worker assignments and integrated sequentially by the coordinator after landing worker diffs.
 3. **Verification**:
    - Each task brief must define concrete automated verification commands (`pytest`, `npm test`, `cargo test`) and clean `git diff` review.
 4. **Adaptive Gating Threshold**:
    - Only recommend parallel worker dispatch when the user requests parallel workers or the task spans genuinely independent modules with non-overlapping file ownership.
    - For tightly coupled or small tasks, specify **Solo Mode** with sequential execution.
 5. **Graceful Host Degradation**:
-   - If `native_swarm` is unavailable or `workspace:"share"` cannot be created, fall back to sequential execution in the primary workspace without crashing.
+   - If parallel workers or isolated workspaces are unavailable, fall back to sequential execution in the primary workspace without crashing.
 
 ---
 

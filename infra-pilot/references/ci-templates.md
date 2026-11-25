@@ -97,7 +97,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
-        uses: actions/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v3
 
       - name: Build Docker Image (Dry-Run / Cache Test)
         uses: docker/build-push-action@v5

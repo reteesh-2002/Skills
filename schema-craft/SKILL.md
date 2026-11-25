@@ -1,6 +1,6 @@
 ---
 name: schema-craft
-description: Database architecture, safe migrations, and type-safe API contract engine. Enforces production indexing strategies (foreign keys, compound queries), strict relational integrity (cascades, check constraints), zero-downtime migration protocols, and realistic edge-case seed data generation across PostgreSQL, SQLite, Prisma, Drizzle, and Django ORM. Use when designing data models, writing migrations, optimizing slow queries, or defining API contracts.
+description: Database architecture and safe migration engine. Enforces production indexing strategies (foreign keys, compound queries), strict relational integrity (cascades, check constraints), safe migration protocols, and realistic edge-case seed data across PostgreSQL, SQLite, Prisma, Drizzle, and Django ORM. Explicit only — not auto-activated.
 ---
 
 # Schema Craft

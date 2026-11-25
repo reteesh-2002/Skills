@@ -7,8 +7,6 @@ Production-aligned local development stacks with explicit health checks, conditi
 ## 1. Full-Stack Production-Grade Local Dev (App + Postgres + Redis)
 
 ```yaml
-version: "3.8"
-
 services:
   # ──────────────────────────────────────────────
   # Primary Web Application
@@ -104,12 +102,16 @@ localhost, app.localhost {
         header_up X-Real-IP {remote_host}
     }
 
-    # Security headers
+    # Security headers (apply Strict-Transport-Security only on public production domains)
     header {
-        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
         X-Content-Type-Options "nosniff"
         X-Frame-Options "DENY"
         Referrer-Policy "strict-origin-when-cross-origin"
+        Content-Security-Policy "default-src 'self'"
+    }
+
+    request_body {
+        max_size 10MB
     }
 
     encode gzip zstd

@@ -28,7 +28,7 @@ Every documentation deliverable produced by `docs-architect` must adhere to thes
 
 ### Discipline 1: High-Craft Developer README (`README.md`)
 A great README converts a skeptical developer in under 15 seconds. Follow the layout in [`references/readme-template.md`](references/readme-template.md):
-1. **The 5-Second Hook**: Single-sentence problem statement $\rightarrow$ concrete solution $\rightarrow$ key technical differentiator.
+1. **The 5-Second Hook**: Single-sentence problem statement → concrete solution → key technical differentiator.
 2. **1-Command Quickstart**: Exactly one command to clone, install, and run locally (e.g. `npx ...` or `docker compose up`).
 3. **Mermaid Architecture Diagram**: Visual graph showing request flow through core primitives and vertical slices.
 4. **Feature & Capability Matrix**: Crisp table of features with supported protocols and status.

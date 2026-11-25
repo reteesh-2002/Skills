@@ -1,6 +1,6 @@
 ---
 name: qa-sentinel
-description: Automated verification and sanity validation engine. Guarantees code actually runs before declaring completion by testing syntax (node -c, py_compile), endpoint health (curl/status codes), visual contrast/rendering, broken imports, and regression safety. Use before marking any feature done, after major refactors, or when verifying project health.
+description: Automated verification and sanity validation engine. Guarantees code actually runs before declaring completion by testing syntax (node -c, py_compile), endpoint health (curl/status codes), broken imports, and regression safety. Use before marking any feature done, after major refactors, or when verifying project health.
 ---
 
 # QA Sentinel
@@ -32,3 +32,6 @@ Conclude verification with a 3-line summary:
 - **Status**: 🟢 PASS / 🔴 FAIL
 - **Checks Executed**: Test runner and exact counts (`e.g. pytest tests/ - 14/14 passed, exit 0`).
 - **Unverified Scope**: Any boundary not directly exercised by tests.
+
+### Intermediate Milestone:
+`✓ [qa-sentinel]: <N>/<N> checks passed (exit 0)`

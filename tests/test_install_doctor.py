@@ -6,9 +6,7 @@ doctor diagnosis, and graceful degradation for optional tools.
 """
 
 import json
-import os
 from pathlib import Path
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -467,6 +465,113 @@ class TestSkillsDoctor(unittest.TestCase):
             self.assertTrue(data["runtime_helpers"]["all_present"])
             self.assertTrue((target_path / "scripts" / "guard_anti_retry.py").exists())
             self.assertTrue((target_path / "scripts" / "validate-skills.py").exists())
+            self.assertTrue((target_path / "scripts" / "skills-doctor.py").exists())
+
+    def test_doctor_fix_merges_existing_custom_hooks(self):
+        """Test --fix merges evidence-policy without overwriting custom user hooks."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target_path = Path(tmpdir)
+            (target_path / ".agents").mkdir(parents=True, exist_ok=True)
+            (target_path / ".agents" / "hooks.json").write_text(
+                json.dumps({"custom-user-hook": {"PreToolUse": []}}),
+                encoding="utf-8",
+            )
+            res = subprocess.run(
+                [sys.executable, str(DOCTOR_SCRIPT), "--project-dir", str(target_path), "--fix", "--json"],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(res.returncode, 0, res.stderr)
+            hooks_data = json.loads((target_path / ".agents" / "hooks.json").read_text(encoding="utf-8"))
+            self.assertIn("custom-user-hook", hooks_data)
+            self.assertIn("evidence-policy", hooks_data)
+
+    def test_doctor_isolated_project_dir_does_not_leak_global_skills(self):
+        """Test --project-dir on an empty dir reports 0/14 skills regardless of ~/.gemini."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            res = subprocess.run(
+                [sys.executable, str(DOCTOR_SCRIPT), "--project-dir", tmpdir, "--json"],
+                capture_output=True,
+                text=True,
+            )
+            data = json.loads(res.stdout)
+            self.assertEqual(data["skills"]["found_count"], 0)
+
+    def test_install_copies_output_policy_and_guards_repo_root_and_traversal(self):
+        """Verify output-policy.md is copied, repo-root install is rejected, and uninstall blocks traversal."""
+        res_root = subprocess.run(
+            [sys.executable, str(INSTALL_SCRIPT), "--workspace", "--target-dir", str(REPO_ROOT)],
+            capture_output=True,
+            text=True,
+        )
+        self.assertNotEqual(res_root.returncode, 0)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            workspace = tmp / "proj"
+            outside = tmp / "outside.txt"
+            outside.write_text("keep-me", encoding="utf-8")
+
+            res_inst = subprocess.run(
+                [sys.executable, str(INSTALL_SCRIPT), "--workspace", "--target-dir", str(workspace)],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(res_inst.returncode, 0, res_inst.stderr)
+            self.assertTrue((workspace / "skills" / "references" / "output-policy.md").is_file())
+
+            # Inject a traversal entry into the manifest and verify uninstall refuses to delete outside.txt
+            manifest_path = workspace / ".skills-install-manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["files"]["../outside.txt"] = {"action": "created", "sha256": "deadbeef"}
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+            res_uninst = subprocess.run(
+                [sys.executable, str(INSTALL_SCRIPT), "--uninstall", "--target-dir", str(workspace)],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(res_uninst.returncode, 0, res_uninst.stderr)
+            self.assertTrue(outside.exists(), "Path traversal entry must not delete files outside dest_root")
+
+    def test_uninstall_preserves_post_install_edits_in_merged_files(self):
+        """Verify --uninstall surgically strips suite markers/keys without clobbering post-install edits."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            workspace = Path(tmpdir)
+            agents_md = workspace / "AGENTS.md"
+            agents_md.write_text("# User Rules\nInitial rule.\n", encoding="utf-8")
+            (workspace / ".agents").mkdir(parents=True, exist_ok=True)
+            hooks_json = workspace / ".agents" / "hooks.json"
+            hooks_json.write_text(json.dumps({"initial-hook": {}}), encoding="utf-8")
+
+            res_inst = subprocess.run(
+                [sys.executable, str(INSTALL_SCRIPT), "--workspace", "--target-dir", str(workspace)],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(res_inst.returncode, 0, res_inst.stderr)
+
+            # User adds post-install content to AGENTS.md and .agents/hooks.json
+            agents_md.write_text(agents_md.read_text(encoding="utf-8") + "\nPost-install rule.\n", encoding="utf-8")
+            hd = json.loads(hooks_json.read_text(encoding="utf-8"))
+            hd["post-install-hook"] = {"PreToolUse": []}
+            hooks_json.write_text(json.dumps(hd, indent=2), encoding="utf-8")
+
+            res_uninst = subprocess.run(
+                [sys.executable, str(INSTALL_SCRIPT), "--uninstall", "--target-dir", str(workspace)],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(res_uninst.returncode, 0, res_uninst.stderr)
+            final_agents = agents_md.read_text(encoding="utf-8")
+            self.assertIn("Initial rule.", final_agents)
+            self.assertIn("Post-install rule.", final_agents)
+            self.assertNotIn("BEGIN ANTIGRAVITY SKILLS SUITE RULES", final_agents)
+
+            final_hooks = json.loads(hooks_json.read_text(encoding="utf-8"))
+            self.assertIn("initial-hook", final_hooks)
+            self.assertIn("post-install-hook", final_hooks)
+            self.assertNotIn("evidence-policy", final_hooks)
 
 
 if __name__ == "__main__":

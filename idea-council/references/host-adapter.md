@@ -26,7 +26,7 @@ Inspect tools exposed in the current session; do not infer functionality from a 
 | Continue debate | Message, resume, or follow-up operation on each original participant/session | Can supply the position sheet and peer challenges after round one and collect revised positions. |
 | Release capacity | Close, cancel, or host-managed completion | Can end only this meeting's work according to the host lifecycle. |
 
-Translate these operations into actual available tools. Keep the process at one chair plus exactly six child participants. Do not create six more agents for the debate round. A resumable original session is acceptable; merely assigning the same role name to a new agent is not evidence of session continuity.
+Translate these operations into actual available tools. Keep the process at one chair plus the active council roster (6 child participants in Full Mode, or 3 in Express Mode). Do not create extra agents for the debate round. A resumable original session is acceptable; merely assigning the same role name to a new agent is not evidence of session continuity.
 
 Where tools use blocking calls, use the host-supported parallel calling facility. Do not invent shell commands or use unrelated terminal processes as a substitute for real agent delegation. A host that exposes only one-shot, non-resumable workers cannot execute this complete two-round workflow as specified.
 
@@ -36,7 +36,7 @@ Distinguish portability of the instructions from availability of multi-agent exe
 
 If six child slots or follow-up support are missing, state the specific limitation. Offer these choices without silently switching:
 
-1. Run **Express Council Mode (3 child slots)** using Value advocate, Constructive skeptic, and Feasibility lead.
+1. Run **Express Council Mode (3 child slots)** using Product Visionary, Red-Team Inquisitor, and Battle-Hardened Principal Architect.
 2. Run later in an environment with six real child agents and follow-up support.
 3. If the user accepts, provide a **single-agent review using multiple perspectives**. Identify it as a simulation, omit claims of independent agents or real peer debate, and label the final result accordingly.
 

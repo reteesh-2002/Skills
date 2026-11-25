@@ -13,7 +13,7 @@ Deliver frontend work with intentional craft: correct layout, accessible interac
 
 - **Existing Design / Targeted Edits / Bug Fixes**: Skip this step and adhere strictly to existing tokens or `DESIGN.md`.
 - **New Page / Greenfield Concept**: If the user's prompt already implies an aesthetic (e.g. "Linear-style dark devtools", "clean Notion docs"), proceed directly with the closest preset. Only ask when the aesthetic is genuinely ambiguous.
-- **Presets & Motion**: Load [`references/design-presets.md`](references/design-presets.md) (Linear Dark, Apple Glass, Vercel Monochrome, Stripe, Raycast, Supabase, Tailwind Catalyst, Resend, GitHub, Notion, Synthwave, or `DESIGN.md`) and [`references/motion-effects.md`](references/motion-effects.md) (Parallax, Sticky Cards, 3D Tilt, Magnetic Micro-Springs, Marquee, or Clean Static) on demand.
+- **Presets, Tokens & Motion**: Load [`references/design-presets.md`](references/design-presets.md) (11 brand presets or `DESIGN.md`), [`references/tokens-tailwind.md`](references/tokens-tailwind.md) / [`references/tokens-vanilla-css.md`](references/tokens-vanilla-css.md), and [`references/motion-effects.md`](references/motion-effects.md) on demand.
 
 ---
 
@@ -27,12 +27,12 @@ Once the design preset is confirmed, execute the 5-step image-to-code pipeline:
 
 1. **Inspect or Generate Reference**:
    - **Supplied Reference Mode**: If the user provided a screenshot or mockup, inspect it directly using `read_file` (crop/zoom allowed to examine subtle borders, spacing, and typography).
-   - **New Concept Mode**: Delegate to the `image-generator` subagent via `invoke_subagent` to establish a visual baseline matching the chosen design preset (16:9 for desktop/hero or 3:2). Generate at most 1 overview and 1 detail image maximum.
-   - **Existing Design / Bugfix**: Skip image generation; adhere strictly to existing tokens.
+   - **New Concept Mode**: Establish the visual baseline from the chosen preset and tokens (generate at most 1 concept image only if the user explicitly requested one and the host supports image generation).
+   - **Existing Design / Bugfix**: Skip concept generation; adhere strictly to existing tokens.
 2. **Extract Design Decisions**:
    - Identify exact canvas color, surface elevations, hairline borders (`1px border-white/10` or `border-slate-200`), font hierarchy, accent color, and interactive states.
 3. **Implement**:
-   - Translate extracted decisions into production code following [`references/interface-guidelines.md`](references/interface-guidelines.md).
+   - Translate extracted decisions into production code following [`references/interface-guidelines.md`](references/interface-guidelines.md) and [`references/framework-adapters.md`](references/framework-adapters.md).
 4. **Verify**:
    - Verify layout stability, keyboard navigation, touch targets, and WCAG AA contrast.
 
@@ -40,18 +40,7 @@ Once the design preset is confirmed, execute the 5-step image-to-code pipeline:
 
 ## 3. Anti-patterns to avoid
 
-These patterns produce low-quality output and should be avoided in new work:
-
-| Pattern | Problem | Replacement |
-|---|---|---|
-| Solid bright cyan/blue wall | Looks like a tutorial template | Rich atmospheric gradient or neutral dark canvas |
-| CSS radial-gradient "sun blobs" | Fake lighting, muddy appearance | Real canvas shaders or clean photography/SVG |
-| Cards inside cards (3+ levels) | Visual clutter, no hierarchy | Hairline 1px dividers, tabular columns, negative space |
-| 4-card KPI stat row at the top of a utility | Obscures the primary workflow | Put the table, form, or canvas front and center |
-| Muddy navy + neon glow | Dated aesthetic | Linear true dark or Vercel monochrome |
-| Excessive rounded corners (`rounded-3xl` everywhere) | Cartoonish | Disciplined `rounded-lg` or `rounded-xl` maximum |
-| Colored pill badge on every cell | Badge inflation | Monochrome text, `tabular-nums`, subtle status dots |
-| Fake interactive buttons with no real state | Toy feature | Real state, optimistic feedback, keyboard shortcuts |
+Avoid tutorial gradients, CSS radial-gradient "sun blobs", nested cards (3+ levels), KPI stat rows obscuring primary workflows, muddy navy + neon glow, excessive `rounded-3xl` everywhere, badge inflation on every table cell, and fake non-functional buttons. See [`references/anti-patterns.md`](references/anti-patterns.md) for the full replacement table.
 
 For layout bans: treat these as contextual guidance except for genuine accessibility or functionality defects.
 
@@ -98,7 +87,7 @@ Follow [`references/output-policy.md`](../references/output-policy.md). Every fr
 ```markdown
 ### 🎨 Frontend Artisan: [Mode] — [Summary]
 * **Design Source**: `[Existing project tokens (DESIGN.md) | Supplied reference (path/url) | Approved concept (preset)]`
-* **Components / Surface**: [`file1.ext`](file:///...) (components styled), [`file2.ext`](file:///...)
+* **Components / Surface**: `src/path/file1.ext` (components styled), `src/path/file2.ext`
 * **States Preserved**: Loading, empty, error, focus-visible, and mobile responsive boundaries.
 * **Verification Proof**: [Playwright browser measurement / Heuristic static scan] across 375px/768px/1440px.
 ```

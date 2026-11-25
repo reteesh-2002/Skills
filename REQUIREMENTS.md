@@ -9,8 +9,9 @@ This document specifies the runtime binaries and host tools used by the **14 Ant
 | Binary | Minimum Version | Required By Skills | Purpose |
 | :--- | :---: | :--- | :--- |
 | **`python3`** | $\ge 3.9$ | `scripts/*`, `qa-sentinel`, `deep-debugger`, `schema-craft` | Installer, validator, doctor, anti-retry hook, SQLite checks |
-| **`git`** | $\ge 2.30$ | `ship-it`, `deep-debugger`, `code-reviewer` | Diff inspection, Git Assertion Lock (`HEAD` immutability) |
+| **`git`** | $\ge 2.30$ | `ship-it`, `deep-debugger`, `code-reviewer` *(optional)* | Diff inspection, Git Assertion Lock (`HEAD` immutability) |
 | **`node` & `npm`** | $\ge 18.0$ | `playwright-cli`, `frontend-artisan` *(optional)* | Syntax check (`node -c`), browser automation |
+| **`pytest`** | Any | Python test suites *(optional)* | Optional test runner detected by `skills-doctor.py` |
 | **`curl`** | Any | `qa-sentinel` *(optional)* | Endpoint health checks |
 
 ---
@@ -35,5 +36,5 @@ Run the diagnostic doctor to verify Python, core scripts, hooks, and optional bi
 
 ```bash
 python3 scripts/skills-doctor.py
-python3 scripts/skills-doctor.py --fix
+python3 scripts/skills-doctor.py --project-dir /path/to/your-project --fix
 ```

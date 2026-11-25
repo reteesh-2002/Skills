@@ -1,6 +1,6 @@
 ---
 name: ship-it
-description: Production release and Git hygiene automator. Formats conventional commits, manages branch cleanups, checks for unstaged artifacts, verifies clean git diffs, and drafts production-ready PR descriptions with test plans and risk assessments. Use when ready to commit, stage, branch, or create a release pull request.
+description: Production release and Git hygiene automator. Scans staged diffs for leaked credentials, checks for build residue, and formats atomic Conventional Commits. Explicit only — not auto-activated.
 ---
 
 # Ship It

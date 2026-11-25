@@ -60,7 +60,7 @@ Write the plan as an actionable markdown document (`plan.md` in artifact hosts):
    - 1 task targets 1 module slice at a time.
    - Slices interact strictly through public interfaces (`contract.ts` / public APIs), never by digging into a sibling slice's private internals.
    - Cohesion over artificial file chopping: Keep cohesive domain logic together (parsers, state machines) without fragmenting into shallow mechanical helpers.
-3. **Sequential Default**: Recommend parallel `native_swarm` only when modules are genuinely separable with non-overlapping file ownership.
+3. **Sequential Default**: Recommend parallel subagents or swarm workers only when modules are genuinely separable with non-overlapping file ownership (fall back to sequential execution otherwise).
 4. **Runnable Checks**: Every task has a concrete check command (`npm test`, `pytest`, `cargo test`).
 5. **Single-Writer Isolation**: Never assign two tasks or parallel workers to the same file.
 
@@ -71,7 +71,7 @@ Write the plan as an actionable markdown document (`plan.md` in artifact hosts):
 The minimal `- [ ] **T1**` format above is the default. Load these only when the task needs them:
 - [`references/templates.md`](references/templates.md) — Extended layouts for multi-phase or parallel plans
 - [`references/slice-dag-rules.md`](references/slice-dag-rules.md) — Rules for `modules/<slice>/` codebases
-- [`references/integrations.md`](references/integrations.md) — Idea Council verdict & `native_swarm` handoff contracts
+- [`references/integrations.md`](references/integrations.md) — Idea Council verdict & parallel worker handoff contracts
 - [`references/source-notice.md`](references/source-notice.md) — Attribution and lineage notice
 
 A planning request ends with the plan. A "plan and execute" request continues directly into implementation.

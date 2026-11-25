@@ -37,8 +37,6 @@ RUNTIME_SCRIPTS = [
     "scripts/skills-doctor.py",
 ]
 
-RUNTIME_AGENT_SCRIPTS: list[str] = []
-
 POLICY_FILES = [
     "suite-policy.json",
 ]
@@ -48,10 +46,19 @@ RULE_FILES = [
     "GEMINI.md",
 ]
 
+def _portable_hook_command() -> str:
+    python_cmd = "python3" if shutil.which("python3") and sys.platform != "win32" else "python"
+    return (
+        f"{python_cmd} -c \"import json,pathlib,runpy; rel='scripts/guard_anti_retry.py'; "
+        "cands=[d/rel for d in [pathlib.Path.cwd(),*pathlib.Path.cwd().parents]]+"
+        "[pathlib.Path.home()/'.gemini'/sub/rel for sub in ('config','antigravity')]; "
+        "hit=next((p for p in cands if p.is_file()),None); "
+        "runpy.run_path(str(hit),run_name='__main__') if hit else print(json.dumps({'decision':'allow'}))\""
+    )
+
 def get_default_hook_template():
     # Pure Python is cross-platform across Windows, Linux, and macOS
-    python_cmd = "python3" if shutil.which("python3") and sys.platform != "win32" else "python"
-    hook_cmd = f"{python_cmd} -c \"import os,runpy; p='scripts/guard_anti_retry.py'; runpy.run_path(p if os.path.exists(p) else '../'+p, run_name='__main__')\""
+    hook_cmd = _portable_hook_command()
     return {
         "evidence-policy": {
             "description": "Lightweight safety invariants (Anti-Retry and mutation hygiene)",
@@ -146,7 +153,7 @@ def copy_skill(
             dest_file = target_dir / file
             if src_file.resolve() != dest_file.resolve():
                 shutil.copy2(src_file, dest_file)
-            rel_manifest_path = str(dest_file.relative_to(dest_root))
+            rel_manifest_path = dest_file.relative_to(dest_root).as_posix()
             manifest_files[rel_manifest_path] = {
                 "action": "created",
                 "sha256": compute_sha256(dest_file),
@@ -184,6 +191,23 @@ def copy_runtime_file(
     }
 
 
+def _normalize_hook_commands(data: dict) -> dict:
+    """Ensure hook commands use a cross-platform Python executable."""
+    if sys.platform != "win32" and shutil.which("python3"):
+        return data
+    ep = data.get("evidence-policy")
+    if isinstance(ep, dict):
+        for phase in ("PreToolUse", "PostToolUse"):
+            entries = ep.get(phase)
+            if isinstance(entries, list):
+                for entry in entries:
+                    if isinstance(entry, dict) and isinstance(entry.get("hooks"), list):
+                        for h in entry["hooks"]:
+                            if isinstance(h, dict) and isinstance(h.get("command"), str) and h["command"].startswith("python3 -c "):
+                                h["command"] = "python -c " + h["command"][len("python3 -c "):]
+    return data
+
+
 def safe_merge_hooks(
     src_hooks_file: Path,
     dest_hooks_file: Path,
@@ -193,16 +217,19 @@ def safe_merge_hooks(
     verbose: bool = False,
 ):
     """Safely merge hooks into dest_hooks_file without overwriting user configuration."""
-    rel_path = str(dest_hooks_file.relative_to(dest_root))
-    
+    rel_path = dest_hooks_file.relative_to(dest_root).as_posix()
+
     # Load source hook data
     if src_hooks_file.exists():
         try:
             src_data = json.loads(src_hooks_file.read_text(encoding="utf-8"))
+            if not isinstance(src_data, dict):
+                src_data = HOOK_TEMPLATE
         except Exception:
             src_data = HOOK_TEMPLATE
     else:
         src_data = HOOK_TEMPLATE
+    src_data = _normalize_hook_commands(json.loads(json.dumps(src_data)))
 
     dest_hooks_file.parent.mkdir(parents=True, exist_ok=True)
 
@@ -210,7 +237,11 @@ def safe_merge_hooks(
         existing_text = dest_hooks_file.read_text(encoding="utf-8")
         try:
             dest_data = json.loads(existing_text)
+            if not isinstance(dest_data, dict):
+                dest_data = {}
         except Exception:
+            if verbose:
+                print(f"⚠️  Existing {dest_hooks_file} is invalid JSON; replacing while preserving original_content in manifest.")
             dest_data = {}
 
         # Preserve original_content from previous manifest if available
@@ -251,7 +282,7 @@ def safe_merge_rules(
     verbose: bool = False,
 ):
     """Safely merge rules into AGENTS.md / GEMINI.md with markers preserving user content."""
-    rel_path = str(dest_rule_file.relative_to(dest_root))
+    rel_path = dest_rule_file.relative_to(dest_root).as_posix()
     if not src_rule_file.exists():
         return
 
@@ -272,8 +303,8 @@ def safe_merge_rules(
             pattern = re.compile(
                 rf"{re.escape(RULES_MARKER_START)}[\s\S]*?{re.escape(RULES_MARKER_END)}"
             )
-            new_text = pattern.sub(marked_block, existing_text)
-        elif "# Antigravity Skills Suite — Routing Rules" in existing_text and len(existing_text.strip().splitlines()) <= 35:
+            new_text = pattern.sub(lambda _m: marked_block, existing_text)
+        elif existing_text.strip() == rule_text:
             # Existing file is identical to standard suite rules without markers
             new_text = marked_block + "\n"
         else:
@@ -306,21 +337,16 @@ def run_install(
     """Execute installation and produce manifest."""
     target_dir = target_dir.resolve()
     
-    # Determine destinations based on mode and target_dir shape
-    if mode == "global":
-        if target_dir.name == "skills":
-            dest_skills_dir = target_dir
-            dest_root = target_dir.parent
-        else:
-            dest_skills_dir = target_dir / "skills"
-            dest_root = target_dir
-    else:  # workspace mode
-        if target_dir.name == "skills":
-            dest_skills_dir = target_dir
-            dest_root = target_dir.parent
-        else:
-            dest_skills_dir = target_dir / "skills"
-            dest_root = target_dir
+    if target_dir.name == "skills":
+        dest_skills_dir = target_dir
+        dest_root = target_dir.parent
+    else:
+        dest_skills_dir = target_dir / "skills"
+        dest_root = target_dir
+
+    if mode == "workspace" and dest_root.resolve() == repo_root.resolve():
+        print("❌ Error: Refusing to install into the source repository root. Pass --target-dir <project_path>.")
+        return 1
 
     if verbose:
         print(f"📦 Installing Antigravity Skills Suite:")
@@ -330,7 +356,7 @@ def run_install(
         print(f"   Source Repo: {repo_root}")
 
     if dry_run:
-        print("🔍 Dry-run enabled: No files will be written.")
+        print(f"🔍 Dry-run enabled: Would install {len(SKILL_INVENTORY)} skills and runtime helpers into {dest_root} (no files written).")
         return 0
 
     dest_root.mkdir(parents=True, exist_ok=True)
@@ -365,16 +391,21 @@ def run_install(
         elif verbose:
             print(f"⚠️  Skipping missing skill: {skill_name}")
 
-    # 2. Install runtime helpers
+    # 2. Install runtime helpers & shared output-policy reference
     for script_rel in RUNTIME_SCRIPTS:
         src_script = repo_root / script_rel
         dest_script = dest_root / script_rel
         copy_runtime_file(src_script, dest_script, dest_root, manifest_files, verbose=verbose)
 
-    for agent_script_rel in RUNTIME_AGENT_SCRIPTS:
-        src_agent_script = repo_root / agent_script_rel
-        dest_agent_script = dest_root / agent_script_rel
-        copy_runtime_file(src_agent_script, dest_agent_script, dest_root, manifest_files, verbose=verbose)
+    output_policy_src = repo_root / "references" / "output-policy.md"
+    if output_policy_src.exists():
+        copy_runtime_file(
+            output_policy_src,
+            dest_skills_dir / "references" / "output-policy.md",
+            dest_root,
+            manifest_files,
+            verbose=verbose,
+        )
 
     # 3. Install suite policy
     for policy_file in POLICY_FILES:
@@ -469,11 +500,17 @@ def run_uninstall(
     candidates = []
     if target_dir:
         td = target_dir.resolve()
-        candidates.extend([
-            td / MANIFEST_FILENAME,
-            td / "skills" / MANIFEST_FILENAME,
-            td.parent / MANIFEST_FILENAME,
-        ])
+        if td.name == "skills":
+            candidates.extend([
+                td.parent / MANIFEST_FILENAME,
+                td / MANIFEST_FILENAME,
+            ])
+        else:
+            candidates.extend([
+                td / MANIFEST_FILENAME,
+                td / "skills" / MANIFEST_FILENAME,
+                td.parent / MANIFEST_FILENAME,
+            ])
 
     candidates.extend([
         Path.cwd() / MANIFEST_FILENAME,
@@ -500,9 +537,9 @@ def run_uninstall(
         print(f"❌ Error reading manifest {manifest_path}: {e}")
         return 1
 
-    dest_root = manifest_path.parent
+    dest_root = manifest_path.parent.resolve()
     if "workspace_root" in manifest_data:
-        root_cand = Path(manifest_data["workspace_root"])
+        root_cand = Path(manifest_data["workspace_root"]).resolve()
         if root_cand.exists():
             dest_root = root_cand
 
@@ -575,6 +612,27 @@ def run_uninstall(
                         break
 
         elif action == "merged":
+            if file_path.suffix == ".json" and "added_keys" in info and file_path.exists():
+                try:
+                    data = json.loads(file_path.read_text(encoding="utf-8"))
+                    if isinstance(data, dict):
+                        for key in info["added_keys"]:
+                            data.pop(key, None)
+                        file_path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+                        restored_files += 1
+                        continue
+                except Exception:
+                    pass
+            if file_path.exists():
+                current_text = file_path.read_text(encoding="utf-8")
+                if RULES_MARKER_START in current_text and RULES_MARKER_END in current_text:
+                    pattern = re.compile(
+                        rf"\n*{re.escape(RULES_MARKER_START)}[\s\S]*?{re.escape(RULES_MARKER_END)}\n*"
+                    )
+                    stripped = pattern.sub("\n", current_text).strip()
+                    file_path.write_text((stripped + "\n") if stripped else "", encoding="utf-8")
+                    restored_files += 1
+                    continue
             if "original_content" in info:
                 try:
                     file_path.write_text(info["original_content"], encoding="utf-8")
@@ -582,15 +640,6 @@ def run_uninstall(
                 except OSError as e:
                     if verbose:
                         print(f"⚠️  Could not restore {file_path}: {e}")
-            elif "added_keys" in info and file_path.suffix == ".json" and file_path.exists():
-                try:
-                    data = json.loads(file_path.read_text(encoding="utf-8"))
-                    for key in info["added_keys"]:
-                        data.pop(key, None)
-                    file_path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
-                    restored_files += 1
-                except Exception:
-                    pass
 
     # If partial uninstall, update manifest file instead of deleting it
     if target_skill_names:

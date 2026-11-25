@@ -1,6 +1,6 @@
 ---
 name: security-verifier
-description: API security, tenant isolation, and boundary threat verifier. Exercises OWASP API Top 10 vulnerabilities (BOLA/IDOR, broken authorization, injection, SSRF, data leaks) using synthetic accounts and deterministic test probes. Trigger on authentication changes, API modifications, database access, uploads, or dependency updates.
+description: API security, tenant isolation, and boundary threat verifier. Exercises OWASP API Top 10 vulnerabilities (BOLA/IDOR, broken authorization, injection, SSRF, data leaks) using synthetic accounts and deterministic test probes. Explicit only — not auto-activated.
 ---
 
 # Security Verifier

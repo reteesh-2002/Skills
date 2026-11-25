@@ -5,7 +5,7 @@ Zero-dependency validator for skill directory conventions, YAML frontmatter,
 context token budgets, and relative file references.
 """
 
-import os
+import json
 import re
 import sys
 from pathlib import Path
@@ -17,28 +17,33 @@ IGNORED_DIRS = {
 
 def parse_frontmatter(content: str):
     """Extract and parse YAML frontmatter between leading --- delimiters."""
+    content = content.lstrip("\ufeff")
     match = re.match(r"^---\s*\n(.*?)\n---\s*\n", content, re.DOTALL)
     if not match:
         return None, content
     raw_fm = match.group(1)
     body = content[match.end():]
-    
+
     data = {}
     current_key = None
     multiline_lines = []
 
     for line in raw_fm.splitlines():
-        # Check if line is indented continuation of a multiline scalar
-        if current_key and (line.startswith("  ") or line.startswith("\t")):
-            multiline_lines.append(line.strip())
+        # Check if line is indented continuation (or blank line inside) a multiline scalar
+        if current_key and (line.startswith("  ") or line.startswith("\t") or not line.strip()):
+            if line.strip():
+                multiline_lines.append(line.strip())
             continue
-        elif current_key and multiline_lines:
+        elif current_key:
             data[current_key] = " ".join(multiline_lines)
             current_key = None
             multiline_lines = []
 
         stripped = line.strip()
         if not stripped or stripped.startswith("#"):
+            continue
+        # Ignore indented nested mapping keys so they don't overwrite top-level keys
+        if line.startswith((" ", "\t")):
             continue
 
         if ":" in line:
@@ -51,24 +56,29 @@ def parse_frontmatter(content: str):
             else:
                 data[key] = val.strip("'\"")
 
-    if current_key and multiline_lines:
+    if current_key:
         data[current_key] = " ".join(multiline_lines)
 
     return data, body
 
-def check_relative_links(skill_dir: Path, skill_file: Path, body: str) -> list[str]:
+def check_relative_links(skill_dir: Path, skill_file: Path, body: str, repo_root: Path | None = None) -> list[str]:
     """Verify that relative markdown links point to existing files on disk."""
     errors = []
-    
-    # Strip fenced code blocks (``` ... ```) so code examples aren't treated as real links
-    clean_body = re.sub(r"```[\s\S]*?```", "", body)
-    # Strip inline code (`...`)
-    clean_body = re.sub(r"`[^`\n]+`", "", clean_body)
 
-    # Match markdown links [text](target)
+    # Strip 4-backtick and 3-backtick fenced code blocks so code examples aren't treated as real links
+    clean_body = re.sub(r"````[\s\S]*?````", "", body)
+    clean_body = re.sub(r"```[\s\S]*?```", "", clean_body)
+    # Strip inline code spans that themselves contain markdown link syntax (e.g., `![alt](./x.png)`)
+    clean_body = re.sub(r"`[^`\n]*\[[^\]]+\]\([^)]+\)[^`\n]*`", "", clean_body)
+
+    # Match markdown links [text](target "optional title")
     link_pattern = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
+    resolved_root = repo_root.resolve() if repo_root else None
     for match in link_pattern.finditer(clean_body):
-        link_target = match.group(2).split("#")[0].strip()
+        raw_target = match.group(2).strip()
+        # Strip optional title ("..." or '...')
+        raw_target = re.sub(r"""\s+["'][^"']*["']\s*$""", "", raw_target)
+        link_target = raw_target.split("#")[0].split("?")[0].strip()
         if not link_target:
             continue
         # Skip external schemes and pseudo-URIs
@@ -76,15 +86,17 @@ def check_relative_links(skill_dir: Path, skill_file: Path, body: str) -> list[s
             continue
 
         target_path = (skill_file.parent / link_target).resolve()
+        if resolved_root and not target_path.is_relative_to(resolved_root):
+            errors.append(f"Relative link escapes repository root in {skill_file.name}: '{link_target}'")
+            continue
         if not target_path.exists():
             errors.append(f"Broken relative link in {skill_file.name}: '{link_target}' (resolved to {target_path})")
-            
+
     return errors
 
 
 def check_policy_parity(repo_root: Path, discovered_skills: list[str]) -> list[str]:
     """Verify suite-policy.json exists, is valid JSON, and matches discovered skill directories."""
-    import json
     policy_path = repo_root / "suite-policy.json"
     if not policy_path.exists():
         return ["suite-policy.json not found — cannot validate policy parity"]
@@ -94,12 +106,24 @@ def check_policy_parity(repo_root: Path, discovered_skills: list[str]) -> list[s
     except Exception as e:
         return [f"suite-policy.json is not valid JSON: {e}"]
 
-    explicit_only = set(policy.get("activation_modes", {}).get("explicit_only", []))
-    auto_skills = {entry["skill"] for entry in policy.get("activation_modes", {}).get("auto", [])}
+    explicit_list = policy.get("activation_modes", {}).get("explicit_only", [])
+    auto_entries = policy.get("activation_modes", {}).get("auto", [])
+    explicit_only = set(explicit_list)
+    auto_skills = set()
+    errors = []
+    for entry in auto_entries:
+        if not isinstance(entry, dict) or "skill" not in entry:
+            errors.append(f"Malformed auto activation entry in suite-policy.json: {entry!r}")
+            continue
+        auto_skills.add(entry["skill"])
+
+    overlap = sorted(explicit_only & auto_skills)
+    if overlap:
+        errors.append(f"suite-policy.json lists skill(s) in both auto and explicit_only: {', '.join(overlap)}")
+
     policy_skills = explicit_only | auto_skills
     disk_skills = set(discovered_skills)
 
-    errors = []
     for missing in sorted(policy_skills - disk_skills):
         errors.append(f"suite-policy.json lists '{missing}' but directory does not exist")
     for extra in sorted(disk_skills - policy_skills):
@@ -127,6 +151,21 @@ def main():
     print(f"🔍 Validating {len(skills)} Antigravity skills in {repo_root}...\n")
     print(f"{'Skill Name':<32} {'Tokens':<10} {'Size':<10} {'Status'}")
     print("-" * 65)
+
+    min_tokens = 150
+    max_tokens = 1500
+    policy_file = repo_root / "suite-policy.json"
+    if policy_file.is_file():
+        try:
+            policy_data = json.loads(policy_file.read_text(encoding="utf-8"))
+            target_cfg = policy_data.get("token_targets", {}).get("ordinary_entrypoints_estimated_tokens", {})
+            if isinstance(target_cfg, dict):
+                min_tokens = int(target_cfg.get("min", min_tokens))
+                max_tokens = int(target_cfg.get("max", max_tokens))
+            elif isinstance(target_cfg, (int, float)):
+                max_tokens = int(target_cfg)
+        except Exception:
+            pass
 
     for skill_dir in skills:
         skill_file = skill_dir / "SKILL.md"
@@ -156,11 +195,12 @@ def main():
             elif len(desc) < 20:
                 skill_errors.append(f"Description is too brief ({len(desc)} characters, minimum 20)")
 
-        link_errors = check_relative_links(skill_dir, skill_file, body)
+        link_errors = check_relative_links(skill_dir, skill_file, body, repo_root=repo_root)
         skill_errors.extend(link_errors)
 
-        max_tokens = 1500
-        if est_tokens > max_tokens:
+        if est_tokens < min_tokens:
+            skill_errors.append(f"SKILL.md is below minimum token budget ({est_tokens} < {min_tokens})")
+        elif est_tokens > max_tokens:
             skill_errors.append(f"SKILL.md exceeds token budget ({est_tokens} > {max_tokens})")
 
         stale_patterns = (
@@ -180,7 +220,7 @@ def main():
             files_to_scan.extend(ref_mds)
             skill_text_norm = content.replace("\\", "/")
             for ref_md in ref_mds:
-                link_errors_ref = check_relative_links(skill_dir, ref_md, ref_md.read_text(encoding="utf-8"))
+                link_errors_ref = check_relative_links(skill_dir, ref_md, ref_md.read_text(encoding="utf-8"), repo_root=repo_root)
                 skill_errors.extend(link_errors_ref)
                 rel_ref = ref_md.relative_to(skill_dir).as_posix()
                 if rel_ref not in skill_text_norm:
@@ -209,11 +249,14 @@ def main():
             print(f"  - {err}")
         errors.extend(drift_errors)
 
-    # Root docs stale-reference scan
+    # Root docs stale-reference scan (exclude CHANGELOG.md, which documents historical removals)
     root_docs = [
         repo_root / "README.md",
         repo_root / "REQUIREMENTS.md",
         repo_root / "CONTRIBUTING.md",
+        repo_root / "AGENTS.md",
+        repo_root / "GEMINI.md",
+        repo_root / "suite-policy.json",
         repo_root / "references" / "output-policy.md",
     ]
     for doc in root_docs:
@@ -222,6 +265,15 @@ def main():
             for pat in stale_patterns:
                 if pat in doc_text:
                     errors.append(f"[{doc.relative_to(repo_root)}] Stale deleted reference '{pat}'")
+
+    hooks_file = repo_root / ".agents" / "hooks.json"
+    if hooks_file.is_file():
+        try:
+            hooks_data = json.loads(hooks_file.read_text(encoding="utf-8"))
+            if not isinstance(hooks_data, dict) or "evidence-policy" not in hooks_data:
+                errors.append("[.agents/hooks.json] Missing top-level 'evidence-policy' object")
+        except Exception as e:
+            errors.append(f"[.agents/hooks.json] Invalid JSON: {e}")
 
     if errors:
         print(f"\n❌ Validation failed with {len(errors)} error(s):")

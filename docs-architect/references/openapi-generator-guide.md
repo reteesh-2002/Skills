@@ -98,33 +98,51 @@ components:
 
   responses:
     BadRequestError:
-      description: Malformed payload or validation error
+      description: Malformed payload or validation error (RFC 7807 Problem Details)
       content:
-        application/json:
+        application/problem+json:
           schema:
             type: object
-            required: [error, details]
+            required: [type, title, status]
             properties:
-              error:
+              type:
                 type: string
-                example: Validation failed
-              details:
-                type: array
-                items:
-                  type: string
+                example: "https://example.com/probs/validation-error"
+              title:
+                type: string
+                example: "Validation failed"
+              status:
+                type: integer
+                example: 400
+              detail:
+                type: string
+                example: "One or more fields failed validation."
 
     UnauthorizedError:
-      description: Missing or expired authentication token
+      description: Missing or expired authentication token (RFC 7807 Problem Details)
       content:
-        application/json:
+        application/problem+json:
           schema:
             type: object
-            required: [error]
+            required: [type, title, status]
             properties:
-              error:
+              type:
                 type: string
-                example: Unauthorized access
+                example: "https://example.com/probs/unauthorized"
+              title:
+                type: string
+                example: "Unauthorized"
+              status:
+                type: integer
+                example: 401
+              detail:
+                type: string
+                example: "Missing or expired bearer token."
 ```
+
+### Contract-to-OpenAPI Mapping Patterns
+- **Zod (`contract.ts`)**: Map `z.object(...)` → `type: object` (`required` for non-optional keys), `z.enum([...])` → `enum`, `z.string().uuid()` → `format: uuid`, `z.string().datetime()` → `format: date-time`.
+- **Pydantic**: Export `model_json_schema()` or FastAPI's `app.openapi()` directly into `components.schemas`.
 
 ---
 

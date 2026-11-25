@@ -39,7 +39,7 @@ Target: Solo Executor | Mode: [Planning only / Execution authorized]
 
 Use for features, multi-phase systems, or parallel multi-worker tasks. Position the **Executive Card** and **1-Click Execution Prompt** at the very top.
 
-```markdown
+````markdown
 # [Project or Feature] Plan
 Revision: [v1.0] | Mode: [Planning only / Execution authorized] | Target: [Solo / swarm]
 
@@ -94,7 +94,7 @@ graph TD
 
 ### 🚀 Immediate Next Action
 [First ready task ID and required input.]
-```
+````
 
 ---
 
@@ -150,7 +150,7 @@ Proceed to full feature build only when all Remediation tasks R1..Rn pass verifi
 
 ---
 
-## 5. Scoped Task Brief for Orchestrator Worker
+## 5. Scoped Task Brief for Parallel Worker
 
 ```text
 Task and Plan Revision: [Tn, revision].

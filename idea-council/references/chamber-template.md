@@ -16,12 +16,12 @@ The Chair initializes `<artifact_dir>/council-deliberation.md` at Round 1 dispat
 
 | Seat / Role | Model | Round 1 Stance | Key Interrogation & Peer Clash | Final Stance | Confidence |
 | :--- | :---: | :---: | :--- | :---: | :---: |
-| **Product Visionary & Moat Maximizer** | `flash` | 🟢 **Go Ahead** | Demands 10x differentiation; challenged on defensibility | 🟢 **Go Ahead** | High |
-| **Red-Team Inquisitor** | `flash` | 🔴 **Drop It** | Highlighted 3-month failure mode; challenged on false assumptions | 🟠 **Fix First** | High |
-| **Battle-Hardened Principal Architect** | `flash` | 🟡 **Test First** | Challenged upstream churn & 3 AM on-call operational failure blast | 🟡 **Test First** | High |
-| **Ruthless User Proxy** | `flash` | 🟠 **Fix First** | Flagged 5-second attention span drop-off & onboarding friction | 🟡 **Test First** | High |
-| **Scrappy CFO & Scope Surgeon** | `flash` | 🟡 **Test First** | Cut 60% of bloated scope; demanded weekend MVP | 🟢 **Go Ahead** | High |
-| **Paranoid SecOps & Empirical Auditor** | `flash` | 🟠 **Fix First** | Demanded zero-trust boundary & rate-limit fallback proof | 🟡 **Test First** | High |
+| **Product Visionary & Moat Maximizer** | `<model>` | `<R1 Stance>` | `<Summary of key challenge>` | `<Final Stance>` | `<High/Med/Low>` |
+| **Red-Team Inquisitor** | `<model>` | `<R1 Stance>` | `<Summary of key challenge>` | `<Final Stance>` | `<High/Med/Low>` |
+| **Battle-Hardened Principal Architect** | `<model>` | `<R1 Stance>` | `<Summary of key challenge>` | `<Final Stance>` | `<High/Med/Low>` |
+| **Ruthless User Proxy** | `<model>` | `<R1 Stance>` | `<Summary of key challenge>` | `<Final Stance>` | `<High/Med/Low>` |
+| **Scrappy CFO & Scope Surgeon** | `<model>` | `<R1 Stance>` | `<Summary of key challenge>` | `<Final Stance>` | `<High/Med/Low>` |
+| **Paranoid SecOps & Auditor** | `<model>` | `<R1 Stance>` | `<Summary of key challenge>` | `<Final Stance>` | `<High/Med/Low>` |
 
 ---
 

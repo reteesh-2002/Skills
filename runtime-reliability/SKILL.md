@@ -1,6 +1,6 @@
 ---
 name: runtime-reliability
-description: Operational resilience, database migration rehearsal, memory soak, and graceful lifecycle verifier. Rehearses zero-downtime expand/contract schema migrations, executes memory leak soak tests under load, and validates graceful shutdown signal handling. Trigger on database migrations, background queues, infrastructure changes, or performance-critical paths.
+description: Operational resilience, database migration rehearsal, memory soak, and graceful lifecycle verifier. Rehearses expand/contract schema migrations, executes memory leak soak tests under load, and validates graceful shutdown signal handling. Explicit only — not auto-activated.
 ---
 
 # Runtime Reliability

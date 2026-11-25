@@ -1,6 +1,6 @@
 # Vertical Slice Architecture Template
 
-Use this reference when `create-architect` produces the module directory scaffold for Decision 3b. Every project — from a 2,000-line prototype to a 50,000-line production system — adopts this layout so that the agent never needs more than 600 lines in context per task.
+Use this reference when `create-architect` produces the module directory scaffold for Decision 3b in multi-domain applications (small `< 3–5` endpoint apps keep cohesive flat files). This layout keeps each task's working context bounded.
 
 ---
 
@@ -18,7 +18,7 @@ src/
     ├── <slice-a>/                 # Example: "billing"
     │   ├── contract.ts            # Frozen public interface (< 50 lines)
     │   ├── routes.ts              # HTTP / RPC handlers
-    │   ├── service.ts             # Pure domain logic (< 200 lines)
+    │   ├── service.ts             # Pure domain logic (~150–350 lines typical)
     │   └── billing.test.ts        # Colocated integration tests
     │
     ├── <slice-b>/                 # Example: "portfolio"

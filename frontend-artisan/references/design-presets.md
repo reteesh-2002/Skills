@@ -29,7 +29,7 @@ When creating a new design system, building UI, or restyling an application with
 - **Canvas**: Pure `#000000` · Cards: `#0a0a0a` · Borders: `#1f1f1f` · Text: `#ffffff`
 - **Typography**: Geist Sans & Geist Mono, high-contrast monochrome hierarchy
 - **Accents**: Pure black and white contrast; zero colored badge clutter
-- **Status**: Crisp semantic indicators (Green dot `#0070f3` or `#50e3c2`), high-contrast pill action buttons
+- **Status**: Crisp semantic indicators (Accent dot `#0070f3` blue or `#50e3c2` teal), high-contrast pill action buttons
 
 ---
 

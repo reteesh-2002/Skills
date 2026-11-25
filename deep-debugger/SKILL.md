@@ -41,3 +41,6 @@ Conclude with a clean, focused summary:
 - **Root Cause**: Concrete mechanism and file link (`path/to/file:L12-15`).
 - **Surgical Fix**: 1-sentence summary of the minimal change.
 - **Verification**: Command executed and passing result (`exit code 0`).
+
+### Intermediate Milestone:
+`✓ [deep-debugger]: Root cause fixed & verified (exit 0)`

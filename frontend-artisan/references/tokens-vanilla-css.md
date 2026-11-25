@@ -134,7 +134,7 @@ For projects built with **pure HTML & CSS** (no Tailwind, no Node/Vite build ste
   text-transform: uppercase;
   letter-spacing: 0.05em;
   background-color: var(--brutalist-accent);
-  color: #ffffff;
+  color: #000000; /* 6.78:1 contrast on #ff5a36 (passes WCAG AA) */
   border: var(--brutalist-border);
   border-radius: 0.5rem;
   box-shadow: var(--brutalist-shadow);

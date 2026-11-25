@@ -16,7 +16,7 @@ Act as a neutral meeting chair. Convene real subagents, collect independent pers
 - **Council Modes & Parameterized Rosters**:
   - **Full Council (6 Seats, Default)**: Used for major architectural, product, or strategic decisions.
   - **Express Council (3 Seats)**: Used for fast reviews or constrained concurrency. Uses Product Visionary, Red-Team Inquisitor, and Principal Architect.
-- **Model Tiering**: When host exposes model selection (e.g. Antigravity), dispatch participants on lighter models (e.g. `flash`), while the Chair coordinates and synthesizes on the primary model (`inherit` / `pro`).
+- **Model Tiering**: When the host exposes model selection (see [references/host-adapter.md](references/host-adapter.md)), dispatch participants on faster/lighter models while the Chair synthesizes on the primary model.
 - **Optional Live Deliberation Artifact**: In hosts supporting artifacts, generating a user-facing live markdown artifact `council-deliberation.md` (read [references/chamber-template.md](references/chamber-template.md)) is **optional**. Create it when requested or useful for tracking; routine deliberations can present findings directly in chat.
 
 ---
@@ -82,14 +82,14 @@ Deliver an actionable, prioritized decision record:
 
 1. **Executive Verdict & Decision Record**:
    ```markdown
-   ┌──────────────────────────────────────────────────────────────┐
-   │ VERDICT: [Go Ahead / Test First / Fix First / On Hold / Drop It]
-   │ RECOMMENDATION: [Concrete 1-sentence product/architectural directive]
-   │ STRONGEST OBJECTION: [Most serious material risk raised by council]
-   │ REVERSAL CONDITIONS: [Specific empirical evidence that flips the verdict]
-   │ UNRESOLVED EVIDENCE: [Data or tests currently unknown]
-   │ NEXT ACTION: [Immediate concrete next step]
-   └──────────────────────────────────────────────────────────────┘
+   ┌────────────────────────────────────────────────────────────────────┐
+   │ VERDICT: [Go Ahead / Test First / Fix First / On Hold / Drop It]   │
+   │ RECOMMENDATION: [Concrete 1-sentence directive]                    │
+   │ STRONGEST OBJECTION: [Most serious material risk raised]           │
+   │ REVERSAL CONDITIONS: [Empirical evidence that flips the verdict]   │
+   │ UNRESOLVED EVIDENCE: [Data or tests currently unknown]             │
+   │ NEXT ACTION: [Immediate concrete next step]                        │
+   └────────────────────────────────────────────────────────────────────┘
    ```
    > [!IMPORTANT]
    > **Authorization Boundary**: A favorable council verdict (`Go Ahead` / `Test First`) does **not** automatically authorize code implementation. The decision record is presented to the user for explicit approval before invoking any implementation skill.

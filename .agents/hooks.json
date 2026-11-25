@@ -8,7 +8,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 -c \"import os,runpy; p='scripts/guard_anti_retry.py'; runpy.run_path(p if os.path.exists(p) else '../'+p, run_name='__main__')\"",
+            "command": "python3 -c \"import json,pathlib,runpy; rel='scripts/guard_anti_retry.py'; cands=[d/rel for d in [pathlib.Path.cwd(),*pathlib.Path.cwd().parents]]+[pathlib.Path.home()/'.gemini'/sub/rel for sub in ('config','antigravity')]; hit=next((p for p in cands if p.is_file()),None); runpy.run_path(str(hit),run_name='__main__') if hit else print(json.dumps({'decision':'allow'}))\"",
             "timeout": 5
           }
         ]
@@ -21,7 +21,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 -c \"import os,runpy; p='scripts/guard_anti_retry.py'; runpy.run_path(p if os.path.exists(p) else '../'+p, run_name='__main__')\"",
+            "command": "python3 -c \"import json,pathlib,runpy; rel='scripts/guard_anti_retry.py'; cands=[d/rel for d in [pathlib.Path.cwd(),*pathlib.Path.cwd().parents]]+[pathlib.Path.home()/'.gemini'/sub/rel for sub in ('config','antigravity')]; hit=next((p for p in cands if p.is_file()),None); runpy.run_path(str(hit),run_name='__main__') if hit else print(json.dumps({'decision':'allow'}))\"",
             "timeout": 5
           }
         ]

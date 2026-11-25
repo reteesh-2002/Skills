@@ -90,9 +90,9 @@ playwright-cli run-code "async page => {
 ## Wait Strategies
 
 ```bash
-# Wait for network idle
+# Wait for DOMContentLoaded (prefer locator/response waits over 'networkidle')
 playwright-cli run-code "async page => {
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
 }"
 
 # Wait for specific element

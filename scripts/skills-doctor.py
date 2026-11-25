@@ -31,11 +31,14 @@ def load_skill_inventory() -> list[str]:
         Path.cwd() / "suite-policy.json",
     ):
         if candidate.exists():
-            data = json.loads(candidate.read_text(encoding="utf-8"))
-            auto = [e["skill"] for e in data.get("activation_modes", {}).get("auto", [])]
-            explicit = data.get("activation_modes", {}).get("explicit_only", [])
-            if auto or explicit:
-                return auto + explicit
+            try:
+                data = json.loads(candidate.read_text(encoding="utf-8"))
+                auto = [e["skill"] for e in data.get("activation_modes", {}).get("auto", [])]
+                explicit = data.get("activation_modes", {}).get("explicit_only", [])
+                if auto or explicit:
+                    return auto + explicit
+            except Exception:
+                continue
     return [
         "deep-debugger", "plan-master", "qa-sentinel",
         "create-architect", "frontend-artisan", "schema-craft",
@@ -159,7 +162,7 @@ def check_hooks(project_dir: Path) -> dict:
             "message": f"Invalid JSON syntax in {hooks_path.name}: {e}",
         }
 
-    has_evidence_policy = "evidence-policy" in data
+    has_evidence_policy = isinstance(data, dict) and "evidence-policy" in data
     if has_evidence_policy:
         return {
             "status": "ok",
@@ -176,7 +179,7 @@ def check_hooks(project_dir: Path) -> dict:
             "path": str(hooks_path),
             "evidence_policy_configured": False,
             "critical": True,
-            "message": "hooks.json missing 'evidence-policy' release gate interception",
+            "message": "hooks.json missing 'evidence-policy' guard",
         }
 
 
@@ -247,13 +250,11 @@ def check_optional_tools() -> dict:
 
 
 def check_skills(project_dir: Path) -> dict:
-    """Inspect presence of suite skills."""
+    """Inspect presence of suite skills in the target project directory."""
     search_dirs = [
         project_dir / "skills",
         project_dir,
         project_dir / ".agents" / "skills",
-        Path.home() / ".gemini" / "config" / "skills",
-        Path.home() / ".gemini" / "antigravity" / "skills",
     ]
 
     found = set()
@@ -414,57 +415,65 @@ def heal_environment(project_dir: Path) -> list[str]:
                 except Exception:
                     pass
 
-    # 3. Hooks configuration repair
+    # 3. Hooks configuration repair (merge evidence-policy without wiping existing user hooks)
     hooks_file = project_dir / ".agents" / "hooks.json"
+    existing_data = None
     needs_hooks = False
     if not hooks_file.exists():
         needs_hooks = True
     else:
         try:
-            content = json.loads(hooks_file.read_text(encoding="utf-8"))
-            if "evidence-policy" not in content:
+            loaded = json.loads(hooks_file.read_text(encoding="utf-8"))
+            if isinstance(loaded, dict):
+                existing_data = loaded
+                if "evidence-policy" not in loaded:
+                    needs_hooks = True
+            else:
                 needs_hooks = True
         except Exception:
             needs_hooks = True
 
     if needs_hooks:
+        python_bin = "python3" if shutil.which("python3") and sys.platform != "win32" else "python"
+        hook_cmd = (
+            f"{python_bin} -c \"import json,pathlib,runpy; rel='scripts/guard_anti_retry.py'; "
+            "cands=[d/rel for d in [pathlib.Path.cwd(),*pathlib.Path.cwd().parents]]+"
+            "[pathlib.Path.home()/'.gemini'/sub/rel for sub in ('config','antigravity')]; "
+            "hit=next((p for p in cands if p.is_file()),None); "
+            "runpy.run_path(str(hit),run_name='__main__') if hit else print(json.dumps({'decision':'allow'}))\""
+        )
         source_hooks = source_root / ".agents" / "hooks.json"
+        template_data = None
         if source_hooks.exists():
-            shutil.copy2(source_hooks, hooks_file)
-            actions.append("Restored .agents/hooks.json from suite template")
-        else:
-            python_bin = "python3" if shutil.which("python3") and sys.platform != "win32" else "python"
-            hook_cmd = f"{python_bin} -c \"import os,runpy; p='scripts/guard_anti_retry.py'; runpy.run_path(p if os.path.exists(p) else '../'+p, run_name='__main__')\""
-            default_hooks = {
+            try:
+                parsed = json.loads(source_hooks.read_text(encoding="utf-8"))
+                if isinstance(parsed, dict) and "evidence-policy" in parsed:
+                    template_data = parsed
+            except Exception:
+                template_data = None
+
+        if template_data is None:
+            template_data = {
                 "evidence-policy": {
-                    "PreToolUse": [
-                        {
-                            "matcher": "run_command",
-                            "hooks": [
-                                {
-                                    "type": "command",
-                                    "command": hook_cmd,
-                                    "timeout": 5
-                                }
-                            ]
-                        }
-                    ],
-                    "PostToolUse": [
-                        {
-                            "matcher": "*",
-                            "hooks": [
-                                {
-                                    "type": "command",
-                                    "command": hook_cmd,
-                                    "timeout": 5
-                                }
-                            ]
-                        }
-                    ]
+                    "PreToolUse": [{"matcher": "run_command", "hooks": [{"type": "command", "command": hook_cmd, "timeout": 5}]}],
+                    "PostToolUse": [{"matcher": "*", "hooks": [{"type": "command", "command": hook_cmd, "timeout": 5}]}],
                 }
             }
-            hooks_file.write_text(json.dumps(default_hooks, indent=2), encoding="utf-8")
-            actions.append("Created default .agents/hooks.json with evidence-policy")
+        elif sys.platform == "win32" or not shutil.which("python3"):
+            ep = template_data.get("evidence-policy", {})
+            for phase in ("PreToolUse", "PostToolUse"):
+                for entry in ep.get(phase, []):
+                    for h in entry.get("hooks", []):
+                        if isinstance(h.get("command"), str) and h["command"].startswith("python3 -c "):
+                            h["command"] = "python -c " + h["command"][len("python3 -c "):]
+
+        if isinstance(existing_data, dict):
+            existing_data["evidence-policy"] = template_data["evidence-policy"]
+            hooks_file.write_text(json.dumps(existing_data, indent=2) + "\n", encoding="utf-8")
+            actions.append("Merged evidence-policy into existing .agents/hooks.json")
+        else:
+            hooks_file.write_text(json.dumps(template_data, indent=2) + "\n", encoding="utf-8")
+            actions.append("Restored .agents/hooks.json with evidence-policy")
 
     return actions
 
@@ -478,6 +487,12 @@ def main():
         type=Path,
         default=Path("."),
         help="Target project directory to diagnose (defaults to current directory)",
+    )
+    parser.add_argument(
+        "--global",
+        dest="is_global",
+        action="store_true",
+        help="Diagnose global Antigravity config (~/.gemini/config or ~/.gemini/antigravity)",
     )
     parser.add_argument(
         "--json",
@@ -496,7 +511,12 @@ def main():
     )
 
     args = parser.parse_args()
-    project_dir = args.project_dir.resolve()
+    if args.is_global:
+        cfg_dir = Path.home() / ".gemini" / "config"
+        agy_dir = Path.home() / ".gemini" / "antigravity"
+        project_dir = (cfg_dir if (cfg_dir / "skills").exists() or cfg_dir.exists() else agy_dir).resolve()
+    else:
+        project_dir = args.project_dir.resolve()
 
     repairs_applied = []
     if args.fix:

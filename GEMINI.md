@@ -26,5 +26,5 @@ These activate only when the user explicitly requests them or invokes their slas
 
 ## Output defaults
 
-See `suite-policy.json` → `output_defaults` for per-context defaults.
+See `suite-policy.json` → `output_defaults` & `effort_profiles` (`quick`, `standard`, `thorough`) and [`references/output-policy.md`](references/output-policy.md).
 An explicit blueprint request receives all 5 core engineering decisions.

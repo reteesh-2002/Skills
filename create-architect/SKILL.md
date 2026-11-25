@@ -1,6 +1,6 @@
 ---
 name: create-architect
-description: Pragmatic project design and architecture engine. Translates raw ideas into concrete engineering decisions (Data Flow, Tech Stack, Data Model/Schema, API contracts, and the 4 mandatory UI states). Enforces an Inside-Out build sequence (DB -> API -> UI -> Verify). Use when designing or architecting a new project or major feature.
+description: Pragmatic project design and architecture engine. Translates raw ideas into concrete engineering decisions (Data Flow, Tech Stack, Data Model/Schema, API contracts, and the 4 mandatory UI states). Enforces an Inside-Out build sequence (DB -> API -> UI -> Verify). Explicit only — not auto-activated.
 ---
 
 # Create Architect
@@ -13,9 +13,8 @@ Translate raw ideas into an **Inside-Out Engineering Blueprint** — a grounded,
 
 ## 1. Activation and Boundaries
 
-**Activate when the user asks to:**
-- Design, architect, structure, or plan a new project, application, or system from scratch.
-- Direct invocation: `$create-architect`, `@create-architect`.
+**Activate only when explicitly requested:**
+- Direct invocation (`$create-architect`, `@create-architect`) or an explicit request for a 5-decision Engineering Blueprint. (Ordinary "plan", "architect", or "build" requests route to `plan-master`.)
 
 **Do not activate for:**
 - Bug fixes, single-file edits, or small refactors → use `deep-debugger` or implement directly.
@@ -44,16 +43,15 @@ Trace how information moves like water through a pipe:
 Select the simplest, battle-tested stack matching the requirements:
 - **Backend / API**: Node/TypeScript (Next.js App Router, Express) or Python (FastAPI, Django).
 - **Database**: PostgreSQL (relational integrity, migrations) or SQLite (lightweight/local prototypes).
-- **Frontend**: React + Tailwind CSS.
-- **Design Aesthetic & Motion**: Select from [`frontend-artisan/references/design-presets.md`](../frontend-artisan/references/design-presets.md) (e.g. *Linear Dark*, *Apple Glass*, *Stripe*) and [`frontend-artisan/references/motion-effects.md`](../frontend-artisan/references/motion-effects.md) (e.g. *Multi-Layer Parallax*, *Sticky Cards*).
+- **Frontend**: React + Tailwind CSS (when UI-facing).
+- **Design Aesthetic & Motion** *(UI-facing apps only)*: Select from [`frontend-artisan/references/design-presets.md`](../frontend-artisan/references/design-presets.md) and [`frontend-artisan/references/motion-effects.md`](../frontend-artisan/references/motion-effects.md).
 
 ### Decision 3: Data Model, Schema & Vertical Slice Layout (The Backbone)
-Software is mostly views over a database. Define entities, relationships, seed data, **and** the module directory structure:
+Define entities, relationships, seed data, **and** module layout:
 
 **3a. Relational Schema:**
-- Tables, column data types, foreign keys, and cascading delete behaviors.
-- Validation constraints (unique keys, not-null, check constraints).
-- **Mandatory Seed Data**: Specify 2–3 realistic records so development never starts against empty tables.
+- Tables, column types, foreign keys, cascading delete behaviors, and validation constraints.
+- **Representative Seed Data**: Specify 2–3 realistic records when initializing stateful tables.
 
 **3b. Vertical Slice Module Layout (for multi-module / growing apps):**
 For small single-purpose apps (< 3–5 endpoints), keep cohesive flat files instead of scaffolding empty directories. For multi-domain apps, adopt a domain-bounded vertical slice structure — not flat layers (`controllers/`, `models/`):
@@ -79,7 +77,7 @@ src/
 
 See [`references/vertical-slice-template.md`](references/vertical-slice-template.md) for the full scaffold with contract stubs.
 
-### Decision 4: API, 4 Screen States Contract & The Missing 70%
+### Decision 4: API, 4 Screen States Contract & Defensive Layers
 **4a. API Endpoints:**
 - Clear HTTP methods and payloads (`GET /api/items`, `POST /api/items`, `PATCH /api/items/:id`).
 
@@ -97,9 +95,9 @@ Apply only the defensive layers the project actually requires today (every API n
 | **Tenant Scoping & RLS** | Every query filtered by `tenant_id` / `org_id`; database Row-Level Security | Multi-user or SaaS apps |
 | **Explicit State Machines** | Enumerated valid transitions with guard validation (`Draft → Approved`) | Multi-step workflows |
 | **Background Jobs & Retry Queue** | Outbox pattern; idempotent async retries with dead-letter handling | Emails, webhooks, long tasks |
-| **Immutable Audit Ledger** | Append-only table: actor, action, resource, timestamp | Any state-mutating write |
+| **Immutable Audit Ledger** | Append-only table: actor, action, resource, timestamp | Multi-user or compliance-sensitive writes |
 | **Input Sanitization Boundaries** | Zod/Pydantic at every API boundary; reject unexpected fields | All endpoints |
-| **RBAC / Permission Guards** | Route-level role checks; deny-by-default middleware | Any authenticated surface |
+| **RBAC / Permission Guards** | Route-level role checks; deny-by-default middleware | Apps with roles or permissions |
 
 ### Decision 5: Inside-Out Build Sequence
 Order tasks strictly from the ground up:
@@ -117,7 +115,7 @@ When activated, produce an **Engineering Blueprint** adhering to [`references/bl
 2. **Data Flow**: Inflow → Transformation → Storage → Outflow.
 3. **Tech Stack**: Backend, Database, Frontend, Design Preset, and Motion Style.
 4. **Data Model & Module Layout**: SQL/ORM schemas with foreign keys, seed data, and vertical slice directory scaffold.
-5. **API, 4 UI States & Missing 70%**: Endpoint contract, UI states, and required defensive layers.
+5. **API, 4 UI States & Defensive Layers**: Endpoint contract, UI states, and required defensive layers.
 6. **Inside-Out Sequence**: Clear phased order ready for `plan-master`.
 
 ---
@@ -125,6 +123,6 @@ When activated, produce an **Engineering Blueprint** adhering to [`references/bl
 ## Reference files
 
 - [`references/blueprint-template.md`](references/blueprint-template.md) — Inside-Out Engineering Blueprint template
-- [`references/vertical-slice-template.md`](references/vertical-slice-template.md) — Vertical slice scaffold with contract.ts stubs and Missing 70% schema
+- [`references/vertical-slice-template.md`](references/vertical-slice-template.md) — Vertical slice scaffold with contract.ts stubs and defensive layers
 - [`../frontend-artisan/references/design-presets.md`](../frontend-artisan/references/design-presets.md) — 11 brand design presets
 - [`../frontend-artisan/references/motion-effects.md`](../frontend-artisan/references/motion-effects.md) — Parallax, sticky stacking, 3D tilt effects

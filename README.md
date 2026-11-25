@@ -20,8 +20,9 @@ A modular software engineering toolkit and skills suite for **Google Antigravity
 Use the suite installer to cleanly install the 14 skills and runtime helpers with manifest tracking:
 
 #### Option A: Workspace Installation (Single Project)
+Run from the cloned Skills repo pointing `--target-dir` at your project (do not run `--workspace` inside the Skills repo root itself):
 ```bash
-python3 scripts/install-skills.py --workspace
+python3 scripts/install-skills.py --workspace --target-dir /path/to/your-project
 ```
 
 #### Option B: Global Installation (All Antigravity Workspaces)
@@ -45,7 +46,7 @@ python3 scripts/install-skills.py --global --uninstall --dry-run
 #### Option D: Health Check & Self-Healing via Skills Doctor
 Run the diagnostic doctor to audit runtime helpers, hooks, and tool availability:
 ```bash
-# Diagnostic audit
+# Diagnostic audit (pass --project-dir /path/to/your-project for external workspaces)
 python3 scripts/skills-doctor.py
 
 # Self-healing auto-repair (recreates missing hooks, directories, and executable bits)
@@ -169,12 +170,14 @@ The remaining 11 skills activate **only** when explicitly requested by name or s
 Implemented in [`create-architect`](create-architect/SKILL.md) with canonical template in [`references/blueprint-template.md`](create-architect/references/blueprint-template.md), this standard ensures grounded technical clarity before code is written:
 
 ```markdown
-1. Executive Intent           # Goal and target user
-2. Data Flow Architecture     # Inflow -> Transformation -> Storage -> Outflow
-3. Pragmatic Tech Stack       # Backend, Database, Frontend, Design Preset & Motion Style
-4. Data Model & Schemas       # Relational schemas, constraints, foreign keys, mandatory seed data
-5. API & 4 UI States Contract # Endpoints + Empty, Loading, Success, Error states
-6. Inside-Out Build Sequence  # Phase 1: DB -> Phase 2: API -> Phase 3: UI -> Phase 4: Verify
+Executive Intent                  # Goal and target user
+1. Data Flow Architecture         # Inflow -> Transformation -> Storage -> Outflow
+2. Pragmatic Tech Stack           # Backend, Database, Frontend, Design Preset & Motion Style
+3. Data Model & Schemas           # Relational schemas, constraints, foreign keys, seed data
+4. API & 4 UI States Contract     # Endpoints + Empty, Loading, Success, Error states
+5. Inside-Out Build Sequence      # Phase 1: DB -> Phase 2: API -> Phase 3: UI -> Phase 4: Verify
+6. Module Directory Scaffold      # Vertical Slice Layout (for multi-domain apps)
+7. Defensive Layers               # Proportional security, state machines, and reliability guards
 ```
 
 
@@ -191,6 +194,11 @@ Implemented in [`create-architect`](create-architect/SKILL.md) with canonical te
 | [`REQUIREMENTS.md`](REQUIREMENTS.md) | System binary and optional tool requirements for the 14-skill suite. |
 | [`CHANGELOG.md`](CHANGELOG.md) | Version history and release notes. |
 | [`README.md`](README.md) | Master documentation, quick start, architecture, and file directory. |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | Contributor guidelines, frontmatter rules, and testing requirements. |
+| [`LICENSE`](LICENSE) | MIT License for the repository. |
+| [`.gitignore`](.gitignore) | Ignored runtime artifacts (`.evidence/`, caches, temp files). |
+| [`.github/workflows/validate.yml`](.github/workflows/validate.yml) | CI workflow running `py_compile`, `validate-skills.py`, `skills-doctor.py`, and `unittest`. |
+| [`references/output-policy.md`](references/output-policy.md) | Shared output formatting and effort-profile contract. |
 | [`.agents/hooks.json`](.agents/hooks.json) | Lightweight hook configuration running `guard_anti_retry.py`. |
 
 ### 2. Core Scripts (`scripts/`)
@@ -205,6 +213,7 @@ Implemented in [`create-architect`](create-architect/SKILL.md) with canonical te
 | Test File | Type | Focus & Scenarios |
 | :--- | :---: | :--- |
 | [`test_install_doctor.py`](tests/test_install_doctor.py) | Unit/Integration | Installer clean install, repeat install, `--remove`, `--uninstall`, doctor diagnostics, and `--fix` self-healing. |
+| [`test_validate_skills.py`](tests/test_validate_skills.py) | Unit/Integration | Frontmatter parsing, relative/backticked links, token budgets, and policy parity validation. |
 | [`test_suite_policy_enforcement.py`](tests/test_suite_policy_enforcement.py) | Policy | Validates `suite-policy.json` (3 auto, 11 explicit = 14 skills), routing rules, and output defaults. |
 | [`test_runtime_guards.py`](tests/test_runtime_guards.py) | Unit/Integration | Anti-Exact-Retry failure recording, exploratory command whitelisting, and mutation-triggered reset. |
 
@@ -216,20 +225,20 @@ Every skill in the suite is optimized for high information density with zero flu
 
 | Skill | Entry Point | Tokens | Tier & Role | Loading Policy |
 | :--- | :--- | :---: | :--- | :--- |
-| **`qa-sentinel`** | [`qa-sentinel/SKILL.md`](qa-sentinel/SKILL.md) | ~336 | **Tier 1**: Pure verification engine & zero-test-trap validator. | **Auto-activated** |
-| **`ship-it`** | [`ship-it/SKILL.md`](ship-it/SKILL.md) | ~343 | **Tier 5**: Staged candidate release scanner & git hygiene automator. | Explicit only |
-| **`deep-debugger`** | [`deep-debugger/SKILL.md`](deep-debugger/SKILL.md) | ~471 | **Tier 1**: 6-stage root-cause repair engine with Git Assertion Lock. | **Auto-activated** |
-| **`plan-master`** | [`plan-master/SKILL.md`](plan-master/SKILL.md) | ~709 | **Tier 1**: Execution planner with Anti-Overengineering (Occam's Razor) Gate. | **Auto-activated** |
-| **`runtime-reliability`** | [`runtime-reliability/SKILL.md`](runtime-reliability/SKILL.md) | ~703 | **Tier 3**: Operational resilience, RSS memory soak, SIGTERM graceful drain. | Explicit only |
-| **`playwright-cli`** | [`playwright-cli/SKILL.md`](playwright-cli/SKILL.md) | ~760 | **Tier 2**: Headless browser automation and end-to-end verification. | Explicit only |
+| **`ship-it`** | [`ship-it/SKILL.md`](ship-it/SKILL.md) | ~319 | **Tier 5**: Staged candidate release scanner & git hygiene automator. | Explicit only |
+| **`qa-sentinel`** | [`qa-sentinel/SKILL.md`](qa-sentinel/SKILL.md) | ~347 | **Tier 1**: Pure verification engine & zero-test-trap validator. | **Auto-activated** |
+| **`deep-debugger`** | [`deep-debugger/SKILL.md`](deep-debugger/SKILL.md) | ~487 | **Tier 1**: 6-stage root-cause repair engine with Git Assertion Lock. | **Auto-activated** |
+| **`runtime-reliability`** | [`runtime-reliability/SKILL.md`](runtime-reliability/SKILL.md) | ~692 | **Tier 3**: Operational resilience, RSS memory soak, SIGTERM graceful drain. | Explicit only |
+| **`plan-master`** | [`plan-master/SKILL.md`](plan-master/SKILL.md) | ~722 | **Tier 1**: Execution planner with Anti-Overengineering (Occam's Razor) Gate. | **Auto-activated** |
+| **`playwright-cli`** | [`playwright-cli/SKILL.md`](playwright-cli/SKILL.md) | ~755 | **Tier 2**: Headless browser automation and end-to-end verification. | Explicit only |
 | **`infra-pilot`** | [`infra-pilot/SKILL.md`](infra-pilot/SKILL.md) | ~825 | **Tier 5**: Production Dockerfiles, docker-compose stacks, and CI automation. | Explicit only |
 | **`docs-architect`** | [`docs-architect/SKILL.md`](docs-architect/SKILL.md) | ~843 | **Tier 5**: Developer documentation, OpenAPI 3.1 contracts, and ADR records. | Explicit only |
-| **`security-verifier`** | [`security-verifier/SKILL.md`](security-verifier/SKILL.md) | ~880 | **Tier 3**: OWASP API, BOLA/IDOR, injection, and payload boundary probes. | Explicit only |
-| **`code-reviewer`** | [`code-reviewer/SKILL.md`](code-reviewer/SKILL.md) | ~920 | **Tier 3**: Independent adversarial diff reviewer with mode disclosure. | Explicit only |
-| **`schema-craft`** | [`schema-craft/SKILL.md`](schema-craft/SKILL.md) | ~1,021 | **Tier 3**: Migration Impact Checklist, ESR indexing, reversible DDL. | Explicit only |
-| **`frontend-artisan`** | [`frontend-artisan/SKILL.md`](frontend-artisan/SKILL.md) | ~1,201 | **Tier 2**: Frontend orchestrator (DESIGN.md tokens, image-to-code, anti-slop, accessibility). | Explicit only |
-| **`idea-council`** | [`idea-council/SKILL.md`](idea-council/SKILL.md) | ~1,305 | **Tier 4**: Multi-agent council (Full 6-seat or Express 3-seat deliberation). | Explicit only |
-| **`create-architect`** | [`create-architect/SKILL.md`](create-architect/SKILL.md) | ~1,467 | **Tier 1b**: Inside-Out engineering blueprint architect. | Explicit only |
+| **`security-verifier`** | [`security-verifier/SKILL.md`](security-verifier/SKILL.md) | ~868 | **Tier 3**: OWASP API, BOLA/IDOR, injection, and payload boundary probes. | Explicit only |
+| **`code-reviewer`** | [`code-reviewer/SKILL.md`](code-reviewer/SKILL.md) | ~912 | **Tier 3**: Independent adversarial diff reviewer with mode disclosure. | Explicit only |
+| **`frontend-artisan`** | [`frontend-artisan/SKILL.md`](frontend-artisan/SKILL.md) | ~1,003 | **Tier 2**: Frontend orchestrator (DESIGN.md tokens, anti-slop, accessibility). | Explicit only |
+| **`schema-craft`** | [`schema-craft/SKILL.md`](schema-craft/SKILL.md) | ~1,003 | **Tier 3**: Migration Impact Checklist, ESR indexing, reversible DDL. | Explicit only |
+| **`idea-council`** | [`idea-council/SKILL.md`](idea-council/SKILL.md) | ~1,300 | **Tier 4**: Multi-agent council (Full 6-seat or Express 3-seat deliberation). | Explicit only |
+| **`create-architect`** | [`create-architect/SKILL.md`](create-architect/SKILL.md) | ~1,432 | **Tier 1b**: Inside-Out engineering blueprint architect. | Explicit only |
 
 ---
 
@@ -242,7 +251,7 @@ python3 scripts/validate-skills.py
 # 2. Environment health check
 python3 scripts/skills-doctor.py
 
-# 3. Run the unit & policy test suite (29 tests)
+# 3. Run the unit & policy test suite (43 tests)
 python3 -m unittest discover -s tests -p 'test_*.py'
 ```
 

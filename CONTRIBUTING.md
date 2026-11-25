@@ -40,7 +40,7 @@ description: Clear, 1–2 sentence description explaining what the skill does an
 
 To prevent polluting the model's context window:
 1. **Core Prompt Budget**: Target $\le 1,500$ tokens for standard `SKILL.md` bodies.
-2. **Progressive Disclosure**: Detailed specifications, multi-framework adapters, and domain reference guides belong in `references/` or `presets/`. Link to them using relative Markdown paths (e.g. `[Tailwind Tokens](references/tokens-tailwind.md)`).
+2. **Progressive Disclosure**: Detailed specifications, multi-framework adapters, and domain reference guides belong in `references/` or `presets/`. Link to them using relative Markdown paths (e.g. `` `[Tailwind Tokens](references/tokens-tailwind.md)` ``).
 3. **Hard Gates over Soft Suggestions**: If a behavior is mandatory (e.g. TDD, anti-slop banlist), define it as an explicit, step-by-step gate with clear stop-the-line criteria.
 
 ---

@@ -5,7 +5,6 @@ Validates activation modes, skill rosters, routing rules, and output defaults.
 """
 
 import json
-import os
 import unittest
 from pathlib import Path
 
@@ -82,15 +81,38 @@ class TestSuitePolicyEnforcement(unittest.TestCase):
             self.assertIn("format", output_defaults[required_key])
 
     def test_agents_and_gemini_md_parity(self):
-        """Verify AGENTS.md and GEMINI.md list the exact same skills as suite-policy.json."""
+        """Verify AGENTS.md and GEMINI.md are identical and place skills in the right sections."""
         auto_skills = {e["skill"] for e in self.policy["activation_modes"]["auto"]}
         explicit_skills = set(self.policy["activation_modes"]["explicit_only"])
-        for doc_name in ("AGENTS.md", "GEMINI.md"):
-            text = (REPO_ROOT / doc_name).read_text(encoding="utf-8")
-            for s in auto_skills | explicit_skills:
-                self.assertIn(f"`{s}`", text, f"{doc_name} missing skill `{s}`")
-            for removed in ("swarm", "anti-slop-spec", "design-md", "image-to-code", "web-interface-guidelines"):
-                self.assertNotIn(f"`{removed}`", text, f"{doc_name} still lists removed `{removed}`")
+        agents_text = (REPO_ROOT / "AGENTS.md").read_text(encoding="utf-8")
+        gemini_text = (REPO_ROOT / "GEMINI.md").read_text(encoding="utf-8")
+        self.assertEqual(agents_text, gemini_text, "AGENTS.md and GEMINI.md must stay identical")
+
+        auto_section = agents_text.split("## Automatic skill activation")[1].split("## All other skills")[0]
+        explicit_section = agents_text.split("## All other skills")[1].split("## Key rules")[0]
+        for s in auto_skills:
+            self.assertIn(f"`{s}`", auto_section, f"AGENTS.md auto section missing `{s}`")
+        for s in explicit_skills:
+            self.assertIn(f"`{s}`", explicit_section, f"AGENTS.md explicit section missing `{s}`")
+        for removed in ("swarm", "anti-slop-spec", "design-md", "image-to-code", "web-interface-guidelines"):
+            self.assertNotIn(f"`{removed}`", agents_text, f"AGENTS.md still lists removed `{removed}`")
+
+    def test_disk_to_policy_and_disjoint_triggers(self):
+        """Verify disk skills match policy bidirectionally and auto triggers/budgets exist."""
+        auto_entries = self.policy["activation_modes"]["auto"]
+        auto_skills = {e["skill"] for e in auto_entries}
+        explicit_skills = set(self.policy["activation_modes"]["explicit_only"])
+        self.assertEqual(len(auto_skills & explicit_skills), 0, "auto and explicit_only must be disjoint")
+        for entry in auto_entries:
+            self.assertTrue(entry.get("triggers"), f"Auto skill {entry['skill']} missing triggers")
+
+        disk_skills = {
+            p.name for p in REPO_ROOT.iterdir()
+            if p.is_dir() and not p.name.startswith(".") and (p / "SKILL.md").is_file()
+        }
+        self.assertEqual(disk_skills, auto_skills | explicit_skills)
+        self.assertIn("effort_profiles", self.policy)
+        self.assertIn("token_targets", self.policy)
 
 
 if __name__ == "__main__":
