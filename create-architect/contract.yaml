@@ -1,5 +1,5 @@
 id: create-architect
-contract_version: 2
+contract_version: 1
 activation: explicit_only
 activation_triggers:
   - user asks to architect, design, or structure a new project or major feature

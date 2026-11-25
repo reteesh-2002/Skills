@@ -25,7 +25,7 @@ For projects built with **pure HTML & CSS** (no Tailwind, no Node/Vite build ste
   --text-2xl: clamp(1.5rem, 1.35rem + 0.75vw, 2rem);
   --text-3xl: clamp(1.875rem, 1.65rem + 1vw, 2.5rem);
 
-  /* Modern Tactile Palette (Light Mode Default) */
+  /* Light Mode Default (Notion / Catalyst Clean) */
   --tactile-bg: #fafaf9;
   --tactile-surface: #ffffff;
   --tactile-elevated: #f5f5f4;
@@ -37,7 +37,7 @@ For projects built with **pure HTML & CSS** (no Tailwind, no Node/Vite build ste
   --tactile-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
   --tactile-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
 
-  /* Neo-Brutalist Palette */
+  /* High-Contrast Accent Tokens */
   --brutalist-bg: #fbf7ee;
   --brutalist-surface: #ffffff;
   --brutalist-border: 2px solid #000000;

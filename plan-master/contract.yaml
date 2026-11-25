@@ -1,5 +1,5 @@
 id: plan-master
-contract_version: 2
+contract_version: 1
 activation: auto_for_multi_step_planning
 activation_triggers:
   - user asks to plan, implement, architect, or build a multi-step feature or system

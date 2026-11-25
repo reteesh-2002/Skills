@@ -12,7 +12,7 @@ A modular software engineering toolkit and skills suite for **Google Antigravity
 - **Core Dependencies**:
   - `git` $\ge 2.30$
   - `python3` $\ge 3.9$
-  - `bash` $\ge 4.0$ *(optional on Windows; native Python and `.cmd` wrappers provided)*
+  - `bash` $\ge 4.0$ *(optional; all core scripts are native cross-platform Python 3)*
   - `node` $\ge 18$ *(optional, for Playwright headless browser testing)*
 
 ### 2. Installation & Environment Health
@@ -216,20 +216,20 @@ Every skill in the suite is optimized for high information density with zero flu
 
 | Skill | Entry Point | Tokens | Tier & Role | Loading Policy |
 | :--- | :--- | :---: | :--- | :--- |
-| **`qa-sentinel`** | [`qa-sentinel/SKILL.md`](qa-sentinel/SKILL.md) | ~336 | **Tier 1**: Pure verification engine & execution proxy manager. | **Auto-activated** |
-| **`ship-it`** | [`ship-it/SKILL.md`](ship-it/SKILL.md) | ~352 | **Tier 5**: Staged candidate release scanner & git hygiene automator. | Explicit only |
+| **`qa-sentinel`** | [`qa-sentinel/SKILL.md`](qa-sentinel/SKILL.md) | ~336 | **Tier 1**: Pure verification engine & zero-test-trap validator. | **Auto-activated** |
+| **`ship-it`** | [`ship-it/SKILL.md`](ship-it/SKILL.md) | ~343 | **Tier 5**: Staged candidate release scanner & git hygiene automator. | Explicit only |
 | **`deep-debugger`** | [`deep-debugger/SKILL.md`](deep-debugger/SKILL.md) | ~471 | **Tier 1**: 6-stage root-cause repair engine with Git Assertion Lock. | **Auto-activated** |
 | **`plan-master`** | [`plan-master/SKILL.md`](plan-master/SKILL.md) | ~630 | **Tier 1**: Execution planner with Anti-Overengineering (Occam's Razor) Gate. | **Auto-activated** |
-| **`runtime-reliability`** | [`runtime-reliability/SKILL.md`](runtime-reliability/SKILL.md) | ~698 | **Tier 3**: Operational resilience, RSS memory soak, SIGTERM graceful drain. | Explicit only |
+| **`runtime-reliability`** | [`runtime-reliability/SKILL.md`](runtime-reliability/SKILL.md) | ~703 | **Tier 3**: Operational resilience, RSS memory soak, SIGTERM graceful drain. | Explicit only |
 | **`playwright-cli`** | [`playwright-cli/SKILL.md`](playwright-cli/SKILL.md) | ~760 | **Tier 2**: Headless browser automation and end-to-end verification. | Explicit only |
 | **`infra-pilot`** | [`infra-pilot/SKILL.md`](infra-pilot/SKILL.md) | ~825 | **Tier 5**: Production Dockerfiles, docker-compose stacks, and CI automation. | Explicit only |
 | **`docs-architect`** | [`docs-architect/SKILL.md`](docs-architect/SKILL.md) | ~843 | **Tier 5**: Developer documentation, OpenAPI 3.1 contracts, and ADR records. | Explicit only |
-| **`security-verifier`** | [`security-verifier/SKILL.md`](security-verifier/SKILL.md) | ~895 | **Tier 3**: OWASP API, BOLA/IDOR, injection, and payload boundary probes. | Explicit only |
-| **`code-reviewer`** | [`code-reviewer/SKILL.md`](code-reviewer/SKILL.md) | ~915 | **Tier 3**: Independent adversarial diff reviewer with mode disclosure. | Explicit only |
+| **`security-verifier`** | [`security-verifier/SKILL.md`](security-verifier/SKILL.md) | ~880 | **Tier 3**: OWASP API, BOLA/IDOR, injection, and payload boundary probes. | Explicit only |
+| **`code-reviewer`** | [`code-reviewer/SKILL.md`](code-reviewer/SKILL.md) | ~920 | **Tier 3**: Independent adversarial diff reviewer with mode disclosure. | Explicit only |
 | **`schema-craft`** | [`schema-craft/SKILL.md`](schema-craft/SKILL.md) | ~1,021 | **Tier 3**: Migration Impact Checklist, ESR indexing, reversible DDL. | Explicit only |
-| **`idea-council`** | [`idea-council/SKILL.md`](idea-council/SKILL.md) | ~1,305 | **Tier 4**: Multi-agent council (Full 6-seat or Express 3-seat deliberation). | Explicit only |
-| **`create-architect`** | [`create-architect/SKILL.md`](create-architect/SKILL.md) | ~1,452 | **Tier 1b**: Inside-Out engineering blueprint architect. | Explicit only |
 | **`frontend-artisan`** | [`frontend-artisan/SKILL.md`](frontend-artisan/SKILL.md) | ~1,201 | **Tier 2**: Frontend orchestrator (DESIGN.md tokens, image-to-code, anti-slop, accessibility). | Explicit only |
+| **`idea-council`** | [`idea-council/SKILL.md`](idea-council/SKILL.md) | ~1,305 | **Tier 4**: Multi-agent council (Full 6-seat or Express 3-seat deliberation). | Explicit only |
+| **`create-architect`** | [`create-architect/SKILL.md`](create-architect/SKILL.md) | ~1,467 | **Tier 1b**: Inside-Out engineering blueprint architect. | Explicit only |
 
 ---
 
@@ -242,7 +242,7 @@ python3 scripts/validate-skills.py
 # 2. Environment health check
 python3 scripts/skills-doctor.py
 
-# 3. Run the unit & policy test suite (28 tests)
+# 3. Run the unit & policy test suite (29 tests)
 python3 -m unittest discover -s tests -p 'test_*.py'
 ```
 

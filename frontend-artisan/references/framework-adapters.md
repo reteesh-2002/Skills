@@ -67,40 +67,40 @@ Use when building static sites, light widgets, or environments without Node.js/V
 Use component encapsulation and variant props to enforce archetype rules across your codebase.
 
 ### Idiomatic Principles:
-- Expose an `archetype` prop (`"tactile"` | `"brutalist"` | `"editorial"`) or theme context.
+- Expose a `preset` prop (`"linear"` | `"vercel"` | `"stripe"`) matching [`design-presets.md`](design-presets.md) or theme context.
 - Never hardcode arbitrary inline styles; use Tailwind or CSS Modules.
 - Ensure strict keyboard access: always spread standard button/input props (`aria-label`, `disabled`, `onClick`).
 - For Next.js: Keep visual presentational components as **Server Components** where possible, isolating interactive state (`onClick`, micro-press) to client leaf components (`"use client"`).
 
-### Example: Multi-Archetype React Button (TypeScript)
+### Example: Preset-Driven React Button (TypeScript)
 ```tsx
 import React from 'react';
 
-type ButtonArchetype = 'tactile' | 'brutalist' | 'subtle';
+type ButtonPreset = 'linear' | 'vercel' | 'stripe';
 
 interface ArtisanButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  archetype?: ButtonArchetype;
+  preset?: ButtonPreset;
   children: React.ReactNode;
 }
 
 export const ArtisanButton: React.FC<ArtisanButtonProps> = ({
-  archetype = 'tactile',
+  preset = 'vercel',
   className = '',
   children,
   ...props
 }) => {
-  const styles: Record<ButtonArchetype, string> = {
-    tactile:
-      'bg-stone-900 text-stone-50 border border-stone-800 rounded-lg shadow-sm hover:bg-stone-800 active:scale-[0.98] active:translate-y-0.5 transition-all duration-150',
-    brutalist:
-      'bg-[#ff5a36] text-white font-black uppercase tracking-wider border-2 border-black rounded-lg shadow-[4px_4px_0px_#000] hover:shadow-[5px_5px_0px_#000] hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-1 active:translate-y-1 active:shadow-none transition-all duration-100',
-    subtle:
-      'bg-transparent text-stone-700 dark:text-zinc-200 border border-stone-200 dark:border-zinc-700 rounded-md hover:bg-stone-50 dark:hover:bg-zinc-800 transition-colors',
+  const styles: Record<ButtonPreset, string> = {
+    linear:
+      'bg-[#5e6ad2] text-white border border-white/10 rounded-lg hover:bg-[#6b77e0] active:scale-[0.98] transition-all duration-150',
+    vercel:
+      'bg-black text-white dark:bg-white dark:text-black border border-black/10 rounded-md hover:opacity-90 active:scale-[0.98] transition-all duration-150',
+    stripe:
+      'bg-[#635bff] text-white rounded-lg shadow-sm hover:bg-[#5850ec] active:scale-[0.98] transition-all duration-150',
   };
 
   return (
     <button
-      className={`px-4 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-900 motion-reduce:transform-none cursor-pointer ${styles[archetype]} ${className}`}
+      className={`px-4 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-900 motion-reduce:transform-none cursor-pointer ${styles[preset]} ${className}`}
       {...props}
     >
       {children}
