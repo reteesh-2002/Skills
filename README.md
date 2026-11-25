@@ -53,19 +53,11 @@ python3 scripts/skills-doctor.py --fix
 ```
 *(Supports `--json` for automated environment auditing.)*
 
-### 3. Release Safety & Git Assertion Lock
-The suite enforces the **Git Assertion Lock** to prevent test tampering during bug repairs, along with staged diff secret scanning:
-```bash
-# Evaluate release readiness and ensure no modified test assertions
-python3 scripts/verify_release_gate.py
+### 3. Frictionless Safety Hook (Anti-Exact-Retry)
+Hooks in `.agents/hooks.json` run [`guard_anti_retry.py`](scripts/guard_anti_retry.py) to halt runaway identical-failure retry loops without blocking `git push` or normal developer commands.
 
-# Or allow intentional test specification changes when requirements evolve
-python3 scripts/verify_release_gate.py --spec-evolution
-```
-Hooks in `.agents/hooks.json` wire `verify_release_gate.py --pre-tool` to intercept `git push` before execution, ensuring tests have been verified against the current git tree. Non-release commands (`git commit`, `git status`, test runs) execute without gate overhead, and runaway tool retry loops are halted by `guard_anti_retry.py`.
-
-### 4. Conformance & Test Suite Verification
-Verify skill metadata, contracts, policy drift, specialist probes, and runtime checks:
+### 4. Test Suite & Validation
+Verify skill metadata, policy parity, environment health, and core tooling:
 ```bash
 # 1. Validate skill frontmatter, metadata, and token budgets (14 skills)
 python3 scripts/validate-skills.py
@@ -73,72 +65,50 @@ python3 scripts/validate-skills.py
 # 2. Run the environment health check
 python3 scripts/skills-doctor.py
 
-# 3. Run the full unit, probe, and behavioral regression suite (257 tests)
+# 3. Run the unit & policy test suite
 python3 -m unittest discover -s tests -p 'test_*.py'
-
-# 4. Run the 27-test runtime conformance and adversarial shell suite (or python3 -m unittest tests/test_runtime_conformance.py)
-bash tests/verify_runtime.sh
 ```
 
 ---
 
-## 🏗️ Master Architecture Topology & Inter-Skill Communication
+## Architecture & Skill Topology
 
-The suite operates as an integrated 5-tier engineering operating system governed authoritatively by [`suite-policy.json`](suite-policy.json). Skills interact through structured artifacts, immutable evidence receipts, and atomic ledgers:
+The suite is governed authoritatively by [`suite-policy.json`](suite-policy.json) (3 auto-activated skills, 11 explicit-only skills):
 
 ```mermaid
 graph TD
-    subgraph "Tier 1: Core Autonomous Triad (Auto-Activated)"
-        PM["plan-master<br>(Execution Planner)"]
-        DD["deep-debugger<br>(Root-Cause Repair)"]
-        QS["qa-sentinel<br>(Anti-Tautology Verifier)"]
+    subgraph "Tier 1: Core Triad (Auto-Activated)"
+        PM["plan-master<br>(Planner + Occam's Razor Gate)"]
+        DD["deep-debugger<br>(Root-Cause Repair + Test Lock)"]
+        QS["qa-sentinel<br>(Proportionate Verifier)"]
     end
 
     subgraph "Tier 1b: Upstream Architecture (Explicit Only)"
         CA["create-architect<br>(Inside-Out Blueprint)"]
     end
 
-    subgraph "Tier 2: Frontend & Interface Superstructure"
+    subgraph "Tier 2: Frontend & Browser (Explicit Only)"
         FA["frontend-artisan<br>(Design, Anti-Slop, Tokens & UI)"]
         PW["playwright-cli<br>(Headless Browser CLI)"]
-        
         FA --> PW
     end
 
-    subgraph "Tier 3: Specialist Systems Engineering"
+    subgraph "Tier 3: Specialist Systems (Explicit Only)"
         SC["schema-craft<br>(DB Migrations & Integrity)"]
         SV["security-verifier<br>(OWASP API & Boundary Audit)"]
         RR["runtime-reliability<br>(Graceful Shutdown & Soak)"]
         CR["code-reviewer<br>(Adversarial Diff Review)"]
     end
 
-    subgraph "Tier 4: Distributed Orchestration & Council"
+    subgraph "Tier 4: Council & Builtin Swarm"
         SWARM["native_swarm<br>(Built-in Platform Skill)"]
         IC["idea-council<br>(Multi-Agent Deliberation)"]
     end
 
-    subgraph "Tier 5: Runtime Enforcement & Gatekeeper"
-        EP["exec-proxy.sh<br>(Bounded Logs & Receipts)"]
-        RE["runtime_evidence.py<br>(Verification Engine)"]
-        TL["task_ledger.py<br>(Flock .evidence/tasks.json)"]
-        SP["specialist_probes.py<br>(Empirical Probe Suite)"]
-        TSG["task_shape_gating.py<br>(Phase 0 Decision Engine)"]
-        VRG["verify-release-gate.sh<br>(Anti-Tamper Release Gate)"]
-        SI["ship-it<br>(Git Hygiene & PR Engine)"]
+    subgraph "Tier 5: Release, Infra & Docs (Explicit Only)"
+        SI["ship-it<br>(Git Hygiene & Conventional Commits)"]
         IP["infra-pilot<br>(Docker & CI Automation)"]
-        DA["docs-architect<br>(Viral README & OpenAPI 3.1)"]
-        
-        EP --> RE
-        TL --> RE
-        VRG --> RE
-        SI --> VRG
-        IP --> SI
-        DA --> SI
-        FA --> SP
-        SC --> SP
-        SV --> SP
-        RR --> SP
-        SWARM --> TSG
+        DA["docs-architect<br>(README, OpenAPI 3.1 & ADRs)"]
     end
 
     CA -.->|Supplies Blueprint| PM
@@ -150,29 +120,16 @@ graph TD
     SV --> QS
     RR --> QS
     CR --> SI
-    QS --> EP
-    SWARM --> TL
-
-    style PM fill:#e1f5fe,stroke:#0288d1,stroke-width:2px
-    style DD fill:#ffebee,stroke:#d32f2f,stroke-width:2px
-    style QS fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
-    style FA fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
-    style VRG fill:#fff3e0,stroke:#f57c00,stroke-width:2px
 ```
 
 ### Division of Responsibilities
-1. **Create Architect vs Plan Master Division**:
-   - [`create-architect`](create-architect/SKILL.md) owns the **Inside-Out Engineering Blueprint**: Data Flow, Tech Stack, Data Models, API & 4 UI states, and build sequencing.
-   - [`plan-master`](plan-master/SKILL.md) owns **execution planning**: current-state inspection, task dependency DAG ($T_1 \dots T_n$), affected files, verification, and recovery.
-   - `create-architect` does **not** auto-run before `plan-master`. A valid blueprint skips regeneration.
-
-2. **Autonomous Triad Handoffs**:
-   - **Feature Creation**: `plan-master` ingests requirements $\rightarrow$ evaluates `task_shape_gating.py` $\rightarrow$ if parallel, dispatches `swarm` workers $\rightarrow$ invokes specialist skills (`schema-craft`, `frontend-artisan`) when explicitly directed $\rightarrow$ delegates verification to `qa-sentinel` $\rightarrow$ calls `code-reviewer` $\rightarrow$ invokes `ship-it` for release staging.
-   - **Bug Remediation**: `deep-debugger` reproduces the bug $\rightarrow$ produces minimal surgical fix $\rightarrow$ delegates verification to `qa-sentinel` $\rightarrow$ delegates commit to `ship-it`.
-   - **Verification**: `qa-sentinel` wraps all test runs in `scripts/exec-proxy.sh`, streaming verbose logs to `.evidence/logs/<run_id>.log` while returning a 3-line bounded summary and generating physical receipts in `.evidence/receipts/`.
-
-3. **Single-Writer File Isolation**:
-   - In multi-worker mode, `swarm` enforces strict **1-writer-per-file** partitioning with isolated `share`/`branch` workspaces. Manifests and lockfiles remain exclusively owned by the coordinator.
+1. **Create Architect vs Plan Master**:
+   - [`create-architect`](create-architect/SKILL.md) owns **Inside-Out Engineering Blueprints** (Data Flow, Tech Stack, Data Model, API & 4 UI States).
+   - [`plan-master`](plan-master/SKILL.md) owns **execution planning** with the **Anti-Overengineering Gate (Occam's Razor)** (`< 3 files` skip planning ceremony).
+   - `create-architect` does **not** auto-run before `plan-master`.
+2. **Core Workflows**:
+   - **Features**: `plan-master` $\rightarrow$ implement (or `native_swarm` when genuinely parallel) $\rightarrow$ `qa-sentinel` $\rightarrow$ `ship-it`.
+   - **Bugs**: `deep-debugger` (reproduce first, never weaken existing tests at `HEAD`) $\rightarrow$ `qa-sentinel`.
 
 4. **Pipeline Output Suppression Rule**:
    - Intermediate skills in a pipeline suppress verbose chat cards to a **single-line milestone heartbeat** (e.g. `✓ [deep-debugger]: Fixed bug in worker.py:L42 (exit 0)`).
@@ -190,7 +147,7 @@ Routing policy is defined authoritatively in [`suite-policy.json`](suite-policy.
 | :--- | :--- | :--- |
 | **Fix a bug / Error / Breakage / Failure** | [`deep-debugger`](deep-debugger/SKILL.md) | 1. 6-stage protocol: `Reproduce → Isolate → State Inspection → Hypothesis → Surgical Minimal Fix → Regression Proof`.<br>2. Multi-file fixes permitted when root cause requires it.<br>3. Protects user edits outside failure path; preserves intermittent bug uncertainty in Compact Hypothesis Log. |
 | **Plan / Implement / Architect multi-step feature** | [`plan-master`](plan-master/SKILL.md) | 1. Current-state inspection & dependency DAG ($T_1 \dots T_n$).<br>2. Phase 0 gating (`task_shape_gating.py`) to select solo vs. multi-worker.<br>3. Strict 1-writer-per-file bounds.<br>4. Small tasks (< 3 files) go directly to implementation. |
-| **Verify / Test / Validate code changes** | [`qa-sentinel`](qa-sentinel/SKILL.md) | 1. Pure verification engine (no implementation duties).<br>2. Executes tests through `scripts/exec-proxy.sh` for physical receipts.<br>3. Generates Coverage Summary table mapping conditions to evidence.<br>4. Rejects zero-inventory false greens and labels unverified checks honestly. |
+| **Verify / Test / Validate code changes** | [`qa-sentinel`](qa-sentinel/SKILL.md) | 1. Pure verification engine (no implementation duties).<br>2. Executes real test suites (`pytest`, `npm test`, `cargo test`, `unittest`).<br>3. Rejects zero-inventory false greens and labels unverified checks honestly. |
 
 ### All Other Skills: Explicit Only
 
@@ -201,7 +158,7 @@ The remaining 11 skills activate **only** when explicitly requested by name or s
 ### Mandatory Host Behaviors
 1. **Always read `SKILL.md`** using `view_file` when activating skills.
 2. **Never auto-trigger specialist skills** without explicit user instruction.
-3. **Execution Discipline**: Route test commands through `scripts/exec-proxy.sh` for physical receipt generation and bounded log capture.
+3. **Execution Discipline**: Run real verification commands and report exact exit codes and counts.
 4. **Concise Reporting**: Chat summaries must stay compact (4–8 lines default per [`references/output-policy.md`](references/output-policy.md)), highlighting outcome, verified tests, and evidence paths.
 5. **Planning Does Not Authorize Publishing**: A plan or release check does not authorize `git push` or package publishing without explicit user permission.
 
@@ -231,47 +188,25 @@ Implemented in [`create-architect`](create-architect/SKILL.md) with canonical te
 | [`suite-policy.json`](suite-policy.json) | **Authoritative Suite Policy**: Single source of truth for routing (3 auto, 11 explicit = 14 skills), output defaults, and tool boundaries. |
 | [`AGENTS.md`](AGENTS.md) | Host routing instructions for Antigravity agents; defines the 3 auto-detected skills and on-demand rules. |
 | [`GEMINI.md`](GEMINI.md) | Workspace-level routing instructions mirroring AGENTS.md for compatibility with Google Gemini agent runtimes. |
-| [`REQUIREMENTS.md`](REQUIREMENTS.md) | Formal engineering requirements and specifications for the skills operating system. |
-| [`CHANGELOG.md`](CHANGELOG.md) | Detailed version history, breaking changes, and migration notes. |
-| [`README.md`](README.md) | Master documentation, quick start, architecture topology, file directory, and verification proofs. |
-| [`.agents/hooks.json`](.agents/hooks.json) | Zero-latency selective hook configuration with automatic PreToolUse release gate and mutation protection. |
+| [`REQUIREMENTS.md`](REQUIREMENTS.md) | System binary and optional tool requirements for the 14-skill suite. |
+| [`CHANGELOG.md`](CHANGELOG.md) | Version history and release notes. |
+| [`README.md`](README.md) | Master documentation, quick start, architecture, and file directory. |
+| [`.agents/hooks.json`](.agents/hooks.json) | Lightweight hook configuration running `guard_anti_retry.py`. |
 
-### 2. Runtime Scripts (`scripts/`)
+### 2. Core Scripts (`scripts/`)
 | Script | Language | Purpose & Functionality |
 | :--- | :---: | :--- |
-| [`exec_proxy.py`](scripts/exec_proxy.py)<br>[`exec-proxy.sh`](scripts/exec-proxy.sh)<br>[`exec-proxy.cmd`](scripts/exec-proxy.cmd) | Python 3<br>Bash Shim<br>Windows CMD | **Execution Proxy & Log Sink**: Pure Python 3 runner (Windows, Linux, macOS). Executes tokenized subprocesses (`shell=False` default) to prevent injection, captures child exit codes, streams logs to `.evidence/logs/<run_id>.log`, parses test frameworks (pytest, Jest, Vitest, Node TAP, Cargo, Python unittest), and generates physical receipts. Unbuffered live streaming available via `VERBOSE_STREAM=1`. |
-| [`verify_release_gate.py`](scripts/verify_release_gate.py)<br>[`verify-release-gate.sh`](scripts/verify-release-gate.sh)<br>[`verify-release-gate.cmd`](scripts/verify-release-gate.cmd) | Python 3<br>Bash Shim<br>Windows CMD | **Deterministic Release Gate & Git Assertion Lock**: Intercepts `git push` via protojson PreToolUse hook. Validates that current git tree matches validated receipts, working tree is clean (with scratch file forgiveness), and enforces the **Git Assertion Lock** (tests at base are immutable unless `--spec-evolution` is passed). |
-| [`runtime_evidence.py`](scripts/runtime_evidence.py) | Python 3 | **Shared Evidence & Policy Engine**: Cross-platform file locking (`msvcrt` on Windows, `fcntl` on POSIX), receipt schema validation, Git Assertion Lock diff engine, ISO-8601 waiver expiry normalization, and TDD progression vs flaky retry detection. |
-| [`guard_read_before_write.py`](scripts/guard_read_before_write.py) | Python 3 | **Zero-Latency Read Guard**: Enforces the Read-Before-Write invariant. Scans active conversation session transcripts so read tools (`view_file`) execute with **0ms hook overhead** while preventing blind mutations. |
-| [`guard_anti_retry.py`](scripts/guard_anti_retry.py) | Python 3 | **Anti-Exact-Retry Guard**: Halts runaway failure loops by detecting identical failing commands within a sliding window while whitelisting exploratory commands (`grep`, `diff`, `find`, `test`). |
-| [`slice-guard.py`](scripts/slice-guard.py) | Python 3 | **Architectural Slice & Context Guard**: Validates vertical slice import isolation, architectural boundaries, and Bounded Context Windowing (cohesive modules permitted up to 1,500 LOC). |
-| [`task_ledger.py`](scripts/task_ledger.py) | Python 3 | **Canonical Task State Ledger**: Multi-process locked ledger (`.evidence/tasks.json`). Tracks task lifecycle, validates dependency DAG acyclicity, mandates receipts for `Done`, and uses PID-isolated temp files. |
-| [`task_shape_gating.py`](scripts/task_shape_gating.py) | Python 3 | **Phase 0 Gating Engine**: Evaluates file touch counts, blast radius, auth/data sensitivity, and coupling to deterministically return `solo`, `sequenced`, `multi(n)`, or `solo+review`. |
-| [`specialist_probes.py`](scripts/specialist_probes.py) | Python 3 | **Empirical Specialist Verification Engine**: Probes for WCAG AA contrast, viewport overflow, disposable SQLite migration rehearsal, BOLA/IDOR isolation, SIGTERM graceful drain, and memory soak plateau. |
-| [`skills-doctor.py`](scripts/skills-doctor.py) | Python 3 | **Environment Health Diagnostic & Self-Healing**: Audits host OS, Python $\ge 3.9$, runtime helpers, hooks, and optional tools. Features `--fix` flag for automatic self-healing repair of missing directories, hooks, and permissions. |
-| [`validate-skills.py`](scripts/validate-skills.py) | Python 3 | **Skill Metadata & Syntax Linter**: Ingests all 19 skills, validates YAML frontmatter, measures token budgets, checks relative links, and prevents policy drift. |
-| [`install-skills.py`](scripts/install-skills.py) | Python 3 | **Suite Installer & Manifest Manager**: Installs skills and runtime helpers to workspace or global configuration with POSIX path normalization, selective skill removal (`--remove`), and full uninstallation (`--uninstall`) with rollback. |
-| [`audit_diff.py`](scripts/audit_diff.py)<br>[`audit_diff.sh`](scripts/audit_diff.sh)<br>[`audit-diff.cmd`](scripts/audit-diff.cmd) | Python 3<br>Bash Shim<br>Windows CMD | **Diff & Boundary Auditor**: Pure Python 3 auditor for committed and untracked changes. Validates declared path prefixes, flags out-of-scope symlinks, protected package manifests, and code placeholders. |
-| [`setup_worktrees.py`](scripts/setup_worktrees.py)<br>[`setup_worktrees.sh`](scripts/setup_worktrees.sh)<br>[`setup-worktrees.cmd`](scripts/setup-worktrees.cmd) | Python 3<br>Bash Shim<br>Windows CMD | **Worktree Isolation & Rescue**: Pure Python worktree manager. Automates worker git worktrees and branch isolation, and auto-rescues uncommitted changes to `orch/rescue-*` before safe detachment. |
+| [`install-skills.py`](scripts/install-skills.py) | Python 3 | **Suite Installer & Manifest Manager**: Installs the 14 skills, policy, and core scripts to workspace or global config with `--remove`, `--uninstall`, and `--dry-run`. |
+| [`validate-skills.py`](scripts/validate-skills.py) | Python 3 | **Skill Metadata & Policy Linter**: Validates all 14 skills' YAML frontmatter, token budgets, relative links, and `suite-policy.json` parity. |
+| [`skills-doctor.py`](scripts/skills-doctor.py) | Python 3 | **Environment Health Diagnostic & Self-Healing**: Audits Python $\ge 3.9$, core scripts, `.agents/hooks.json`, and optional tools (`--fix`, `--json`). |
+| [`guard_anti_retry.py`](scripts/guard_anti_retry.py) | Python 3 | **Anti-Exact-Retry Guard**: Halts runaway identical-failure loops while whitelisting exploratory commands (`grep`, `diff`, `find`, `git status`). |
 
 ### 3. Test Suites (`tests/`)
 | Test File | Type | Focus & Scenarios |
 | :--- | :---: | :--- |
-| [`test_runtime_conformance.py`](tests/test_runtime_conformance.py) | Conformance | Pure Python cross-platform conformance suite implementing 12 core runtime invariants (P01–P32): exit code capture, tree SHA mismatch, tamper detection, dirty worktree rescue, and boundary audits. |
-| [`test_verify_release_gate.py`](tests/test_verify_release_gate.py) | Unit/Integration | Release gate execution, Git Assertion Lock enforcement, test file regex matching, and `--spec-evolution` bypass. |
-| [`test_runtime_guards.py`](tests/test_runtime_guards.py) | Unit/Integration | Read-Before-Write guard with transcript scan fallback, Anti-Retry exploratory command whitelisting, and timestamp freshness. |
-| [`test_install_doctor.py`](tests/test_install_doctor.py) | Unit/Integration | Installer clean install, idempotent repeat install, uninstallation, doctor diagnostics, and `--fix` self-healing engine. |
-| [`test_windows_compat.py`](tests/test_windows_compat.py) | Unit/Integration | Windows native compatibility: cross-platform file locking (`msvcrt` mock / POSIX), Windows RSS memory probe, pure Python proxy, and batch wrappers. |
-| [`test_runtime_evidence.py`](tests/test_runtime_evidence.py) | Unit | Waiver parsing, `git -C` command matcher, policy disposition, and snapshot isolation. |
-| [`test_evidence_gate_regressions.py`](tests/test_evidence_gate_regressions.py) | Behavioral | Hermetic regression suite: push detection, tree SHA mismatch, corrupt receipts, date-only expiry, TDD progress, and zero-inventory false greens. |
-| [`test_t06_t07_evidence.py`](tests/test_t06_t07_evidence.py) | Unit/Integration | Framework detection, pytest `xfail` parsing, `unverified` check flag, `eval` / command substitution ambiguity detection, and release gate blocking. |
-| [`test_t08_t09_probes_ledger.py`](tests/test_t08_t09_probes_ledger.py) | Unit/Integration | Subprocess graceful drain, RSS memory soak plateau, heuristic viewport overflow labeling, task ledger cycle detection, and session tracking. |
-| [`test_suite_policy_enforcement.py`](tests/test_suite_policy_enforcement.py) | Behavioral | Suite policy validation: verifies exactly 3 skills auto-activate, 16 require explicit trigger, and output formats follow defaults. |
-| [`test_task_ledger.py`](tests/test_task_ledger.py) | Unit | Ledger initialization, task registration, state transitions, receipt requirements, and markdown table rendering. |
-| [`test_release_b.py`](tests/test_release_b.py) | Acceptance | Live task flow (`T-01` to `T-07`), output bounding (`O-01` to `O-05`), code-reviewer transparency, and anti-tautology mutation probes. |
-| [`test_release_c.py`](tests/test_release_c.py) | Acceptance | Phase 0 task-shape gating (`E-01` to `E-06`), minimal worker brief contents, concurrency caps, and durable resume protocol. |
-| [`test_release_d.py`](tests/test_release_d.py) | Acceptance | WCAG AA contrast, viewport overflow detection, database migration rehearsal, dual-tenant IDOR probes, graceful drain, and memory soak plateaus. |
-| [`verify_runtime.sh`](tests/verify_runtime.sh) | Conformance | 27-test end-to-end bash adversarial test suite verifying exit code capture, pipefail detection, protojson hooks, symlink escapes, and concurrency races. |
+| [`test_install_doctor.py`](tests/test_install_doctor.py) | Unit/Integration | Installer clean install, repeat install, `--remove`, `--uninstall`, doctor diagnostics, and `--fix` self-healing. |
+| [`test_suite_policy_enforcement.py`](tests/test_suite_policy_enforcement.py) | Policy | Validates `suite-policy.json` (3 auto, 11 explicit = 14 skills), routing rules, and output defaults. |
+| [`test_runtime_guards.py`](tests/test_runtime_guards.py) | Unit/Integration | Anti-Exact-Retry failure recording, exploratory command whitelisting, and mutation-triggered reset. |
 
 ---
 
@@ -298,53 +233,18 @@ Every skill in the suite is optimized for high information density with zero flu
 
 ---
 
-## 🔬 Empirical Technical Protections
-
-When AI coding assistants operate without disciplined guardrails, they suffer from common failure patterns: **shotgun debugging loops**, **hallucinated test passes**, **unconstrained worker sprawl**, and **premature git pushes**.
-
-Below is a comparison of standard failure modes versus the suite's concrete technical mitigations:
-
-| Engineering Dimension | Without Skills (Raw AI Agent) | With Antigravity Skills Suite | Concrete Mechanism |
-| :--- | :--- | :--- | :--- |
-| **Bug Fixing & Diagnostics** | **Shotgun Patching**: Edits multiple files blindly on guess 1; wraps crashes in `try/except: pass`; risks weakening existing assertions to fake a pass. | **Scientific 6-Stage Protocol** (`deep-debugger`): Enforces isolated reproduction in `scratch/repro.py` before editing source; locks existing tests at HEAD via Git Assertion Lock. | Pre-existing test files at HEAD are immutable during repairs; reproduction must pass cleanly before closing. |
-| **Test Verification Integrity** | **Honor-System / Tautology**: Declares "All tests pass!" without running commands; writes trivial tautologies (`assert True`); accepts zero-inventory test runs. | **Evidence Gate & Log Proxy** (`qa-sentinel` + `exec_proxy.py`): Requires real exit code 0; captures child logs to disk; validates non-zero test collection; records physical receipts in `.evidence/`. | Release gate requires physical JSON receipt matching tree SHA and rejects zero-test passes. |
-| **Multi-Worker Orchestration** | **Unconstrained Subagent Sprawl**: Spawns multiple workers for tiny 1-file fixes; workers overwrite each other's code; session disconnects lose in-flight state. | **Adaptive Gating & Durable Recovery** (`task_shape_gating.py` + `task_ledger.py`): Phase 0 restricts tasks $\le 3$ files to Solo mode; enforces 1-writer-per-file; minimal worker briefs exclude chat history. | Single-writer file locking in `.evidence/tasks.json`; scoped worker briefs under 800 tokens. |
-| **Frontend Craft & Design** | **AI Slop Clichés**: Generic purple gradients, nested cards, cartoonish cyan buttons, unstyled mobile layouts, broken contrast. | **Zero-Slop Hard Gates** (`frontend-artisan` + `image-to-code`): Concrete visual rules against AI cliches; WCAG AA contrast check ($\ge 4.5:1$); Playwright multi-viewport checks (375px/768px/1440px). | CSS inspection for forbidden color palettes and layout cliches; automated contrast verification. |
-| **Database Migrations** | **Destructive / Guessing**: Drops columns directly; unindexed foreign keys cause table locks; naive timestamps without timezone support. | **Production Invariants & Rehearsal** (`schema-craft` + `specialist_probes.py`): Mandatory indexes on foreign keys; ESR compound indexing; disposable SQLite migration rehearsal (UP $\rightarrow$ seed $\rightarrow$ rollback). | Rehearsal verifies DDL reversibility and detects syntax failures before applying to production. |
-| **Release & Git Hygiene** | **Messy Pushes**: Dumps dozens of modified files in one commit; risks committing API keys or `.env` files; pushes unverified code directly to main. | **Automated Gatekeeper** (`ship-it` + `verify_release_gate.py`): Scans staged diff for secrets; builds Conventional Commits; blocks `git push` via PreToolUse hook if evidence is missing or stale. | PreToolUse hook checks `.evidence/manifest.v1.json` before allowing `git push`. |
-
-### Token Consumption Optimization
-
-1. **Model-Facing Log Compression**:
-   - Standard test runs produce 200–2,000 lines of verbose stdout/stderr.
-   - `exec_proxy.py` captures full logs to disk (`.evidence/logs/`) and emits only **3 lines** on success, reducing context-window token consumption by **over 70%** during long test iterations.
-2. **Minimal Worker Context Briefs**:
-   - Naive worker dispatch copies the entire conversation history (~30,000–60,000 tokens per subagent).
-   - `task_shape_gating.build_worker_brief` passes only the task goal, permitted file scope, frozen API contract, and verification command—slashing subagent prompt payload to **under 800 tokens**.
-3. **Phase 0 Solo Gating**:
-   - Small tasks ($\le 3$ files) remain in Solo mode without dispatching subagents, completely avoiding multi-agent coordination overhead and token duplication.
-
----
-
-## 🛡️ Verification & Test Suite Summary
-
-The repository includes a comprehensive testing framework:
+## Verification Summary
 
 ```bash
-# 1. Full Unit, Behavioral & Property Regression Suite (257 tests)
+# 1. Validate skill metadata, policy parity, and token budgets (14 skills)
+python3 scripts/validate-skills.py
+
+# 2. Environment health check
+python3 scripts/skills-doctor.py
+
+# 3. Run the unit & policy test suite (28 tests)
 python3 -m unittest discover -s tests -p 'test_*.py'
-
-# 2. Conformance & Adversarial Runtime Suite (27 bash tests)
-bash tests/verify_runtime.sh
-
-# 3. Environment Health Check & Self-Healing
-python3 scripts/skills-doctor.py --fix
 ```
-
-- **Unit & Behavioral Tests**: **257 passed** in ~9s (`python3 -m unittest discover -s tests -p 'test_*.py'`).
-- **Runtime Conformance Tests**: **27/27 passed** in ~3.5s (`bash tests/verify_runtime.sh` or `python3 -m unittest tests/test_runtime_conformance.py`).
-- **Deterministic Release Gate**: **PASS** (`python3 scripts/verify_release_gate.py --check-only`).
-- **Verification Integrity**: Zero simulated sleep loops, zero hard-coded scores, Git Assertion Lock against test tampering, and transcript auditing via `benchmarks/audit_trial.py`.
 
 ---
 

@@ -54,16 +54,11 @@ class TestInstallSkills(unittest.TestCase):
                     skill_md.exists(), f"Expected skill file missing: {skill_md}"
                 )
 
-            # 3. Verify runtime helpers installed
+            # 3. Verify core runtime helpers installed
             for helper in [
-                "exec-proxy.sh",
-                "verify-release-gate.sh",
-                "runtime_evidence.py",
-                "task_ledger.py",
-                "task_shape_gating.py",
-                "slice-guard.py",
-                "guard_read_before_write.py",
                 "guard_anti_retry.py",
+                "validate-skills.py",
+                "skills-doctor.py",
             ]:
                 helper_file = target_path / "scripts" / helper
                 self.assertTrue(
@@ -463,8 +458,7 @@ class TestSkillsDoctor(unittest.TestCase):
             self.assertTrue(data["core_sound"])
             self.assertEqual(data["status"], "healthy")
             self.assertTrue((target_path / ".agents" / "hooks.json").exists())
-            self.assertTrue((target_path / ".evidence" / "receipts").exists())
-            self.assertTrue((target_path / ".evidence" / "logs").exists())
+            self.assertTrue((target_path / "scripts").exists())
             self.assertIn("repairs_applied", data)
             self.assertGreater(len(data["repairs_applied"]), 0)
 
@@ -480,8 +474,8 @@ class TestSkillsDoctor(unittest.TestCase):
             data = json.loads(res.stdout)
             self.assertTrue(data["core_sound"])
             self.assertTrue(data["runtime_helpers"]["all_present"])
-            self.assertTrue((target_path / "scripts" / "runtime_evidence.py").exists())
-            self.assertTrue((target_path / "scripts" / "task_ledger.py").exists())
+            self.assertTrue((target_path / "scripts" / "guard_anti_retry.py").exists())
+            self.assertTrue((target_path / "scripts" / "validate-skills.py").exists())
 
 
 if __name__ == "__main__":

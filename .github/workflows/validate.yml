@@ -33,10 +33,6 @@ jobs:
         run: |
           python3 scripts/skills-doctor.py
 
-      - name: Run Pytest Conformance & Specialist Probes Suite
+      - name: Run Unit & Policy Enforcement Suite
         run: |
-          pytest tests/ -v
-
-      - name: Run Runtime Conformance & Adversarial Shell Suite
-        run: |
-          bash tests/verify_runtime.sh
+          python3 -m unittest discover -s tests -p 'test_*.py' -v

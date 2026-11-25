@@ -30,5 +30,5 @@ Clean Git release and repository hygiene automator. Converts working changes int
 3. **Conventional Commit**: Format commit message cleanly:
    `git commit -m "<type>(<optional-scope>): <imperative summary>"`
    Types: `feat`, `fix`, `refactor`, `perf`, `style`, `test`, `chore`.
-4. **Deterministic Release Gate Evaluation**: When evidence compliance is enabled, run `verify-release-gate.sh` to enforce the Fail-Closed Rule before release.
+4. **Verification Check**: Ensure the project test suite passes cleanly before committing.
 5. **Ready for Push**: Report commit hash and summary. Wait for explicit user confirmation before `git push`.

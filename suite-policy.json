@@ -97,8 +97,7 @@
   ],
 
   "token_targets": {
-    "note": "Review targets only — not reasons to delete safeguards or truncate the 24-section spec",
-    "ordinary_entrypoints_estimated_tokens": {"min": 500, "max": 1500},
-    "image_to_code_entrypoint_estimated_tokens": {"target": 1500}
+    "note": "Review targets only — not reasons to delete safeguards",
+    "ordinary_entrypoints_estimated_tokens": {"min": 150, "max": 1500}
   }
 }

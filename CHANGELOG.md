@@ -2,6 +2,20 @@
 
 All notable changes to the Antigravity Skills Suite are documented in this file.
 
+## [2.3.0] - 2026-11-25
+
+### Lean Core Restructuring (Idea Council Consensus)
+- **Shadow Runtime Removed**:
+  - Deleted ~4,400 LOC of local shadow-CI infrastructure (`exec_proxy.py`, `verify_release_gate.py`, `runtime_evidence.py`, `task_ledger.py`, `task_shape_gating.py`, `slice-guard.py`, `slice_guard.py` symlink, `specialist_probes.py`, `audit_diff.*`, `setup_worktrees.*`, `guard_read_before_write.py`, `.agents/scripts/`, and coupled runtime test suites).
+  - Real release gating belongs in CI (`.github/workflows/validate.yml`) and branch protection rather than local same-UID `.evidence/` hooks.
+- **Frictionless Default Hooks**:
+  - `.agents/hooks.json` now runs only `guard_anti_retry.py` (stops identical-failure retry loops without blocking `git push`).
+- **4-Script Core**:
+  - Suite tooling consolidated to `scripts/install-skills.py`, `scripts/validate-skills.py`, `scripts/skills-doctor.py`, and `scripts/guard_anti_retry.py`.
+- **Stale Docs & Artifact Cleanup**:
+  - Removed `*/agents/openai.yaml` and historical `Reports/` / `benchmarks/` snapshots.
+  - Reconciled `REQUIREMENTS.md`, `CONTRIBUTING.md`, `references/output-policy.md`, `plan-master/SKILL.md`, `plan-master/references/integrations.md`, `suite-policy.json`, and `README.md` to the 14-skill + 4-script architecture.
+
 ## [2.2.1] - 2026-11-23
 
 ### Runtime Integrity, Release Gating & Audit Fixes

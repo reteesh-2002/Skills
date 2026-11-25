@@ -1,3 +1,0 @@
-skill ID:       ^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$
-SHA-256 digest: ^[a-f0-9]{64}$
-heartbeat:      ^\[(GREEN|AMBER|RED)\] [a-z0-9-]+: [^\r\n]{1,160}$

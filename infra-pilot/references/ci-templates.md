@@ -42,8 +42,8 @@ jobs:
       - name: TypeScript Compile
         run: npm run typecheck
 
-      - name: Vertical Slice Boundary Guard
-        run: python3 scripts/slice-guard.py --target-dir src
+      - name: Lint
+        run: npm run lint
 
   # ──────────────────────────────────────────────
   # Job 2: Test Suite with Physical Evidence

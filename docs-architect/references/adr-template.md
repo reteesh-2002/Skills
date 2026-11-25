@@ -45,7 +45,7 @@ Chosen option: **Option 3: Vertical Slice Architecture**, because it delivers th
 
 ### Positive Consequences
 - Every module (`modules/<slice>/`) is self-contained with its own contract, service, routes, and tests.
-- Cross-slice imports are mechanically blocked by `slice-guard.py`.
+- Cross-slice imports are restricted to public `contract.ts` boundaries and checked in code review / ESLint.
 - Tasks can be planned and executed within a strict Sub-600 LOC context window.
 
 ### Negative Consequences & Trade-offs
@@ -58,5 +58,5 @@ Chosen option: **Option 3: Vertical Slice Architecture**, because it delivers th
 
 1. All new features must be placed in `src/modules/<slice>/`.
 2. Slices must never import sibling slice internal files (`service.ts`, `routes.ts`).
-3. Running `python3 scripts/slice-guard.py` must return exit code 0 before merging.
+3. All tests and boundary/lint checks must return exit code 0 before merging.
 ```

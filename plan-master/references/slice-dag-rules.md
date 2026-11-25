@@ -46,8 +46,8 @@ Reference for structuring execution plans for projects that adopt the Vertical S
 
 | ID | Deliverable | `[CONTEXT SCOPE]` | Depends On | Acceptance Gate |
 |---|---|---|---|---|
-| **T6** | `modules/billing/service.ts` + `modules/billing/routes.ts` + `modules/billing/billing.test.ts` | `billing/contract.ts` + the 3 billing files | T3 | `A6`: All billing tests pass: `exec-proxy.sh --label test_billing` |
-| **T7** | `modules/portfolio/service.ts` + `modules/portfolio/routes.ts` + `modules/portfolio/portfolio.test.ts` | `portfolio/contract.ts` + the 3 portfolio files | T4 | `A7`: All portfolio tests pass: `exec-proxy.sh --label test_portfolio` |
+| **T6** | `modules/billing/service.ts` + `modules/billing/routes.ts` + `modules/billing/billing.test.ts` | `billing/contract.ts` + the 3 billing files | T3 | `A6`: All billing tests pass (`npm test -- billing`) |
+| **T7** | `modules/portfolio/service.ts` + `modules/portfolio/routes.ts` + `modules/portfolio/portfolio.test.ts` | `portfolio/contract.ts` + the 3 portfolio files | T4 | `A7`: All portfolio tests pass (`npm test -- portfolio`) |
 | **T8** | `modules/notifications/service.ts` + `modules/notifications/routes.ts` + `modules/notifications/notifications.test.ts` | `notifications/contract.ts` + the 3 notification files + `core/events.ts` | T5, T2 | `A8`: Notification dispatch tests pass |
 
 ### Integration & Verification Phase
@@ -55,7 +55,7 @@ Reference for structuring execution plans for projects that adopt the Vertical S
 | ID | Deliverable | `[CONTEXT SCOPE]` | Depends On | Acceptance Gate |
 |---|---|---|---|---|
 | **T9** | Integration: billing emits `invoice.created` event → notifications slice listens via event bus | `billing/contract.ts` + `notifications/contract.ts` + `core/events.ts` only | T6, T8 | `A9`: End-to-end event test passes: invoice creation triggers notification |
-| **T10** | Full test suite + release gate | All receipts | T6, T7, T8, T9 | `A10`: `verify-release-gate.sh` passes; all receipts green |
+| **T10** | Full test suite + final review | All slices | T6, T7, T8, T9 | `A10`: Full `npm test` & lint pass cleanly |
 
 ---
 

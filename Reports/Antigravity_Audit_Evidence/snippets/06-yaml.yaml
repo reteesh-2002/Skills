@@ -1,9 +1,0 @@
-id: qa-sentinel
-contract_version: 1
-inputs: [task.v1, change.v1, execution-receipts.v1]
-outputs: [assessment-proposal.v1]
-required_capabilities: [run_check, read_artifact, publish_assessment]
-forbidden_capabilities: [approve_own_waiver, deploy]
-manual_only: false
-max_repair_rounds: 2
-report_policy: inherit_terminal_owner

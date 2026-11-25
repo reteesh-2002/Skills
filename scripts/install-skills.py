@@ -36,36 +36,12 @@ SKILL_INVENTORY = [
 
 # Explicit runtime inventory scripts and policies
 RUNTIME_SCRIPTS = [
-    "scripts/exec-proxy.sh",
-    "scripts/exec-proxy.cmd",
-    "scripts/exec_proxy.py",
-    "scripts/verify-release-gate.sh",
-    "scripts/verify-release-gate.cmd",
-    "scripts/verify_release_gate.py",
-    "scripts/runtime_evidence.py",
-    "scripts/task_ledger.py",
-    "scripts/task_shape_gating.py",
-    "scripts/specialist_probes.py",
-    "scripts/slice-guard.py",
-    "scripts/guard_read_before_write.py",
     "scripts/guard_anti_retry.py",
     "scripts/validate-skills.py",
     "scripts/skills-doctor.py",
-    "scripts/audit_diff.py",
-    "scripts/audit_diff.sh",
-    "scripts/audit-diff.cmd",
-    "scripts/setup_worktrees.py",
-    "scripts/setup_worktrees.sh",
-    "scripts/setup-worktrees.cmd",
 ]
 
-RUNTIME_AGENT_SCRIPTS = [
-    ".agents/scripts/verify-release-gate.sh",
-    ".agents/scripts/verify_release_gate.py",
-    ".agents/scripts/runtime_evidence.py",
-    ".agents/scripts/guard_read_before_write.py",
-    ".agents/scripts/guard_anti_retry.py",
-]
+RUNTIME_AGENT_SCRIPTS: list[str] = []
 
 POLICY_FILES = [
     "suite-policy.json",
@@ -79,6 +55,7 @@ RULE_FILES = [
 def get_default_hook_template():
     # Pure Python is cross-platform across Windows, Linux, and macOS
     python_cmd = "python3" if shutil.which("python3") and sys.platform != "win32" else "python"
+    hook_cmd = f"{python_cmd} -c \"import os,runpy; p='scripts/guard_anti_retry.py'; runpy.run_path(p if os.path.exists(p) else '../'+p, run_name='__main__')\""
     return {
         "evidence-policy": {
             "description": "Lightweight safety invariants (Anti-Retry and mutation hygiene)",
@@ -89,7 +66,7 @@ def get_default_hook_template():
                     "hooks": [
                         {
                             "type": "command",
-                            "command": f"{python_cmd} scripts/guard_anti_retry.py",
+                            "command": hook_cmd,
                             "timeout": 5,
                         }
                     ],
@@ -102,7 +79,7 @@ def get_default_hook_template():
                     "hooks": [
                         {
                             "type": "command",
-                            "command": f"{python_cmd} scripts/guard_anti_retry.py",
+                            "command": hook_cmd,
                             "timeout": 5,
                         }
                     ],

@@ -16,14 +16,9 @@ import sys
 
 # Critical runtime helpers that must be present for the suite to operate
 REQUIRED_RUNTIME_HELPERS = [
-    "exec-proxy.sh",
-    "verify-release-gate.sh",
-    "runtime_evidence.py",
-    "task_ledger.py",
-    "task_shape_gating.py",
-    "slice-guard.py",
-    "guard_read_before_write.py",
     "guard_anti_retry.py",
+    "validate-skills.py",
+    "skills-doctor.py",
 ]
 
 # Optional external tool binaries
@@ -386,8 +381,6 @@ def heal_environment(project_dir: Path) -> list[str]:
     # 1. Essential directories
     dirs_to_create = [
         project_dir / ".agents",
-        project_dir / ".evidence" / "receipts",
-        project_dir / ".evidence" / "logs",
         project_dir / "scripts",
     ]
     for d in dirs_to_create:
@@ -443,6 +436,7 @@ def heal_environment(project_dir: Path) -> list[str]:
             actions.append("Restored .agents/hooks.json from suite template")
         else:
             python_bin = "python3" if shutil.which("python3") and sys.platform != "win32" else "python"
+            hook_cmd = f"{python_bin} -c \"import os,runpy; p='scripts/guard_anti_retry.py'; runpy.run_path(p if os.path.exists(p) else '../'+p, run_name='__main__')\""
             default_hooks = {
                 "evidence-policy": {
                     "PreToolUse": [
@@ -451,13 +445,8 @@ def heal_environment(project_dir: Path) -> list[str]:
                             "hooks": [
                                 {
                                     "type": "command",
-                                    "command": f"{python_bin} scripts/guard_anti_retry.py",
+                                    "command": hook_cmd,
                                     "timeout": 5
-                                },
-                                {
-                                    "type": "command",
-                                    "command": f"{python_bin} scripts/verify_release_gate.py --pre-tool",
-                                    "timeout": 10
                                 }
                             ]
                         }
@@ -468,7 +457,7 @@ def heal_environment(project_dir: Path) -> list[str]:
                             "hooks": [
                                 {
                                     "type": "command",
-                                    "command": f"{python_bin} scripts/guard_anti_retry.py",
+                                    "command": hook_cmd,
                                     "timeout": 5
                                 }
                             ]

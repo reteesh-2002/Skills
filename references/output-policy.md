@@ -12,7 +12,7 @@ Authoritative output reference for the Antigravity Skills Suite, derived from [`
 | **Review** | Actionable findings first | **No mandatory finding quota**. Clean passes with zero findings are valid. Explicitly label self-review when independent reviewer is unavailable. |
 | **Failure** | Cause/uncertainty + relevant excerpt + next action + full log path | Pinpoints failure without flooding chat; points to full disk log. |
 | **Intermediate pipeline stage** | Single-line milestone heartbeat | Intermediate skills in a pipeline suppress full cards (e.g. `✓ [skill]: summary`). Only the terminal or coordinating skill emits the final summary. |
-| **Full master specification** | All 24 sections | Full depth when explicitly requested. Truncation prohibited; routine-chat length caps do not apply. |
+| **Engineering blueprint** | Inside-Out blueprint (5 core decisions) | Full blueprint when explicitly requested; routine-chat length caps do not apply. |
 | **Execution plan** | Plan artifact + concise chat overview | Detailed step breakdown lives in the artifact; chat displays status and open decisions. |
 
 ---
@@ -47,7 +47,7 @@ Support conversational detail toggles without requiring special slash commands:
 
 ## 5. Core Invariants
 
-- An explicit request for a 24-section specification always receives all 24 sections regardless of effort profile.
+- An explicit blueprint request receives all 5 core engineering decisions regardless of effort profile.
 - Effort profiles never override manual activation or host constraints.
 - Do not claim token or cost limits are enforced unless host telemetry exists.
 - Planning does not authorize publishing.

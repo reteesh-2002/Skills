@@ -1,9 +1,0 @@
-{
-  "contract_version": "design.v1",
-  "primary_task": "identify and inspect an unhealthy container",
-  "hierarchy": ["container state", "container identity", "actions", "telemetry"],
-  "layout": "dense main list with a right telemetry rail",
-  "prohibited_patterns": ["decorative gradient hero", "identical KPI card wall"],
-  "required_states": ["loading", "empty", "error", "stale", "narrow-screen"],
-  "review": ["task completion", "keyboard access", "visual hierarchy"]
-}

@@ -1,8 +1,0 @@
-tasks(task_id, version, state, contract_digest, report_owner)
-attempts(task_id, generation, worker_id, lease_expiry, snapshot_digest)
-events(event_id, task_id, seq, kind, payload_digest, created_at)
-receipts(receipt_id, run_id, check_id, snapshot_digest, completeness)
-artifacts(digest, media_type, bytes, storage_key, retention_class)
-claims(claim_id, status, evidence_ids, supersedes, source_revision)
-warnings(fingerprint, impact, owner, expires_at, waiver_id)
-outbox(event_id, delivery_status, retry_after)

@@ -1,20 +1,15 @@
 {
   "evidence-policy": {
-    "description": "Lightweight safety invariants (Anti-Retry and Release Gate evidence verification)",
+    "description": "Lightweight safety invariant (Anti-Exact-Retry loop prevention)",
     "PreToolUse": [
       {
         "matcher": "run_command",
-        "description": "Enforce Anti-Exact-Retry invariant and Release Gate verification",
+        "description": "Enforce Anti-Exact-Retry invariant to halt runaway failure loops",
         "hooks": [
           {
             "type": "command",
-            "command": "python3 scripts/guard_anti_retry.py",
+            "command": "python3 -c \"import os,runpy; p='scripts/guard_anti_retry.py'; runpy.run_path(p if os.path.exists(p) else '../'+p, run_name='__main__')\"",
             "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "python3 scripts/verify_release_gate.py --pre-tool",
-            "timeout": 10
           }
         ]
       }
@@ -26,7 +21,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 scripts/guard_anti_retry.py",
+            "command": "python3 -c \"import os,runpy; p='scripts/guard_anti_retry.py'; runpy.run_path(p if os.path.exists(p) else '../'+p, run_name='__main__')\"",
             "timeout": 5
           }
         ]

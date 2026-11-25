@@ -55,7 +55,7 @@ graph TD
 
 - **`src/core/`**: Shared frozen database clients, session context, and logging.
 - **`src/modules/<slice>/`**: Domain modules. Each contains its own `contract.ts`, `routes.ts`, `service.ts`, and colocated tests.
-- **Cross-Slice Rule**: Slices communicate strictly via frozen `contract.ts` interfaces; direct internal imports are mechanically blocked by `slice-guard`.
+- **Cross-Slice Rule**: Slices communicate strictly via frozen `contract.ts` interfaces; direct internal imports are disallowed.
 
 ---
 
@@ -63,7 +63,7 @@ graph TD
 
 | Capability | Technical Standard | Benefit |
 |---|---|---|
-| **Sub-600 LOC Modules** | Enforced by `slice-guard.py` | Eliminates AI prompt amnesia and cascading regressions |
+| **Bounded Modules** | Enforced by lint / review | Eliminates AI prompt amnesia and cascading regressions |
 | **Transactional Outbox** | PostgreSQL write-ahead events | Zero data loss during background worker restarts |
 | **Row-Level Security (RLS)** | Tenant-scoped database queries | Guaranteed multi-tenant data isolation at the DB level |
 | **Idempotent Mutations** | `Idempotency-Key` header support | Prevents duplicate billing and operations on network retries |
@@ -89,11 +89,8 @@ Run the test suite and architectural boundary linters:
 # Run unit & integration tests
 npm test
 
-# Run mechanical slice boundary linter
-python3 scripts/slice-guard.py
-
-# Evaluate release gate
-bash scripts/verify-release-gate.sh
+# Run lint & typechecks
+npm run lint
 ```
 
 ---

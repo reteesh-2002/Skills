@@ -62,14 +62,14 @@ When creating or modifying frontend skills:
 All contributions must pass the local test and validation suite before submitting:
 
 ```bash
-# 1. Validate all skill frontmatter, metadata, and relative links
+# 1. Validate all skill frontmatter, metadata, policy parity, and relative links
 python3 scripts/validate-skills.py
 
-# 2. Run the 27-test runtime conformance and adversarial suite
-./scripts/exec-proxy.sh --label test_runtime bash tests/verify_runtime.sh
+# 2. Check environment and hook health
+python3 scripts/skills-doctor.py
 
-# 3. Verify the release gate
-./scripts/verify-release-gate.sh
+# 3. Run the unit & policy test suite
+python3 -m unittest discover -s tests -p 'test_*.py'
 ```
 
 ---
@@ -77,5 +77,5 @@ python3 scripts/validate-skills.py
 ## 📦 Pull Requests & Release Hygiene
 
 1. **Commit Messages**: Follow [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`).
-2. **Clean Working Tree**: Ensure no temporary test outputs, debug scripts, or `.evidence/logs` are tracked by git.
+2. **Clean Working Tree**: Ensure no temporary test outputs, debug scripts, or `.evidence/` artifacts are tracked by git.
 3. **Changelog**: When introducing significant capability or protocol updates to a skill, add an entry to `<skill>/CHANGELOG.md`.
