@@ -33,7 +33,9 @@ def clear_failures(failures_file: Path) -> None:
         except OSError: pass
 
 EXPLORATORY_COMMAND_PREFIXES = (
-    "grep ", "fgrep ", "egrep ", "diff ", "test ", "find ", "curl -i", "curl -I", "which ", "type ", "git status", "git diff", "git log"
+    "grep ", "fgrep ", "egrep ", "rg ", "ls ", "cat ", "head ", "tail ",
+    "ps ", "ss ", "lsof ", "diff ", "test ", "find ", "curl -s", "curl -i",
+    "curl -I", "which ", "type ", "git status", "git diff", "git log",
 )
 
 def is_exploratory_command(command_line: str) -> bool:
@@ -55,9 +57,11 @@ def evaluate_retry(tool_name: str, args: dict, active_failures: set) -> tuple[bo
 def main():
     if len(sys.argv) > 1 and sys.argv[1] == "--test-harness":
         print("Anti-Exact-Retry Guard ready"); sys.exit(0)
-    payload = {}
-    try: payload = json.load(sys.stdin)
-    except Exception: print("{}" if ("result" in payload or "output" in payload) else json.dumps({"decision": "allow"})); sys.exit(0)
+    try:
+        payload = json.load(sys.stdin)
+    except Exception:
+        print(json.dumps({"decision": "allow"}))
+        sys.exit(0)
     tc = payload.get("toolCall") or payload.get("tool_call") or {}
     name = tc.get("name") or payload.get("name") or ""
     args = tc.get("args") or payload.get("args") or payload.get("tool_input") or {}
@@ -76,8 +80,6 @@ def main():
     allowed, reason = evaluate_retry(name, args, load_failures(ff))
     if not allowed:
         print(json.dumps({"decision": "deny", "reason": reason})); sys.exit(0)
-    if name in mutation_tools:
-        clear_failures(ff)
     print(json.dumps({"decision": "allow"}))
 
 if __name__ == "__main__": main()

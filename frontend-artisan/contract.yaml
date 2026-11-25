@@ -1,8 +1,0 @@
-id: frontend-artisan
-contract_version: 1
-inputs: [design-brief.v1, ui-task.v1]
-outputs: [ui-component-artifact.v1, generative-ui-widget.v1]
-required_capabilities: [render_html, write_css, compile_tailwind]
-forbidden_capabilities: [modify_database_schema, approve_release]
-manual_only: true
-report_policy: standalone_card

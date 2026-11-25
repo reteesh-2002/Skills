@@ -131,7 +131,7 @@ graph TD
    - **Features**: `plan-master` $\rightarrow$ implement (or `native_swarm` when genuinely parallel) $\rightarrow$ `qa-sentinel` $\rightarrow$ `ship-it`.
    - **Bugs**: `deep-debugger` (reproduce first, never weaken existing tests at `HEAD`) $\rightarrow$ `qa-sentinel`.
 
-4. **Pipeline Output Suppression Rule**:
+3. **Pipeline Output Suppression Rule**:
    - Intermediate skills in a pipeline suppress verbose chat cards to a **single-line milestone heartbeat** (e.g. `✓ [deep-debugger]: Fixed bug in worker.py:L42 (exit 0)`).
    - Only the terminal skill or coordinating agent outputs the final **4–8 line executive card**.
 

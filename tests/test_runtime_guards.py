@@ -129,12 +129,12 @@ class TestAntiRetryGuard(unittest.TestCase):
 
         res = subprocess.run(
             [sys.executable, str(GUARD_AER)],
-            input=json.dumps({"cwd": str(self.tmp_path), "toolCall": {"name": "replace_file_content", "args": {}}}),
+            input=json.dumps({"cwd": str(self.tmp_path), "toolCall": {"name": "replace_file_content", "args": {}}, "result": {}}),
             capture_output=True,
             text=True,
         )
         self.assertEqual(res.returncode, 0)
-        self.assertEqual(json.loads(res.stdout).get("decision"), "allow")
+        self.assertEqual(json.loads(res.stdout), {})
 
         res = subprocess.run(
             [sys.executable, str(GUARD_AER)],

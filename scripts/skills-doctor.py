@@ -24,22 +24,28 @@ REQUIRED_RUNTIME_HELPERS = [
 # Optional external tool binaries
 OPTIONAL_TOOLS = ["pytest", "playwright", "git", "node"]
 
-SKILL_INVENTORY = [
-    "code-reviewer",
-    "deep-debugger",
-    "frontend-artisan",
-    "idea-council",
-    "plan-master",
-    "playwright-cli",
-    "create-architect",
-    "qa-sentinel",
-    "runtime-reliability",
-    "schema-craft",
-    "security-verifier",
-    "ship-it",
-    "infra-pilot",
-    "docs-architect",
-]
+def load_skill_inventory() -> list[str]:
+    """Load the authoritative skill roster from suite-policy.json."""
+    for candidate in (
+        Path(__file__).resolve().parent.parent / "suite-policy.json",
+        Path.cwd() / "suite-policy.json",
+    ):
+        if candidate.exists():
+            data = json.loads(candidate.read_text(encoding="utf-8"))
+            auto = [e["skill"] for e in data.get("activation_modes", {}).get("auto", [])]
+            explicit = data.get("activation_modes", {}).get("explicit_only", [])
+            if auto or explicit:
+                return auto + explicit
+    return [
+        "deep-debugger", "plan-master", "qa-sentinel",
+        "create-architect", "frontend-artisan", "schema-craft",
+        "code-reviewer", "security-verifier", "runtime-reliability",
+        "idea-council", "ship-it", "playwright-cli",
+        "infra-pilot", "docs-architect",
+    ]
+
+
+SKILL_INVENTORY = load_skill_inventory()
 
 
 def check_python() -> dict:

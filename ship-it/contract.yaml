@@ -1,8 +1,0 @@
-id: ship-it
-contract_version: 1
-inputs: [staged-diff.v1, test-output-summary.v1]
-outputs: [conventional-commit.v1]
-required_capabilities: [scan_secrets, format_commit, verify_tests_before_commit]
-forbidden_capabilities: [waive_failed_qa, push_without_consent]
-manual_only: true
-report_policy: standalone_card

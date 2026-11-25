@@ -67,4 +67,4 @@ Follow [`references/output-policy.md`](../references/output-policy.md):
 - **Evidence**: Command executed, exit code, and measured deltas.
 
 ### Intermediate Milestone:
-`✓ [runtime-reliability]: Soak & lifecycle check PASS (N samples, rcpt_id)`
+`✓ [runtime-reliability]: Soak & lifecycle check PASS (N samples)`

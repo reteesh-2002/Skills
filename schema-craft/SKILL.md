@@ -82,5 +82,5 @@ Follow [`references/output-policy.md`](../references/output-policy.md):
    - **Migration Impact & Recovery**: Rehearsal result and recovery strategy (reversible vs. forward-recovery).
    - **Evidence & Files**: Paths to generated migrations and seed files.
 2. **Intermediate Milestone**:
-   `✓ [schema-craft]: Migrations defined & rehearsed for <engine> (<N> models, rcpt_id)`
+   `✓ [schema-craft]: Migrations defined & rehearsed for <engine> (<N> models)`
 

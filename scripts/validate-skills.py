@@ -82,19 +82,12 @@ def check_relative_links(skill_dir: Path, skill_file: Path, body: str) -> list[s
     return errors
 
 
-def check_contract_drift(repo_root: Path) -> list[str]:
-    """
-    Validates that skill contract.yaml files are consistent with suite-policy.json.
-    Catches activation drift: a skill listed as explicit_only in policy
-    must not have manual_only: false without a corresponding auto trigger.
-    """
+def check_policy_parity(repo_root: Path, discovered_skills: list[str]) -> list[str]:
+    """Verify suite-policy.json exists, is valid JSON, and matches discovered skill directories."""
     import json
-    errors = []
-
     policy_path = repo_root / "suite-policy.json"
     if not policy_path.exists():
-        return ["suite-policy.json not found — cannot validate contract drift"]
-
+        return ["suite-policy.json not found — cannot validate policy parity"]
     try:
         with open(policy_path, encoding="utf-8") as f:
             policy = json.load(f)
@@ -103,38 +96,14 @@ def check_contract_drift(repo_root: Path) -> list[str]:
 
     explicit_only = set(policy.get("activation_modes", {}).get("explicit_only", []))
     auto_skills = {entry["skill"] for entry in policy.get("activation_modes", {}).get("auto", [])}
+    policy_skills = explicit_only | auto_skills
+    disk_skills = set(discovered_skills)
 
-    skills_subdir = repo_root / "skills"
-    base_dir = skills_subdir if (skills_subdir.exists() and skills_subdir.is_dir()) else repo_root
-
-    for skill_name in explicit_only:
-        contract_path = base_dir / skill_name / "contract.yaml"
-        if not contract_path.exists():
-            continue
-        content = contract_path.read_text(encoding="utf-8")
-        if "manual_only: false" in content and skill_name not in auto_skills:
-            errors.append(
-                f"[{skill_name}] contract.yaml has 'manual_only: false' but "
-                f"suite-policy.json lists it as explicit_only"
-            )
-        if "activation: auto" in content:
-            errors.append(
-                f"[{skill_name}] contract.yaml has 'activation: auto' but "
-                f"suite-policy.json lists it as explicit_only"
-            )
-
-    for entry in policy.get("activation_modes", {}).get("auto", []):
-        skill_name = entry["skill"]
-        contract_path = base_dir / skill_name / "contract.yaml"
-        if not contract_path.exists():
-            continue
-        content = contract_path.read_text(encoding="utf-8")
-        if "manual_only: true" in content:
-            errors.append(
-                f"[{skill_name}] contract.yaml has 'manual_only: true' but "
-                f"suite-policy.json lists it as auto-activated"
-            )
-
+    errors = []
+    for missing in sorted(policy_skills - disk_skills):
+        errors.append(f"suite-policy.json lists '{missing}' but directory does not exist")
+    for extra in sorted(disk_skills - policy_skills):
+        errors.append(f"Skill directory '{extra}' is missing from suite-policy.json")
     return errors
 
 
@@ -191,20 +160,16 @@ def main():
         skill_errors.extend(link_errors)
 
         stale_patterns = (
-            "exec_proxy", "exec-proxy.sh", "Exec Proxy", "verify_release_gate", "verify-release-gate.sh",
+            "exec_proxy", "exec-proxy.sh", "Exec Proxy", "Execute via Proxy",
+            "verify_release_gate", "verify-release-gate.sh",
             "specialist_probes.py", "task_ledger.py", "task_shape_gating.py",
             "slice-guard.py", "audit_diff", "setup_worktrees", "guard_read_before_write",
             "probe_memory_soak_plateau", "probe_graceful_drain_subprocess",
             ".evidence/manifest.v1.json", "manifest-receipt.v1", "update_manifest",
             "evaluate_release_gate", "anti-slop-spec.v1", "adaptive-worker-orchestrator-v2",
-            "openai.yaml",
+            "openai.yaml", "rcpt_id",
         )
-        contract_file = skill_dir / "contract.yaml"
-        if not contract_file.is_file():
-            skill_errors.append("Missing contract.yaml")
         files_to_scan = [skill_file]
-        if contract_file.is_file():
-            files_to_scan.append(contract_file)
         refs_dir = skill_dir / "references"
         if refs_dir.is_dir():
             files_to_scan.extend(sorted(refs_dir.rglob("*.md")))
@@ -224,10 +189,10 @@ def main():
 
     print("-" * 65)
 
-    # Contract drift check (T03)
-    drift_errors = check_contract_drift(repo_root)
+    # Policy parity check
+    drift_errors = check_policy_parity(repo_root, [s.name for s in skills])
     if drift_errors:
-        print("\n⚠️  Contract drift detected:")
+        print("\n⚠️  Policy parity errors detected:")
         for err in drift_errors:
             print(f"  - {err}")
         errors.extend(drift_errors)

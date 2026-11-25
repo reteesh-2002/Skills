@@ -21,7 +21,7 @@ Deterministic security boundary inspection and vulnerability verification. Close
 ## 2. 4-Stage Security Verification Protocol
 
 ```
-[1. Threat Model & Scope] ──> [2. Synthesize Probes] ──> [3. Execute via Proxy] ──> [4. Gate & Assessment]
+[1. Threat Model & Scope] ──> [2. Synthesize Probes] ──> [3. Execute Probes] ──> [4. Gate & Assessment]
 ```
 
 ### Stage 1: Threat Modeling & Scope Definition
@@ -78,5 +78,5 @@ When a vulnerability is discovered, present:
 - **Evidence**: Test command executed and pass/fail counts.
 
 ### Intermediate Milestone:
-`✓ [security-verifier]: Security audit PASS (<N> boundaries clean, rcpt_id)`
+`✓ [security-verifier]: Security audit PASS (<N> boundaries clean)`
 

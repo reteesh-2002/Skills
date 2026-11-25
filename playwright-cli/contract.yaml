@@ -1,8 +1,0 @@
-id: playwright-cli
-contract_version: 1
-inputs: [browser-verification-task.v1]
-outputs: [playwright-verification-summary.v1]
-required_capabilities: [run_playwright, capture_snapshot, assert_dom_state]
-forbidden_capabilities: [kill_unrelated_browsers]
-manual_only: true
-report_policy: standalone_card

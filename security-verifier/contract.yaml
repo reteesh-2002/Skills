@@ -1,8 +1,0 @@
-id: security-verifier
-contract_version: 1
-inputs: [task-contract.v1, endpoint-schema.v1, dependency-delta.v1]
-outputs: [security-assessment.v1]
-required_capabilities: [run_security_probe, audit_dependencies]
-forbidden_capabilities: [approve_own_waiver, git_push, fuzz_production]
-manual_only: true
-report_policy: standalone_card

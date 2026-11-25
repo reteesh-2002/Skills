@@ -16,23 +16,19 @@ import shutil
 import stat
 import sys
 
-# Explicit inventory of all 14 suite skills
-SKILL_INVENTORY = [
-    "code-reviewer",
-    "deep-debugger",
-    "frontend-artisan",
-    "idea-council",
-    "plan-master",
-    "playwright-cli",
-    "create-architect",
-    "qa-sentinel",
-    "runtime-reliability",
-    "schema-craft",
-    "security-verifier",
-    "ship-it",
-    "infra-pilot",
-    "docs-architect",
-]
+def load_skill_inventory() -> list[str]:
+    """Load the authoritative skill roster from suite-policy.json."""
+    policy_path = Path(__file__).resolve().parent.parent / "suite-policy.json"
+    if policy_path.exists():
+        data = json.loads(policy_path.read_text(encoding="utf-8"))
+        auto = [e["skill"] for e in data.get("activation_modes", {}).get("auto", [])]
+        explicit = data.get("activation_modes", {}).get("explicit_only", [])
+        return auto + explicit
+    return []
+
+
+# Authoritative suite skill inventory loaded from suite-policy.json
+SKILL_INVENTORY = load_skill_inventory()
 
 # Explicit runtime inventory scripts and policies
 RUNTIME_SCRIPTS = [

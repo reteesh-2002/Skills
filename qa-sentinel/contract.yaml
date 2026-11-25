@@ -1,8 +1,0 @@
-id: qa-sentinel
-contract_version: 1
-inputs: [task.v1, git-tree-sha]
-outputs: [qa-assessment.v1, test-output-summary.v1]
-required_capabilities: [run_check, parse_framework_metrics, verify_exit_and_counts]
-forbidden_capabilities: [approve_own_waiver, git_push, modify_source]
-manual_only: false
-report_policy: pipeline_suppress_intermediate
