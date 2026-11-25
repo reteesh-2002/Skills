@@ -16,7 +16,6 @@ required_capabilities:
   - parse_dependencies
   - define_acceptance_gates
 forbidden_capabilities:
-  - modify_source
   - git_push
   - regenerate_blueprint          # do not reproduce or regenerate the engineering blueprint
   - start_implementation_workers  # orchestrator activation is explicit, not automatic

@@ -4,4 +4,4 @@ Plan Master adapts planning-relevant prompt structures and concepts from the use
 
 Adapted concepts include intent extraction, precise scope, current/target state, acceptance criteria, grounded context, concise handoffs, and stopping conditions. Plan Master adds dependency-aware task planning, optional council and executor integration, plan revisions, and standalone operation.
 
-The supplied provider/model catalog and its capability claims are not imported or endorsed. No specific model is required. Earlier user-provided adaptive orchestrator instructions informed generic ownership and task-handoff requirements; exact `adaptive-worker-orchestrator-v2` compatibility must be resolved at use time from its actual source.
+The supplied provider/model catalog and its capability claims are not imported or endorsed. No specific model is required. Parallel task-handoff conventions integrate cleanly with Antigravity's built-in `native_swarm`.

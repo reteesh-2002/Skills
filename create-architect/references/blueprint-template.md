@@ -112,7 +112,7 @@ src/
     ├── [slice-a]/
     │   ├── contract.ts      # < 50 lines — public Zod/TypeScript interface only
     │   ├── routes.ts        # HTTP handlers
-    │   ├── service.ts       # Domain logic < 200 lines
+    │   ├── service.ts       # Cohesive domain logic
     │   └── [slice-a].test.ts
     └── [slice-b]/
         ├── contract.ts

@@ -79,7 +79,7 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      - name: Run Test Suite via Exec Proxy
+      - name: Run Test Suite
         env:
           DATABASE_URL: postgresql://postgres:testpassword@localhost:5432/app_test
         run: |

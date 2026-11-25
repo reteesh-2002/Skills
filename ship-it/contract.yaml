@@ -1,8 +1,8 @@
 id: ship-it
 contract_version: 1
-inputs: [manifest-receipt.v1, git-tree-sha]
-outputs: [release-receipt.v1, conventional-commit.v1]
-required_capabilities: [scan_secrets, format_commit, evaluate_release_gate]
-forbidden_capabilities: [waive_failed_qa, bypass_release_gate]
+inputs: [staged-diff.v1, test-output-summary.v1]
+outputs: [conventional-commit.v1]
+required_capabilities: [scan_secrets, format_commit, verify_tests_before_commit]
+forbidden_capabilities: [waive_failed_qa, push_without_consent]
 manual_only: true
 report_policy: standalone_card

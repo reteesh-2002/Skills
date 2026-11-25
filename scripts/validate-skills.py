@@ -191,23 +191,28 @@ def main():
         skill_errors.extend(link_errors)
 
         stale_patterns = (
-            "exec_proxy", "exec-proxy.sh", "verify_release_gate", "verify-release-gate.sh",
+            "exec_proxy", "exec-proxy.sh", "Exec Proxy", "verify_release_gate", "verify-release-gate.sh",
             "specialist_probes.py", "task_ledger.py", "task_shape_gating.py",
             "slice-guard.py", "audit_diff", "setup_worktrees", "guard_read_before_write",
             "probe_memory_soak_plateau", "probe_graceful_drain_subprocess",
-            ".evidence/manifest.v1.json",
+            ".evidence/manifest.v1.json", "manifest-receipt.v1", "update_manifest",
+            "evaluate_release_gate", "anti-slop-spec.v1", "adaptive-worker-orchestrator-v2",
+            "openai.yaml",
         )
-        if not (skill_dir / "contract.yaml").is_file():
+        contract_file = skill_dir / "contract.yaml"
+        if not contract_file.is_file():
             skill_errors.append("Missing contract.yaml")
         files_to_scan = [skill_file]
+        if contract_file.is_file():
+            files_to_scan.append(contract_file)
         refs_dir = skill_dir / "references"
         if refs_dir.is_dir():
             files_to_scan.extend(sorted(refs_dir.rglob("*.md")))
-        for md_file in files_to_scan:
-            md_text = md_file.read_text(encoding="utf-8")
+        for scan_file in files_to_scan:
+            scan_text = scan_file.read_text(encoding="utf-8")
             for pat in stale_patterns:
-                if pat in md_text:
-                    skill_errors.append(f"Stale deleted reference '{pat}' in {md_file.relative_to(skill_dir)}")
+                if pat in scan_text:
+                    skill_errors.append(f"Stale deleted reference '{pat}' in {scan_file.relative_to(skill_dir)}")
 
         if skill_errors:
             status = "❌ FAIL"

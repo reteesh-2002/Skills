@@ -8,7 +8,7 @@ Categorized inventory of default AI UI traps and uncurated web patterns. Replace
 
 | Anti-Pattern | Why It Fails | Artisan Replacement |
 |---|---|---|
-| **Purple-on-Slate Default** (`bg-slate-900` + purple/indigo gradients) | Universal hallmark of unprompted AI templates; looks identical across thousands of sites. | Deliberate palettes: warm stone/sand, deep obsidian with emerald accents, high-contrast monochrome, or warm editorial ivory. |
+| **Unprompted Purple-on-Slate Default** (`bg-slate-900` + generic purple/indigo gradients) | Universal hallmark of unprompted AI templates when no brand palette is chosen. | Use deliberate presets from `design-presets.md` (e.g. `#08090a` true dark with `#5e6ad2` Linear accent, deep obsidian with emerald, or warm editorial ivory). |
 | **CSS Radial "Sun Blobs"** (giant blurry radial gradient in page center) | Creates a muddy, low-contrast smear across background text without adding real lighting depth. | Clean linear gradients, subtle noise/grain texture, authentic SVG mesh geometry, or crisp photography. |
 | **Muddy Navy + Neon Glow** (generic blue/cyan neon borders) | Dated, high-friction aesthetic that distracts from core content. | Linear true dark (`#08090a`), Vercel monochrome, or subtle 1px hairline borders (`border-white/10`). |
 | **Solid Bright Cyan/Blue Walls** | Overwhelming visual weight that washes out primary call-to-actions. | Restrained neutral canvas with targeted accent color reserved for interactive elements. |

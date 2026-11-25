@@ -44,6 +44,6 @@ If runtime failure occurs after startup, retry the affected existing participant
 
 ## Optional metadata
 
-`agents/openai.yaml` is optional host-specific metadata. Hosts that do not recognize it should use the Markdown instructions and manual invocation gate. Its `allow_implicit_invocation: false` setting reinforces manual activation in supporting hosts; it does not guarantee how another host discovers or loads instructions.
+Hosts that do not recognize vendor-specific agent metadata should use `SKILL.md` and the manual invocation gate directly. Keep `idea-council` manual-only in host configuration.
 
 No external packages, API keys, or executable launcher are bundled. Native delegation must be supplied by the host. These instructions do not claim verified compatibility with every coding-agent product or version.
