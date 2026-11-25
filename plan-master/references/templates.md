@@ -56,7 +56,7 @@ Revision: [v1.0] | Mode: [Planning only / Execution authorized] | Target: [Solo 
 Execute [Project or Feature] Plan (Revision [v1.0]).
 Scope: [Brief list of included files/modules].
 Task Graph: Follow tasks T1 through Tn strictly respecting dependencies and 1-writer-per-file write isolation.
-Verification: Run [specific command, e.g. npm test or audit_diff.sh] after each integration step.
+Verification: Run [specific command, e.g. npm test or pytest] after each integration step.
 Stop Condition: Halt immediately if [specific baseline mismatch or test failure occurs].
 ```
 
@@ -81,7 +81,7 @@ graph TD
 | **T1** | [Core contract or schema] | `src/types/contract.ts` | None | **A1**: Type check passes (`npm run typecheck`) |
 | **T2** | [Independent worker slice A] | `src/backend/` | T1 | **A2**: Unit tests pass (`pytest tests/unit/`) |
 | **T3** | [Independent worker slice B] | `src/frontend/` | T1 | **A3**: Component renders without error |
-| **T4** | [Coordinator integration] | Root manifests / lockfiles | T2, T3 | **A4**: End-to-end audit passes (`./audit_diff.sh`) |
+| **T4** | [Coordinator integration] | Root manifests / lockfiles | T2, T3 | **A4**: Integration tests & `git diff` review pass |
 
 ---
 
@@ -157,7 +157,7 @@ Task and Plan Revision: [Tn, revision].
 Role: [Worker name/number]; execute only this slice; do not delegate recursively.
 Write Scope: [Strict list of owned files/directories]; do not touch shared root files.
 Contract Excerpt: [Relevant interface or types needed].
-Verification Target: [Supported command, e.g. npm test or audit_diff.sh].
+Verification Target: [Supported command, e.g. npm test or pytest].
 If Blocked: Report exact gap to coordinator; do not expand file ownership.
 Return: Changed files, diff summary, verification output, and blockers.
 ```

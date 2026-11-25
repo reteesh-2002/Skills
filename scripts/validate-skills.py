@@ -193,8 +193,12 @@ def main():
         stale_patterns = (
             "exec_proxy", "exec-proxy.sh", "verify_release_gate", "verify-release-gate.sh",
             "specialist_probes.py", "task_ledger.py", "task_shape_gating.py",
-            "slice-guard.py", ".evidence/manifest.v1.json",
+            "slice-guard.py", "audit_diff", "setup_worktrees", "guard_read_before_write",
+            "probe_memory_soak_plateau", "probe_graceful_drain_subprocess",
+            ".evidence/manifest.v1.json",
         )
+        if not (skill_dir / "contract.yaml").is_file():
+            skill_errors.append("Missing contract.yaml")
         files_to_scan = [skill_file]
         refs_dir = skill_dir / "references"
         if refs_dir.is_dir():
@@ -222,6 +226,20 @@ def main():
         for err in drift_errors:
             print(f"  - {err}")
         errors.extend(drift_errors)
+
+    # Root docs stale-reference scan
+    root_docs = [
+        repo_root / "README.md",
+        repo_root / "REQUIREMENTS.md",
+        repo_root / "CONTRIBUTING.md",
+        repo_root / "references" / "output-policy.md",
+    ]
+    for doc in root_docs:
+        if doc.is_file():
+            doc_text = doc.read_text(encoding="utf-8")
+            for pat in stale_patterns:
+                if pat in doc_text:
+                    errors.append(f"[{doc.relative_to(repo_root)}] Stale deleted reference '{pat}'")
 
     if errors:
         print(f"\n❌ Validation failed with {len(errors)} error(s):")

@@ -1,0 +1,8 @@
+id: code-reviewer
+contract_version: 1
+inputs: [diff-review-request.v1]
+outputs: [review-findings-report.v1]
+required_capabilities: [inspect_diff, evaluate_edge_cases]
+forbidden_capabilities: [modify_production_code, fabricate_findings]
+manual_only: true
+report_policy: actionable_findings_first
