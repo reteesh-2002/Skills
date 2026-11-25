@@ -229,7 +229,7 @@ Every skill in the suite is optimized for high information density with zero flu
 | **`schema-craft`** | [`schema-craft/SKILL.md`](schema-craft/SKILL.md) | ~1,021 | **Tier 3**: Migration Impact Checklist, ESR indexing, reversible DDL. | Explicit only |
 | **`idea-council`** | [`idea-council/SKILL.md`](idea-council/SKILL.md) | ~1,305 | **Tier 4**: Multi-agent council (Full 6-seat or Express 3-seat deliberation). | Explicit only |
 | **`create-architect`** | [`create-architect/SKILL.md`](create-architect/SKILL.md) | ~1,452 | **Tier 1b**: Inside-Out engineering blueprint architect. | Explicit only |
-| **`frontend-artisan`** | [`frontend-artisan/SKILL.md`](frontend-artisan/SKILL.md) | ~1,474 | **Tier 2**: Frontend orchestrator (DESIGN.md tokens, image-to-code, anti-slop, accessibility). | Explicit only |
+| **`frontend-artisan`** | [`frontend-artisan/SKILL.md`](frontend-artisan/SKILL.md) | ~1,201 | **Tier 2**: Frontend orchestrator (DESIGN.md tokens, image-to-code, anti-slop, accessibility). | Explicit only |
 
 ---
 

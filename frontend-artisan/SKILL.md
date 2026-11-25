@@ -9,33 +9,11 @@ Deliver frontend work with intentional craft: correct layout, accessible interac
 
 ---
 
-## 1. Always Ask for Design & Interactive Effects (Step 0)
+## 1. Design Preset & Motion Selection (Step 0, Greenfield Only)
 
-Before generating images or writing code for a **new page or greenfield concept** without an implied style, ask the user for their visual aesthetic preset and motion preference. **Skip this step** for targeted edits, bug fixes, or projects with an existing `DESIGN.md` / design system.
-
-### A. Visual Aesthetic Preset (from [`references/design-presets.md`](references/design-presets.md))
-1. **Linear Dark Minimalist** — `#08090a` canvas, `#5e6ad2` blurple, `tabular-nums`, high-density devtools
-2. **Apple Atmospheric Glass** — Frosted glass `backdrop-blur-xl`, dynamic lighting, SF Pro/Inter, consumer/media
-3. **Vercel Modern Monochrome** — Pure `#000000` & `#ffffff`, Geist Sans/Mono, zero badge clutter, cloud/admin
-4. **Stripe Vibrant Multi-Layer** — Radiant mesh gradients, `#635bff` accent, opulent card spacing, fintech/SaaS
-5. **Raycast High-Contrast Fast** — Deep `#111111`, coral red `#ff6363`, keyboard hints, command palettes
-6. **Supabase Emerald Matrix** — Obsidian `#121212`, emerald `#3ecf8e`, SQL editors, developer dashboards
-7. **Tailwind Catalyst Modern Clean** — Crisp white/slate `#0f172a`, subtle borders, polished modern SaaS
-8. **Resend Exquisite Typography** — Pure black, micro-spaced editorial text, subtle radial dot grid
-9. **GitHub High-Density Dev** — Dark `#0d1117`, green `#238636`, octicon components, code reviews
-10. **Notion Calm Editorial** — Warm paper `#f7f6f3` or obsidian, serif headers (Charter/Lora), calm docs
-11. **Cyberpunk Neon Synthwave** — Deep `#0a0a14`, neon cyan `#00f0ff` & magenta `#ff0055`, gaming/creative
-12. **Existing Project Tokens** — Ingest and extend existing `DESIGN.md` in the workspace root
-
-### B. Interactive Motion & Effects Menu (from [`references/motion-effects.md`](references/motion-effects.md))
-- **Multi-Layer Parallax**: Differential depth scrolling between background atmosphere and foreground hero
-- **Sticky Stacking Cards**: Cards that lock to top and stack with subtle scale-down on scroll
-- **3D Tilt & Cursor Spotlight**: Interactive card perspective tilt with mouse-following radial glow border
-- **Magnetic Buttons & Micro-Springs**: Subtle cursor attraction on hover with spring physics
-- **Infinite Marquee / Ticker**: Smooth GPU-accelerated horizontal ticker (pauses on hover)
-- **Clean Minimal / Static**: Zero motion distraction, instant layout stability, no parallax
-
-Use the interactive `ask_question` tool or prompt the user directly with these choices before proceeding.
+- **Existing Design / Targeted Edits / Bug Fixes**: Skip this step and adhere strictly to existing tokens or `DESIGN.md`.
+- **New Page / Greenfield Concept**: If the user's prompt already implies an aesthetic (e.g. "Linear-style dark devtools", "clean Notion docs"), proceed directly with the closest preset. Only ask when the aesthetic is genuinely ambiguous.
+- **Presets & Motion**: Load [`references/design-presets.md`](references/design-presets.md) (Linear Dark, Apple Glass, Vercel Monochrome, Stripe, Raycast, Supabase, Tailwind Catalyst, Resend, GitHub, Notion, Synthwave, or `DESIGN.md`) and [`references/motion-effects.md`](references/motion-effects.md) (Parallax, Sticky Cards, 3D Tilt, Magnetic Micro-Springs, Marquee, or Clean Static) on demand.
 
 ---
 
