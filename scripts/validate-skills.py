@@ -159,6 +159,10 @@ def main():
         link_errors = check_relative_links(skill_dir, skill_file, body)
         skill_errors.extend(link_errors)
 
+        max_tokens = 1500
+        if est_tokens > max_tokens:
+            skill_errors.append(f"SKILL.md exceeds token budget ({est_tokens} > {max_tokens})")
+
         stale_patterns = (
             "exec_proxy", "exec-proxy.sh", "Exec Proxy", "Execute via Proxy",
             "verify_release_gate", "verify-release-gate.sh",
@@ -172,7 +176,15 @@ def main():
         files_to_scan = [skill_file]
         refs_dir = skill_dir / "references"
         if refs_dir.is_dir():
-            files_to_scan.extend(sorted(refs_dir.rglob("*.md")))
+            ref_mds = sorted(refs_dir.rglob("*.md"))
+            files_to_scan.extend(ref_mds)
+            skill_text_norm = content.replace("\\", "/")
+            for ref_md in ref_mds:
+                link_errors_ref = check_relative_links(skill_dir, ref_md, ref_md.read_text(encoding="utf-8"))
+                skill_errors.extend(link_errors_ref)
+                rel_ref = ref_md.relative_to(skill_dir).as_posix()
+                if rel_ref not in skill_text_norm:
+                    skill_errors.append(f"Orphaned reference file not linked from SKILL.md: {rel_ref}")
         for scan_file in files_to_scan:
             scan_text = scan_file.read_text(encoding="utf-8")
             for pat in stale_patterns:

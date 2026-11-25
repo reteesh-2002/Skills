@@ -219,7 +219,7 @@ Every skill in the suite is optimized for high information density with zero flu
 | **`qa-sentinel`** | [`qa-sentinel/SKILL.md`](qa-sentinel/SKILL.md) | ~336 | **Tier 1**: Pure verification engine & zero-test-trap validator. | **Auto-activated** |
 | **`ship-it`** | [`ship-it/SKILL.md`](ship-it/SKILL.md) | ~343 | **Tier 5**: Staged candidate release scanner & git hygiene automator. | Explicit only |
 | **`deep-debugger`** | [`deep-debugger/SKILL.md`](deep-debugger/SKILL.md) | ~471 | **Tier 1**: 6-stage root-cause repair engine with Git Assertion Lock. | **Auto-activated** |
-| **`plan-master`** | [`plan-master/SKILL.md`](plan-master/SKILL.md) | ~630 | **Tier 1**: Execution planner with Anti-Overengineering (Occam's Razor) Gate. | **Auto-activated** |
+| **`plan-master`** | [`plan-master/SKILL.md`](plan-master/SKILL.md) | ~709 | **Tier 1**: Execution planner with Anti-Overengineering (Occam's Razor) Gate. | **Auto-activated** |
 | **`runtime-reliability`** | [`runtime-reliability/SKILL.md`](runtime-reliability/SKILL.md) | ~703 | **Tier 3**: Operational resilience, RSS memory soak, SIGTERM graceful drain. | Explicit only |
 | **`playwright-cli`** | [`playwright-cli/SKILL.md`](playwright-cli/SKILL.md) | ~760 | **Tier 2**: Headless browser automation and end-to-end verification. | Explicit only |
 | **`infra-pilot`** | [`infra-pilot/SKILL.md`](infra-pilot/SKILL.md) | ~825 | **Tier 5**: Production Dockerfiles, docker-compose stacks, and CI automation. | Explicit only |

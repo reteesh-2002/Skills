@@ -1,6 +1,6 @@
 # Vertical Slice DAG Rules for Plan Master
 
-Reference for structuring execution plans for projects that adopt the Vertical Slice Architecture. Every task in a slice-based project must conform to these rules so the agent never loads more than 600 lines of context per task.
+Reference for structuring execution plans for projects that adopt the Vertical Slice Architecture. Every task in a slice-based project should follow these rules so each task loads only the target slice's bounded context.
 
 ---
 

@@ -125,8 +125,8 @@ src/
 
 ---
 
-## 7. Missing 70% Checklist
-Mark each layer as **Required**, **Not Required**, or **Deferred** for this project. Leaving all unchecked means the project will cap at ~3,000 lines.
+## 7. Defensive Layers (Proportional to Scale)
+Mark each layer as **Required**, **Not Required**, or **Deferred** based on what this project actually requires today.
 
 | Defensive Layer | Status | Implementation Note |
 |---|---|---|
