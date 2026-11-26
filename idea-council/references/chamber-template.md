@@ -31,5 +31,6 @@ The Chair initializes `<artifact_dir>/council-deliberation.md` at Round 1 dispat
 - **Core Clash 2**: Radical scope cuts (YAGNI) vs. enterprise security boundaries
 
 ### Current Consensus Direction
-🟡 **Test First (Try Small)** — Consensus converged on a stripped-down pilot with strict architectural invariants.
+> [!NOTE]
+> **Provisional Direction:** 🟡 **Test First (Try Small)** — `<1-sentence summary of emerging consensus>`
 ```

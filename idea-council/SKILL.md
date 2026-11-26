@@ -78,31 +78,32 @@ Collect results. Optionally update `council-deliberation.md` if an artifact was 
 
 ## 6. Chair's Synthesis
 
-Deliver an actionable, prioritized decision record:
+Deliver a crisp, scannable decision record (no ASCII boxes):
 
-1. **Executive Verdict & Decision Record**:
-   ```markdown
-   ┌────────────────────────────────────────────────────────────────────┐
-   │ VERDICT: [Go Ahead / Test First / Fix First / On Hold / Drop It]   │
-   │ RECOMMENDATION: [Concrete 1-sentence directive]                    │
-   │ STRONGEST OBJECTION: [Most serious material risk raised]           │
-   │ REVERSAL CONDITIONS: [Empirical evidence that flips the verdict]   │
-   │ UNRESOLVED EVIDENCE: [Data or tests currently unknown]             │
-   │ NEXT ACTION: [Immediate concrete next step]                        │
-   └────────────────────────────────────────────────────────────────────┘
-   ```
+1. **Executive Verdict Card**:
+   > [!NOTE]
+   > ### 🏛️ Verdict: [🟢 Go Ahead / 🟡 Test First / 🟠 Fix First / ⏸️ On Hold / 🔴 Drop It]
+   > **Recommendation:** [Concrete 1-sentence directive]
+   - **Strongest Objection:** [Most serious material risk raised by council]
+   - **Reversal Conditions:** [Specific empirical evidence that flips the verdict]
+   - **Unresolved Evidence:** [Data or tests currently unknown]
+   - **Next Action:** [Immediate concrete next step]
+
    > [!IMPORTANT]
-   > **Authorization Boundary**: A favorable council verdict (`Go Ahead` / `Test First`) does **not** automatically authorize code implementation. The decision record is presented to the user for explicit approval before invoking any implementation skill.
+   > **Authorization Boundary**: A favorable council verdict (`Go Ahead` / `Test First`) does **not** automatically authorize implementation. Present this decision record for explicit user approval before invoking any implementation skill.
 
-2. **Parameterized Roster Positions Table**:
-   Summary table covering the active participants (3 in Express, 6 in Full):
-   | Seat / Role | R1 Stance | Final Stance | Confidence | Core Argument |
+2. **Council Roster Positions** (3 rows in Express, 6 in Full):
+   | Seat / Role | R1 | Final | Confidence | Core Argument |
    |---|:---:|:---:|:---:|---|
-   | [Active Seat 1] | ... | ... | High/Med/Low | ... |
+   | [Active Seat] | 🟢/🟡/🟠/⏸️/🔴 | 🟢/🟡/🟠/⏸️/🔴 | High/Med/Low | [1-line position] |
 
-3. **Key Clashes & Concessions**: 2–3 key technical debates and how they were resolved.
+3. **Key Clashes & Concessions**: 2–3 key technical debates and how they resolved.
 4. **Ruthless Scope (80/20 Plan)**:
    - **P0 (Build Now)**: Non-negotiable core.
-   - **P2/P3 (Cut / Defer)**: Features ruthlessly cut to accelerate shipping.
-5. **Execution Handoff**: Formatted prompt ready for `plan-master` once user approves implementation.
+   - **P2/P3 (Cut / Defer)**: Features cut to accelerate shipping.
+5. **Execution Handoff** *(copy-ready prompt for `plan-master` once approved)*:
+   ```text
+   Implement [Idea/Feature] per Idea Council verdict ([Verdict]).
+   P0 Scope: [core items]. Constraints: [key invariants / cuts].
+   ```
 
