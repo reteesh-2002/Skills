@@ -44,7 +44,7 @@ def load_skill_inventory() -> list[str]:
         "create-architect", "frontend-artisan", "schema-craft",
         "code-reviewer", "security-verifier", "runtime-reliability",
         "idea-council", "ship-it", "playwright-cli",
-        "infra-pilot", "docs-architect",
+        "infra-pilot", "docs-architect", "repo-auditor",
     ]
 
 

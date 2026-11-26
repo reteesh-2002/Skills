@@ -1,6 +1,6 @@
 # Antigravity Skills Suite: System & Tool Requirements
 
-This document specifies the runtime binaries and host tools used by the **14 Antigravity skills**.
+This document specifies the runtime binaries and host tools used by the **15 Antigravity skills**.
 
 ---
 

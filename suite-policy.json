@@ -28,7 +28,8 @@
       "ship-it",
       "playwright-cli",
       "infra-pilot",
-      "docs-architect"
+      "docs-architect",
+      "repo-auditor"
     ]
   },
 

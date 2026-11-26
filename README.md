@@ -17,7 +17,7 @@ A modular software engineering toolkit and skills suite for **Google Antigravity
 
 ### 2. Installation & Environment Health
 
-Use the suite installer to cleanly install the 14 skills and runtime helpers with manifest tracking:
+Use the suite installer to cleanly install the 15 skills and runtime helpers with manifest tracking:
 
 #### Option A: Workspace Installation (Single Project)
 Run from the cloned Skills repo pointing `--target-dir` at your project (do not run `--workspace` inside the Skills repo root itself):
@@ -60,7 +60,7 @@ Hooks in `.agents/hooks.json` run [`guard_anti_retry.py`](scripts/guard_anti_ret
 ### 4. Test Suite & Validation
 Verify skill metadata, policy parity, environment health, and core tooling:
 ```bash
-# 1. Validate skill frontmatter, metadata, and token budgets (14 skills)
+# 1. Validate skill frontmatter, metadata, and token budgets (15 skills)
 python3 scripts/validate-skills.py
 
 # 2. Run the environment health check
@@ -188,10 +188,10 @@ Executive Intent                  # Goal and target user
 ### 1. Root Configuration & Governance
 | File | Role |
 | :--- | :--- |
-| [`suite-policy.json`](suite-policy.json) | **Authoritative Suite Policy**: Single source of truth for routing (3 auto, 11 explicit = 14 skills), output defaults, and tool boundaries. |
+| [`suite-policy.json`](suite-policy.json) | **Authoritative Suite Policy**: Single source of truth for routing (3 auto, 12 explicit = 15 skills), output defaults, and tool boundaries. |
 | [`AGENTS.md`](AGENTS.md) | Host routing instructions for Antigravity agents; defines the 3 auto-detected skills and on-demand rules. |
 | [`GEMINI.md`](GEMINI.md) | Workspace-level routing instructions mirroring AGENTS.md for compatibility with Google Gemini agent runtimes. |
-| [`REQUIREMENTS.md`](REQUIREMENTS.md) | System binary and optional tool requirements for the 14-skill suite. |
+| [`REQUIREMENTS.md`](REQUIREMENTS.md) | System binary and optional tool requirements for the 15-skill suite. |
 | [`CHANGELOG.md`](CHANGELOG.md) | Version history and release notes. |
 | [`README.md`](README.md) | Master documentation, quick start, architecture, and file directory. |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Contributor guidelines, frontmatter rules, and testing requirements. |
@@ -229,6 +229,7 @@ Every skill in the suite is optimized for high information density with zero flu
 | **`qa-sentinel`** | [`qa-sentinel/SKILL.md`](qa-sentinel/SKILL.md) | ~347 | **Tier 1**: Pure verification engine & zero-test-trap validator. | **Auto-activated** |
 | **`deep-debugger`** | [`deep-debugger/SKILL.md`](deep-debugger/SKILL.md) | ~487 | **Tier 1**: 6-stage root-cause repair engine with Git Assertion Lock. | **Auto-activated** |
 | **`runtime-reliability`** | [`runtime-reliability/SKILL.md`](runtime-reliability/SKILL.md) | ~692 | **Tier 3**: Operational resilience, RSS memory soak, SIGTERM graceful drain. | Explicit only |
+| **`repo-auditor`** | [`repo-auditor/SKILL.md`](repo-auditor/SKILL.md) | ~718 | **Tier 3**: Cold-start full-repo defect & parity auditor (Reproducer-or-Drop). | Explicit only |
 | **`plan-master`** | [`plan-master/SKILL.md`](plan-master/SKILL.md) | ~722 | **Tier 1**: Execution planner with Anti-Overengineering (Occam's Razor) Gate. | **Auto-activated** |
 | **`playwright-cli`** | [`playwright-cli/SKILL.md`](playwright-cli/SKILL.md) | ~755 | **Tier 2**: Headless browser automation and end-to-end verification. | Explicit only |
 | **`infra-pilot`** | [`infra-pilot/SKILL.md`](infra-pilot/SKILL.md) | ~825 | **Tier 5**: Production Dockerfiles, docker-compose stacks, and CI automation. | Explicit only |
@@ -245,7 +246,7 @@ Every skill in the suite is optimized for high information density with zero flu
 ## Verification Summary
 
 ```bash
-# 1. Validate skill metadata, policy parity, and token budgets (14 skills)
+# 1. Validate skill metadata, policy parity, and token budgets (15 skills)
 python3 scripts/validate-skills.py
 
 # 2. Environment health check
