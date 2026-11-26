@@ -18,9 +18,23 @@ Run an objective, evidence-only audit of the entire repository—not just a rece
 
 ---
 
-## 2. The 6-Vector Cold-Start Audit Protocol
+## 2. Swarm Execution Model (`/swarm` Default)
 
-Execute all 6 vectors in parallel or sequence across the whole repository:
+Always run `repo-auditor` using `swarm` (parallel read-only workers on the shared message board) when the host exposes the `swarm` tool:
+
+1. **Title & Spawn Read-Only Workers (`workspace: "inherit"`)**:
+   - Call `swarm{action:"title", title:"Repo Auditor: Cold-Start Audit"}`.
+   - Split the 6 vectors across lean, non-overlapping workers (e.g., `code-exceptions` for Vectors 1–2, `coverage-e2e` for Vectors 3–4, `docs-git` for Vectors 5–6). Keep each worker read-only (`workspace: "inherit"`).
+   - Every worker brief must enforce the **Reproducer-or-Drop Rule** (`file:line` + concrete reproducer, no `/10` scores) and instruct the worker to post `[done]` with findings to the board.
+2. **Coordinate & Verify**:
+   - Call `swarm_wait` until all workers post `[done]`, cross-check every reported `file:line` and reproducer, then kill finished workers (`swarm{action:"kill", name:...}`) before delivering the final report.
+3. **Host Fallback**: If `swarm` is unavailable on the host, fall back to parallel read-only subagents (`invoke_subagent`) or sequential execution.
+
+---
+
+## 3. The 6-Vector Cold-Start Audit Protocol
+
+Execute all 6 vectors across the whole repository:
 
 ### Vector 1: Silent Failure & Exception Swallowing
 - Scan for `except Exception: pass`, bare `except:`, `|| true`, or swallowed `returncode` checks.
@@ -46,7 +60,7 @@ Execute all 6 vectors in parallel or sequence across the whole repository:
 
 ---
 
-## 3. Output Format
+## 4. Output Format
 
 Follow [`references/output-policy.md`](../references/output-policy.md):
 
