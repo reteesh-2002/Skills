@@ -91,6 +91,32 @@ class TestValidateSkills(unittest.TestCase):
             self.assertNotEqual(res.returncode, 0)
             self.assertIn("below minimum token budget", res.stdout)
 
+    def test_invalid_token_targets_and_null_hooks_fail_validation(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "scripts").mkdir()
+            (root / "scripts" / "validate-skills.py").write_text(
+                VALIDATE_SCRIPT.read_text(encoding="utf-8"), encoding="utf-8"
+            )
+            (root / "suite-policy.json").write_text(
+                '{"activation_modes":{"auto":[],"explicit_only":["ok-skill"]},'
+                '"token_targets":{"ordinary_entrypoints_estimated_tokens":{"min":"bad_int","max":500}}}',
+                encoding="utf-8",
+            )
+            (root / ".agents").mkdir()
+            (root / ".agents" / "hooks.json").write_text('{"evidence-policy": null}', encoding="utf-8")
+            sk = root / "ok-skill"
+            sk.mkdir()
+            (sk / "SKILL.md").write_text(
+                "---\nname: ok-skill\ndescription: Valid skill description for schema test.\n---\n"
+                + ("word " * 160) + "\n",
+                encoding="utf-8",
+            )
+            res = subprocess.run([sys.executable, str(root / "scripts" / "validate-skills.py")], capture_output=True, text=True)
+            self.assertNotEqual(res.returncode, 0)
+            self.assertIn("Invalid token_targets configuration", res.stdout)
+            self.assertIn("Invalid or missing 'evidence-policy'", res.stdout)
+
     def test_cli_passes_on_repo(self):
         res = subprocess.run([sys.executable, str(VALIDATE_SCRIPT)], capture_output=True, text=True)
         self.assertEqual(res.returncode, 0, res.stdout + res.stderr)

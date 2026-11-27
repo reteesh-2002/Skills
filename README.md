@@ -252,7 +252,7 @@ python3 scripts/validate-skills.py
 # 2. Environment health check
 python3 scripts/skills-doctor.py
 
-# 3. Run the unit & policy test suite (43 tests)
+# 3. Run the unit & policy test suite (45 tests)
 python3 -m unittest discover -s tests -p 'test_*.py'
 ```
 

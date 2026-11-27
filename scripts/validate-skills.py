@@ -164,8 +164,12 @@ def main():
                 max_tokens = int(target_cfg.get("max", max_tokens))
             elif isinstance(target_cfg, (int, float)):
                 max_tokens = int(target_cfg)
-        except Exception:
-            pass
+            else:
+                errors.append("[suite-policy.json] Invalid token_targets.ordinary_entrypoints_estimated_tokens type")
+        except (ValueError, TypeError) as e:
+            errors.append(f"[suite-policy.json] Invalid token_targets configuration: {e}")
+        except Exception as e:
+            errors.append(f"[suite-policy.json] Failed to parse token_targets: {e}")
 
     for skill_dir in skills:
         skill_file = skill_dir / "SKILL.md"
@@ -249,7 +253,12 @@ def main():
             print(f"  - {err}")
         errors.extend(drift_errors)
 
-    # Root docs stale-reference scan (exclude CHANGELOG.md, which documents historical removals)
+    # Root docs stale-reference scan & link checks (exclude CHANGELOG.md, which documents historical removals)
+    output_policy_path = (
+        skills_subdir / "references" / "output-policy.md"
+        if skills_subdir.is_dir()
+        else repo_root / "references" / "output-policy.md"
+    )
     root_docs = [
         repo_root / "README.md",
         repo_root / "REQUIREMENTS.md",
@@ -257,21 +266,29 @@ def main():
         repo_root / "AGENTS.md",
         repo_root / "GEMINI.md",
         repo_root / "suite-policy.json",
-        repo_root / "references" / "output-policy.md",
+        output_policy_path,
     ]
+    link_checked_docs = {
+        repo_root / "AGENTS.md",
+        repo_root / "GEMINI.md",
+        output_policy_path,
+    }
     for doc in root_docs:
         if doc.is_file():
             doc_text = doc.read_text(encoding="utf-8")
             for pat in stale_patterns:
                 if pat in doc_text:
                     errors.append(f"[{doc.relative_to(repo_root)}] Stale deleted reference '{pat}'")
+            if doc in link_checked_docs:
+                errors.extend(check_relative_links(repo_root, doc, doc_text, repo_root=repo_root))
 
     hooks_file = repo_root / ".agents" / "hooks.json"
     if hooks_file.is_file():
         try:
             hooks_data = json.loads(hooks_file.read_text(encoding="utf-8"))
-            if not isinstance(hooks_data, dict) or "evidence-policy" not in hooks_data:
-                errors.append("[.agents/hooks.json] Missing top-level 'evidence-policy' object")
+            ep = hooks_data.get("evidence-policy") if isinstance(hooks_data, dict) else None
+            if not (isinstance(ep, dict) and isinstance(ep.get("PreToolUse"), list) and isinstance(ep.get("PostToolUse"), list)):
+                errors.append("[.agents/hooks.json] Invalid or missing 'evidence-policy' PreToolUse/PostToolUse schema")
         except Exception as e:
             errors.append(f"[.agents/hooks.json] Invalid JSON: {e}")
 

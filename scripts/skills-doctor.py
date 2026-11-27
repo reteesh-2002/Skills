@@ -162,7 +162,8 @@ def check_hooks(project_dir: Path) -> dict:
             "message": f"Invalid JSON syntax in {hooks_path.name}: {e}",
         }
 
-    has_evidence_policy = isinstance(data, dict) and "evidence-policy" in data
+    ep = data.get("evidence-policy") if isinstance(data, dict) else None
+    has_evidence_policy = isinstance(ep, dict) and isinstance(ep.get("PreToolUse"), list) and isinstance(ep.get("PostToolUse"), list)
     if has_evidence_policy:
         return {
             "status": "ok",

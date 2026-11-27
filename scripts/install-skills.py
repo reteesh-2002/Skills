@@ -287,6 +287,8 @@ def safe_merge_rules(
         return
 
     rule_text = src_rule_file.read_text(encoding="utf-8").strip()
+    if dest_rule_file.parent == dest_root:
+        rule_text = rule_text.replace("(references/output-policy.md)", "(skills/references/output-policy.md)")
     marked_block = f"{RULES_MARKER_START}\n{rule_text}\n{RULES_MARKER_END}"
 
     dest_rule_file.parent.mkdir(parents=True, exist_ok=True)
@@ -399,13 +401,22 @@ def run_install(
 
     output_policy_src = repo_root / "references" / "output-policy.md"
     if output_policy_src.exists():
+        dest_policy_ref = dest_skills_dir / "references" / "output-policy.md"
         copy_runtime_file(
             output_policy_src,
-            dest_skills_dir / "references" / "output-policy.md",
+            dest_policy_ref,
             dest_root,
             manifest_files,
             verbose=verbose,
         )
+        if dest_skills_dir != dest_root and dest_policy_ref.is_file():
+            updated_text = dest_policy_ref.read_text(encoding="utf-8").replace(
+                "(../suite-policy.json)", "(../../suite-policy.json)"
+            )
+            dest_policy_ref.write_text(updated_text, encoding="utf-8")
+            rel_ref = dest_policy_ref.relative_to(dest_root).as_posix()
+            if rel_ref in manifest_files:
+                manifest_files[rel_ref]["sha256"] = compute_sha256(dest_policy_ref)
 
     # 3. Install suite policy
     for policy_file in POLICY_FILES:

@@ -573,6 +573,23 @@ class TestSkillsDoctor(unittest.TestCase):
             self.assertIn("post-install-hook", final_hooks)
             self.assertNotIn("evidence-policy", final_hooks)
 
+    def test_installed_workspace_passes_validate_skills_including_root_links(self):
+        """Verify installed AGENTS.md/GEMINI.md/output-policy.md have valid relative links."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            workspace = Path(tmpdir)
+            res_inst = subprocess.run(
+                [sys.executable, str(INSTALL_SCRIPT), "--workspace", "--target-dir", str(workspace)],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(res_inst.returncode, 0, res_inst.stderr)
+            res_val = subprocess.run(
+                [sys.executable, str(workspace / "scripts" / "validate-skills.py")],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(res_val.returncode, 0, res_val.stdout + res_val.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()
